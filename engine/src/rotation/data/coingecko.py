@@ -8,6 +8,7 @@ recent data. Set COINGECKO_API_KEY and COINGECKO_PLAN (demo | pro) in .env.
 from __future__ import annotations
 
 import os
+import threading
 import time
 from datetime import UTC, datetime
 
@@ -17,7 +18,7 @@ from rotation.data import cache, http
 
 BASE = {"demo": "https://api.coingecko.com/api/v3", "pro": "https://pro-api.coingecko.com/api/v3"}
 HEADER = {"demo": "x-cg-demo-api-key", "pro": "x-cg-pro-api-key"}
-MIN_INTERVAL_S = {"demo": 2.1, "pro": 0.15}  # stays under 30/min (demo) and 500/min (analyst)
+CALLS_PER_MIN = {"demo": 28, "pro": 450}  # under the 30/min (demo) and 500/min (analyst) caps
 
 
 class CoinGecko:
@@ -29,13 +30,21 @@ class CoinGecko:
         if not key:
             raise RuntimeError("COINGECKO_API_KEY is not set (see .env.example)")
         self._c = http.client(base_url=BASE[self.plan], headers={HEADER[self.plan]: key})
-        self._last = 0.0
+        self._interval = 60.0 / CALLS_PER_MIN[self.plan]
+        self._next_slot = 0.0
+        self._lock = threading.Lock()
+
+    def _throttle(self) -> None:
+        """Thread-safe: each call reserves the next free slot, so N workers share one rate."""
+        with self._lock:
+            now = time.monotonic()
+            slot = max(now, self._next_slot)
+            self._next_slot = slot + self._interval
+        if slot > now:
+            time.sleep(slot - now)
 
     def _get(self, path: str, params: dict | None = None):
-        wait = MIN_INTERVAL_S[self.plan] - (time.monotonic() - self._last)
-        if wait > 0:
-            time.sleep(wait)
-        self._last = time.monotonic()
+        self._throttle()
         r = http.get(self._c, path, params=params)
         return None if r.status_code == 404 else r.json()
 

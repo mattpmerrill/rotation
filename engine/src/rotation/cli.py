@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import date
 from typing import Annotated
 
@@ -9,7 +10,7 @@ import typer
 from dotenv import load_dotenv
 
 from rotation.config import load_config
-from rotation.data import binance_archive, coinmetrics, http
+from rotation.data import backfill, binance_archive, coinmetrics, http
 
 app = typer.Typer(no_args_is_help=True)
 fetch = typer.Typer(no_args_is_help=True, help="Download market data into the Parquet cache.")
@@ -58,6 +59,17 @@ def fetch_binance(
                 df = binance_archive.fetch_open_interest(c, sym, start=start)
                 parts.append(f"oi {0 if df is None else len(df)}")
             typer.echo(f"{sym}: " + ", ".join(parts) + " days")
+
+
+@app.command("backfill")
+def backfill_cmd(
+    limit: Annotated[int | None, typer.Option(help="Only fetch N coins (for testing)")] = None,
+    workers: int = 8,
+) -> None:
+    """One-time CoinGecko history for every active and dead coin (needs a paid key). Resumable."""
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    backfill.run(limit=limit, workers=workers)
 
 
 if __name__ == "__main__":
