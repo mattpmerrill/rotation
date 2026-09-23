@@ -1,0 +1,34 @@
+# Coin classification. CoinGecko categories do most of the work; these lists
+# are manual overrides for what the categories miss or get wrong.
+# Values are CoinGecko coin ids.
+
+exclude_categories:           # CoinGecko category ids
+  - stablecoins
+  - wrapped-tokens
+  - liquid-staking-tokens
+  - bridged-tokens
+
+exclude_ids:                  # always excluded, whatever the categories say
+  - bitcoin                   # BTC is the benchmark and the Vault, not an alt
+  - tether
+  - usd-coin
+  - dai
+  - binance-usd
+  - true-usd
+  - paxos-standard
+  - first-digital-usd
+  - ethena-usde
+  - wrapped-bitcoin
+  - staked-ether
+  - wrapped-steth
+  - wrapped-eeth
+
+meme_categories:
+  - meme-token
+
+meme_ids: []                  # add coins CoinGecko fails to tag as memes
+
+leverage_symbols:             # CoinGecko id -> ticker used by the leverage rule
+  bitcoin: BTC
+  ethereum: ETH
+  solana: SOL
