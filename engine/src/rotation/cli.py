@@ -10,7 +10,7 @@ import typer
 from dotenv import load_dotenv
 
 from rotation.config import load_config
-from rotation.data import backfill, binance_archive, coinmetrics, http
+from rotation.data import backfill, binance_archive, coinmetrics, http, universe
 
 app = typer.Typer(no_args_is_help=True)
 fetch = typer.Typer(no_args_is_help=True, help="Download market data into the Parquet cache.")
@@ -70,6 +70,16 @@ def backfill_cmd(
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
     backfill.run(limit=limit, workers=workers)
+
+
+@app.command("ranks")
+def ranks_cmd() -> None:
+    """Point-in-time top-N ranks from the backfill; writes an exclusion audit CSV."""
+    ranked = universe.build_ranks()
+    top = ranked[ranked["rank"] <= 100]
+    typer.echo(
+        f"ranks: {ranked['date'].nunique()} days, {top['coin_id'].nunique()} coins ever top 100"
+    )
 
 
 if __name__ == "__main__":

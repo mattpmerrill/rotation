@@ -2,11 +2,13 @@
 # are manual overrides for what the categories miss or get wrong.
 # Values are CoinGecko coin ids.
 
-exclude_categories:           # CoinGecko category ids
-  - stablecoins
-  - wrapped-tokens
-  - liquid-staking-tokens
-  - bridged-tokens
+exclude_category_keywords:    # a coin is excluded if any CoinGecko category contains one of these
+  - stablecoin                # USD, EUR, gold-pegged stables
+  - wrapped                   # WBTC, WETH, ...
+  - bridged
+  - liquid-staking            # stETH, JitoSOL, ...
+  - liquid-restaking
+  - tokenized                 # tokenized stocks, gold (PAXG, XAUT), treasuries: not crypto beta
 
 exclude_ids:                  # always excluded, whatever the categories say
   - bitcoin                   # BTC is the benchmark and the Vault, not an alt

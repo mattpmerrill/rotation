@@ -324,7 +324,7 @@ class Rules(_Model):
 
 
 class Universe(_Model):
-    exclude_categories: list[str]
+    exclude_category_keywords: list[str]
     exclude_ids: list[str]
     meme_categories: list[str]
     meme_ids: list[str]
