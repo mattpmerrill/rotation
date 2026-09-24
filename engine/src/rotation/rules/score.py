@@ -62,6 +62,7 @@ def gates(df: pd.DataFrame, u: UniverseRules) -> pd.DataFrame:
     )
     gate_cols = ["top_n", "volume", "history", "altbtc", "exchanges", "unlock", "catalyst"]
     out["passes"] = out[gate_cols].all(axis=1)
+    out["passes_ex_altbtc"] = out[[c for c in gate_cols if c != "altbtc"]].all(axis=1)
     return out
 
 

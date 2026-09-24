@@ -72,6 +72,14 @@ def ladder_step(p: Position, close: float, sma20: float | None, cfg: Ladder) -> 
     return Step(p, actions)
 
 
+def hold_step(p: Position, close: float) -> Step:
+    """No profit-taking: only the stop can close the position (the "hold" baseline)."""
+    p = replace(p, high=max(p.high, close))
+    if close <= p.stop:
+        return Step(None, [Action("exit", p.qty, "stop")])
+    return Step(p)
+
+
 def time_stop_hit(p: Position, today: date, close: float, score: int, cfg: TimeStop) -> bool:
     """45+ days held, up less than 10%, and score below 3 -> exit."""
     held = (today - p.entry_date).days
@@ -140,6 +148,17 @@ def rotation_check(
         return RotationCheck(False, edge, hurdle, "protected: A scores 4+ in a trend")
     ok = edge > hurdle
     return RotationCheck(ok, edge, hurdle, "edge clears hurdle" if ok else "edge below hurdle")
+
+
+def ladder_upside(p: Position | None, close: float, cfg: Ladder) -> float:
+    """U for rule 7: upside to the next ladder rung. A candidate (no position) looks at the
+    first rung; a runner (every rung sold) has no next target, so 0."""
+    if p is None:
+        return cfg.rungs[0].gain
+    if p.rungs_hit >= len(cfg.rungs):
+        return 0.0
+    nxt = p.entry_price * (1 + cfg.rungs[p.rungs_hit].gain)
+    return max(nxt / close - 1, 0.0)
 
 
 # --- leverage sizing (rule 8) ---------------------------------------------------

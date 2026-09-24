@@ -180,3 +180,16 @@ def test_leverage_gates():
     assert not _lev(stop=50.0).ok  # 50% stop: no leverage keeps liq 2x away
     capped = _lev(margin_available=1_000.0)
     assert capped.margin == 1_000 and capped.notional == pytest.approx(3_000)
+
+
+def test_ladder_upside_for_rotation():
+    from rotation.rules.positions import ladder_upside
+
+    assert ladder_upside(None, 50.0, R.ladder) == pytest.approx(0.30)  # candidate: first rung
+    p = fresh()
+    assert ladder_upside(p, 120.0, R.ladder) == pytest.approx(130 / 120 - 1)
+    p = ladder_step(p, 131.0, 120.0, R.ladder).position  # rung 1 hit -> next is +60%
+    assert ladder_upside(p, 150.0, R.ladder) == pytest.approx(160 / 150 - 1)
+    for c in (160.0, 200.0):
+        p = ladder_step(p, c, 150.0, R.ladder).position
+    assert ladder_upside(p, 210.0, R.ladder) == 0.0  # runner

@@ -152,5 +152,13 @@ def market_cmd() -> None:
     typer.echo(f"market: {len(m)} days, {m.index.min():%Y-%m-%d} -> {m.index.max():%Y-%m-%d}")
 
 
+@app.command("report")
+def report_cmd() -> None:
+    """Run every Phase 0 experiment; write docs/backtests/phase0-report.md + charts."""
+    from rotation.backtest import report
+
+    typer.echo(f"report: {report.build()}")
+
+
 if __name__ == "__main__":
     app()

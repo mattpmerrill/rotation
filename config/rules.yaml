@@ -71,6 +71,8 @@ positions:
   max_positions: 10
   max_alt_weight: 0.10
   trim_at_weight: 0.15                # trim back to max_alt_weight
+  reentry_cooldown_days: 7            # DEFAULT: no re-buying a coin within 7 days of fully exiting it
+                                      # (without it: 33 same-day stop-and-rebuy whipsaws, 2019-26)
 
 ladder:                               # gains measured in USD from average entry price
   rungs:                              # sell = fraction of the ORIGINAL position size
@@ -98,6 +100,11 @@ rotation:
   hurdle_pp: 10                       # U_B*S_B/5 - U_A*S_A/5 must exceed fees% + tax% + 10
   protect_score: 4                    # never rotate out of a position scoring >= 4 in a trend
   round_trip_fee: 0.006               # fees% term, as a fraction
+  upside: ladder                      # DEFAULT: U = upside to the next ladder rung (candidate: first
+                                      # rung, +30%; runner: 0). "target" = the entry target instead,
+                                      # which churned 728 rotations in the 2019-26 test.
+  min_hold_days: 14                   # DEFAULT: churn guard
+  max_per_week: 1                     # DEFAULT: churn guard
 
 leverage:
   enabled: false                      # off until the backtest shows it adds BTC (see PLAN.md)
@@ -150,15 +157,34 @@ euphoria_actions:
     mvrv_z_below: 1.0
     tranches: 4
     tranche_spacing_days: 14          # DEFAULT
+  pause_entries: true                 # DEFAULT: no new alt buys after a euphoria sale...
+  reset_weeks: 8                      # DEFAULT: ...until 8 straight weeks below 3 flags
+
+rebalance:                            # DEFAULT: how bucket targets are enforced
+  weekday: 6                          # weekly, on the Sunday close
+  sell_excess_band: 0.05              # bucket > target + 5% of portfolio -> sell lowest scores first
+  min_trade_frac: 0.005               # ignore trades smaller than 0.5% of the portfolio
+  vault: two_way                      # OPEN QUESTION for Matt. two_way: trim the Vault back to target
+                                      # when it is more than vault_band over. top_up_only: the Vault is
+                                      # never sold to rebalance (then alt buckets starve as BTC rises).
+  vault_band: 0.05
+  vault_tax: long_term                # DEFAULT: Vault sales reserve tax at the long-term rate
 
 breakers:
   measure: usd                        # DEFAULT: portfolio peak-to-now drawdown in USD
   level_1: { drawdown: 0.15, close_leverage: true, entry_freeze_days: 7 }
   level_2: { drawdown: 0.25, force_regime: defend }
+  defend_days: 7                      # DEFAULT: forced Defend lasts a week, then weekly regime resumes
+  rebase_after_fire: true             # DEFAULT: after level 2 fires, the peak resets to today's value,
+                                      # so the breaker re-arms instead of latching until a new high
 
 backtest:
   fee_per_side: 0.003
   slippage_per_side: 0.001            # DEFAULT
   signal_at: close                    # decide on the daily close...
-  fill_at: next_open                  # ...fill at the next day's open
+  fill_at: close                      # crypto is 24/7: the next open IS this close (checked:
+                                      # BTCUSDT open vs prior close, median gap 0.000%)
+  initial_usd: 100_000
+  delisted_haircut: 0.30              # DEFAULT: coin data ends -> exit at last price minus 30%
+  delisted_after_days: 7
   walk_forward: { train_days: 730, test_days: 180 }

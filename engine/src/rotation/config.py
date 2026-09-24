@@ -150,6 +150,7 @@ class Positions(_Model):
     max_positions: int
     max_alt_weight: float
     trim_at_weight: float
+    reentry_cooldown_days: int
 
 
 # --- ladder / routing / stops -------------------------------------------------
@@ -206,6 +207,9 @@ class RotationRules(_Model):
     hurdle_pp: float
     protect_score: int
     round_trip_fee: float
+    upside: Literal["ladder", "target"]
+    min_hold_days: int
+    max_per_week: int
 
 
 class LeverageRules(_Model):
@@ -277,6 +281,17 @@ class EuphoriaActions(_Model):
     tiers: list[EuphoriaTier]
     backstop: Backstop
     rebuy: Rebuy
+    pause_entries: bool
+    reset_weeks: int
+
+
+class Rebalance(_Model):
+    weekday: int
+    sell_excess_band: float
+    min_trade_frac: float
+    vault: Literal["two_way", "top_up_only"]
+    vault_band: float
+    vault_tax: Literal["long_term", "short_term"]
 
 
 class BreakerL1(_Model):
@@ -294,6 +309,8 @@ class Breakers(_Model):
     measure: Literal["usd", "btc"]
     level_1: BreakerL1
     level_2: BreakerL2
+    defend_days: int
+    rebase_after_fire: bool
 
 
 class WalkForward(_Model):
@@ -305,7 +322,10 @@ class BacktestRules(_Model):
     fee_per_side: float
     slippage_per_side: float
     signal_at: Literal["close"]
-    fill_at: Literal["next_open", "close"]
+    fill_at: Literal["close"]
+    initial_usd: float
+    delisted_haircut: float
+    delisted_after_days: int
     walk_forward: WalkForward
 
 
@@ -324,6 +344,7 @@ class Rules(_Model):
     regime: RegimeRules
     flags: FlagRules
     euphoria_actions: EuphoriaActions
+    rebalance: Rebalance
     breakers: Breakers
     backtest: BacktestRules
 
