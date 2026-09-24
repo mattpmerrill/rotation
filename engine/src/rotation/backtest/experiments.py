@@ -58,6 +58,8 @@ def metrics(res: Result) -> dict:
         "avg_alt_weight": (e["alts_usd"] / e["value_usd"]).mean(),
         "end_btc": net.iloc[-1],
         "start_btc": net.iloc[0],
+        "sleeve_end_btc": e["sleeve_value_btc"].iloc[-1],
+        "sleeve_max_dd_btc": (1 - e["sleeve_value_btc"] / e["sleeve_value_btc"].cummax()).max(),
     }
 
 

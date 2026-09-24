@@ -215,5 +215,6 @@ def combine_oi(fmap: pd.DataFrame) -> pd.DataFrame:
         if df is not None and len(df):
             parts.append(df.assign(coin_id=coin)[["coin_id", "date", "oi_usd"]])
     out = pd.concat(parts, ignore_index=True)
+    out = out[out["oi_usd"] > 0]  # zero/negative OI rows are archive errors, not data
     cache.write(out, "universe", "open_interest")
     return out

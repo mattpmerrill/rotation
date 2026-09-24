@@ -248,3 +248,10 @@ def test_sleeve_books_conserve_btc_with_zero_costs():
     buy = res.trades[(res.trades.side == "buy") & (res.trades.coin_id == "alt")].iloc[0]
     pnl_btc = buy.qty * (130.0 - 100.0) / 30_000
     assert res.equity.iloc[-1].net_btc == pytest.approx(11.0 + pnl_btc, rel=1e-9)
+
+
+def test_no_sleeve_means_no_alt_buys():
+    from rotation.backtest.experiments import with_rules
+
+    res = _run(feats([100.0] * 3), mkt(3), rules=with_rules(S, portfolio={"sleeve_frac": 0.0}))
+    assert res.trades.empty or not (res.trades.coin_id == "alt").any()

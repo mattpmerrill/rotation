@@ -312,7 +312,7 @@ class Sim:
         # circuit breakers: level 1 freezes entries, level 2 forces Defend for a week;
         # after level 2 the peak re-bases so the breaker re-arms instead of latching
         self.peak = max(self.peak, v)
-        dd = 1 - v / self.peak
+        dd = 1 - v / self.peak if self.peak > 0 else 0.0  # no sleeve -> no breaker
         b = r.breakers
         level = 2 if dd >= b.level_2.drawdown else 1 if dd >= b.level_1.drawdown else 0
         if level >= 1 and self.breaker == 0:
@@ -480,7 +480,7 @@ class Sim:
             # 5% headroom: in sleeve mode, spending also sells BTC to reserve its own tax
             spare = min(self.idle(btc) - w["dry_powder"] * v, 0.95 * self.idle(btc))
             usd = min(r.positions.max_alt_weight * v * size[coin], room, spare)
-            if usd < r.rebalance.min_trade_frac * v:
+            if usd <= 0 or usd < r.rebalance.min_trade_frac * v:
                 continue
             self.buy(coin, row, usd, t, bucket, btc)
 

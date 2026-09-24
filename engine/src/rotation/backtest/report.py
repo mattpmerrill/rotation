@@ -46,7 +46,9 @@ def _style(ax, title: str, ylabel: str) -> None:
     ax.tick_params(colors=INK2, labelsize=9)
 
 
-def _lines(path: Path, title: str, ylabel: str, series, fmt="{:.2f}", log=False) -> None:
+def _lines(
+    path: Path, title: str, ylabel: str, series, fmt="{:.2f}", log=False, legend="upper left"
+) -> None:
     fig, ax = plt.subplots(figsize=(9, 4.6), dpi=150)
     for name, s, color in series:
         ax.plot(s.index, s.values, color=color, linewidth=2, label=name)
@@ -71,7 +73,7 @@ def _lines(path: Path, title: str, ylabel: str, series, fmt="{:.2f}", log=False)
     if log:
         ax.set_yscale("log")
     _style(ax, title, ylabel)
-    ax.legend(frameon=False, fontsize=9, labelcolor=INK, loc="upper left")
+    ax.legend(frameon=False, fontsize=9, labelcolor=INK, loc=legend)
     fig.subplots_adjust(right=0.74)
     fig.savefig(path, bbox_inches="tight")
     plt.close(fig)
@@ -82,6 +84,13 @@ def _table(df: pd.DataFrame, start_btc: float) -> str:
     d[f"{start_btc:g} BTC became"] = (df["btc_multiple"] * start_btc).map(lambda x: f"{x:.2f} BTC")
     d["vs start"] = (df["btc_multiple"] - 1).map(lambda x: f"{x:+.0%}")
     d["USD multiple"] = df["usd_multiple"].map(lambda x: f"{x:.1f}x")
+    if df["sleeve_end_btc"].notna().any():
+        d["Sleeve at end"] = df["sleeve_end_btc"].map(
+            lambda x: "" if pd.isna(x) else f"{x:.2f} BTC"
+        )
+        d["Sleeve worst drop"] = df["sleeve_max_dd_btc"].map(
+            lambda x: "" if pd.isna(x) else f"{x:.0%}"
+        )
     d["Worst drop (BTC)"] = df["max_dd_btc"].map(lambda x: f"{x:.0%}")
     d["Worst drop (USD)"] = df["max_dd_usd"].map(lambda x: f"{x:.0%}")
     d["Alt buys"] = df["alt_entries"]
@@ -163,6 +172,7 @@ def build() -> Path:
         f"Total BTC, starting from {start_btc:g} BTC (2019 to 2026)",
         "BTC (net of tax reserve)",
         series,
+        legend="center right",
     )
 
     core_btc = eq["vault_btc"] + eq["vault_usd"] / eq["btc_close"]
@@ -171,6 +181,7 @@ def build() -> Path:
         "Your plan, split into core and sleeve (in BTC)",
         "BTC",
         [("Core (incl. stables waiting to rebuy)", core_btc, S1), ("Alt sleeve", sleeve, S2)],
+        legend="center left",
     )
 
     dd = []
@@ -191,22 +202,22 @@ def build() -> Path:
         w = btc.loc[t - pd.Timedelta(days=300) : t + pd.Timedelta(days=200)]
         ax.plot(w.index, w.values, color=S1, linewidth=2)
         row = q4.loc[cycle]
-        for key, lab in (
-            ("tier1_date", "3 flags"),
-            ("tier2_date", "5 flags"),
-            ("tier3_date", "exit"),
-        ):
+        marks = (("tier1_date", "3 flags"), ("tier2_date", "5 flags"), ("tier3_date", "exit"))
+        for i, (key, lab) in enumerate(marks):
             d = row[key]
             if d is not None and pd.Timestamp(d) in w.index:
                 ax.axvline(pd.Timestamp(d), color=S2, linewidth=1.2, linestyle="--")
+                left = i % 2 == 0  # alternate sides so tiers days apart don't overprint
                 ax.annotate(
                     lab,
                     (pd.Timestamp(d), w.max()),
+                    xytext=(-2 if left else 2, 0),
+                    textcoords="offset points",
                     fontsize=8,
                     color=INK2,
                     rotation=90,
                     va="top",
-                    ha="right",
+                    ha="right" if left else "left",
                 )
         _style(ax, f"{cycle} top", "BTC (USD)" if cycle == "2017" else "")
         ax.tick_params(axis="x", labelrotation=45)
