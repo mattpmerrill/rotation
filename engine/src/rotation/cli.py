@@ -179,5 +179,13 @@ def load_cmd(
         typer.echo(f"loaded: {loader.load(tables)}")
 
 
+@app.command("cycle-report")
+def cycle_report_cmd(start_btc: float = 11.0, tax: float = 0.15) -> None:
+    """BTC cycle-harvest study: grid, leave-one-cycle-out, forward test, trades."""
+    from rotation.backtest import cycle_study
+
+    typer.echo(f"cycle report: {cycle_study.build(start_btc=start_btc, tax=tax)}")
+
+
 if __name__ == "__main__":
     app()

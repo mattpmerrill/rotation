@@ -16,6 +16,7 @@ Owner: Matt. Architect: Beck. Last updated 2026-09-23.
 | 4 | Repo: `~/Work/rotation`, private on `mattpmerrill` GitHub. | 2026-09-23 |
 | 5 | Custom daily-step simulator instead of vectorbt as the core backtester, so the backtest and the live engine run the *same* rule functions. | 2026-09-23 |
 | 6 | pandas only (no polars). Backtests read Parquet directly; Postgres holds what the dashboard and bot need. | 2026-09-23 |
+| 8 | **Primary strategy: BTC cycle harvest.** Grow the BTC count by selling at least a third of the stack near each cycle top into USDT and redeploying near the bear bottom. Alts optional (sleeve off unless a test shows it adds BTC). Supabase: project `rotation` (ref `xtccrljmxtjmxbosczrd`) in the free 21 Stacks org. Study: `docs/backtests/cycle-harvest.md`. | 2026-09-24 |
 | 7 | **Portfolio design: a BTC core + an alt sleeve.** Example: 11 BTC, 9.9 kept as a core that is never sold to rebalance, 1.1 as the alt sleeve that runs every rule. Success = total BTC grows. Profits route into the core; the sleeve's idle money is held as BTC; sleeve losses are never topped up. The bucket table applies inside the sleeve. Replaces the doc's USD-weighted buckets, which sold BTC into every rally. | 2026-09-24 |
 
 Open: CoinGecko Analyst month (see "Data"). Terms the program doc left undefined have
