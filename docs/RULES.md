@@ -36,6 +36,20 @@ reported in both BTC and USD.
 - Target: the highest high of the last 365 days above the current price; if price is
   already at the high, +100% (the top ladder rung).
 
+## 0. Portfolio design (Matt, 2026-09-24)
+
+- **Core:** 90% of your BTC (e.g. 9.9 of 11). Never sold to rebalance. It grows from routed
+  alt profits, and the cycle-top exit (rule 10) can move part of it to stables and rebuy lower.
+- **Alt sleeve:** 10% (1.1 BTC). Runs every rule below. Its idle money is held as BTC, not
+  dollars. If it loses, it is not topped up from the core: the most you can lose to the alt
+  experiment is the sleeve.
+- **Scorecard:** total BTC, net of the tax reserve.
+
+The bucket table in section 3 applies **inside the sleeve**: Vault and leverage rows drop
+out and the rest is re-scaled to 100% (e.g. Expand: 36% large, 27% mid, 18% small, 18% dry
+powder). Position limits (max 10, 10% each, trim at 15%) are percentages of the sleeve.
+Circuit breakers watch the sleeve's value.
+
 ## 3. Buckets
 
 | | Expand | Accumulate | Euphoria | Defend |
