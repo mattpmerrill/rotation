@@ -10,7 +10,7 @@ import typer
 from dotenv import load_dotenv
 
 from rotation.config import load_config
-from rotation.data import backfill, binance_archive, coinmetrics, http, universe
+from rotation.data import backfill, binance_archive, cache, coinmetrics, http, prices, universe
 
 app = typer.Typer(no_args_is_help=True)
 fetch = typer.Typer(no_args_is_help=True, help="Download market data into the Parquet cache.")
@@ -79,6 +79,31 @@ def ranks_cmd() -> None:
     top = ranked[ranked["rank"] <= 100]
     typer.echo(
         f"ranks: {ranked['date'].nunique()} days, {top['coin_id'].nunique()} coins ever top 100"
+    )
+
+
+@app.command("prices")
+def prices_cmd() -> None:
+    """Build the price panel: CoinMetrics where validated, CoinGecko otherwise."""
+    import pandas as pd
+
+    ranked = cache.read("universe", "ranks")
+    coins = set(ranked["coin_id"]) | {"bitcoin"}
+    cg = backfill.load()
+    cg = cg[cg["coin_id"].isin(coins)]
+    meta = pd.read_parquet(cache.data_dir() / backfill.DATASET / "_coins.parquet")
+    symbols = dict(zip(meta["id"], meta["symbol"], strict=True))
+    with http.client() as c:
+        cm = coinmetrics.fetch_prices(c, coinmetrics.price_assets(c))
+    mapping = prices.match_coinmetrics(cm, cg, {k: symbols[k] for k in coins if k in symbols})
+    panel = prices.build_panel(cg, cm, mapping)
+    cache.write(panel, "universe", "prices")
+    cache.write(
+        pd.DataFrame(sorted(mapping.items()), columns=["asset", "coin_id"]), "universe", "cm_map"
+    )
+    share = (panel["source"] == "coinmetrics").mean()
+    typer.echo(
+        f"prices: {len(mapping)} coins on CoinMetrics, {share:.0%} of rows; {len(panel)} rows"
     )
 
 
