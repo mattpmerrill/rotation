@@ -7,7 +7,11 @@ import pytest
 from rotation.backtest.sim import Options, run
 from rotation.config import load_config
 
-R = load_config().rules
+# The original tests exercise the program doc's USD-bucket books; sleeve tests are below.
+_BASE = load_config().rules
+R = _BASE.model_copy(
+    update={"portfolio": _BASE.portfolio.model_copy(update={"mode": "usd_buckets"})}
+)
 COST = R.backtest.fee_per_side + R.backtest.slippage_per_side
 START = "2021-01-04"  # a Monday
 
@@ -55,9 +59,9 @@ def feats(prices, coin="alt", rank=10, score=5, stop_frac=0.8, size=1.0):
     )
 
 
-def _run(f, m, **opts):
+def _run(f, m, rules=None, **opts):
     end = m.index[-1].strftime("%Y-%m-%d")
-    return run(R, f, m, START, end, Options(**opts))
+    return run(rules or R, f, m, START, end, Options(**opts))
 
 
 def test_starts_with_vault_at_target_and_dry_powder_in_cash():
@@ -158,7 +162,7 @@ def test_top_up_only_vault_is_never_trimmed():
     r = R.model_copy(update={"rebalance": R.rebalance.model_copy(update={"vault": "top_up_only"})})
     n = 14
     m = mkt(n, btc=np.r_[30_000.0, np.full(n - 1, 60_000.0)])
-    res = run(r, feats([100.0] * n, size=0.0), m, START, m.index[-1].strftime("%Y-%m-%d"))
+    res = _run(feats([100.0] * n, size=0.0), m, rules=r)
     assert not (res.trades.reason == "vault_trim").any()
 
 
@@ -178,6 +182,69 @@ def test_score_threshold_variant_changes_entries_without_rebuilding_features():
     m = mkt(3)
     f = feats([100.0] * 3, score=3)
     base = _run(f, m)
-    strict = run(with_rules(R, score={"half_size_at": 4}), f, m, START, "2021-01-06")
+    strict = _run(f, m, rules=with_rules(R, score={"half_size_at": 4}))
     assert (base.trades.coin_id == "alt").any()
     assert not (strict.trades.coin_id == "alt").any()
+
+
+# --- btc_sleeve mode (Matt, 2026-09-24): 90% core, 10% alt sleeve ------------------------
+
+S = _BASE  # config default is btc_sleeve
+
+
+def test_sleeve_starts_90_10_with_no_fee_and_counts_in_btc():
+    res = _run(feats([100.0] * 3, size=0.0), mkt(3), rules=S)
+    e = res.equity.iloc[0]
+    assert S.portfolio.mode == "btc_sleeve"
+    assert e.vault_btc == pytest.approx(9.9) and e.sleeve_btc == pytest.approx(1.1)
+    assert e.net_btc == pytest.approx(11.0)
+
+
+def test_sleeve_entry_is_sized_on_the_sleeve_and_paid_in_btc():
+    res = _run(feats([100.0] * 3), mkt(3), rules=S)
+    buy = res.trades[(res.trades.side == "buy") & (res.trades.coin_id == "alt")].iloc[0]
+    sleeve_usd = 1.1 * 30_000
+    assert buy.usd == pytest.approx(S.positions.max_alt_weight * sleeve_usd, rel=1e-6)
+    e = res.equity.iloc[0]
+    assert e.vault_btc == pytest.approx(9.9)  # the core paid nothing
+    assert e.sleeve_btc < 1.1
+
+
+def test_sleeve_profit_grows_the_core_and_loss_never_touches_it():
+    win = _run(feats([100.0, 100.0, 130.0]), mkt(3), rules=S)  # rung 1 on day 3
+    assert win.equity.iloc[-1].vault_btc > 9.9
+    loss = _run(feats([100.0, 100.0, 70.0]), mkt(3), rules=S)  # stopped out
+    assert loss.equity.iloc[-1].vault_btc == pytest.approx(9.9)
+    assert loss.equity.iloc[-1].net_btc < 11.0
+
+
+def test_sleeve_core_is_never_trimmed_when_btc_rallies():
+    n = 14
+    m = mkt(n, btc=np.r_[30_000.0, np.full(n - 1, 60_000.0)])
+    res = _run(feats([100.0] * n, size=0.0), m, rules=S)
+    assert res.trades.empty  # nothing is sold or bought: the core just holds
+    assert res.equity.iloc[-1].net_btc == pytest.approx(11.0)
+
+
+def test_sleeve_weights_renormalise_without_vault_and_leverage():
+    from rotation.backtest.sim import Sim
+
+    sim = Sim(S, feats([100.0], size=0.0), mkt(1), Options())
+    w = sim.weights("expand")  # 20/15/10 alts + 10 dry of 55
+    assert w["large"] == pytest.approx(20 / 55) and w["dry_powder"] == pytest.approx(10 / 55)
+    assert sum(w.values()) == pytest.approx(1.0)
+
+
+def test_sleeve_books_conserve_btc_with_zero_costs():
+    """No fees, no tax, flat BTC: total BTC moves by exactly the alt P&L."""
+    from rotation.backtest.experiments import with_rules
+
+    free = with_rules(
+        S,
+        backtest={"fee_per_side": 0.0, "slippage_per_side": 0.0},
+        routing={"tax_reserve_rate": 0.0, "long_term_rate": 0.0},
+    )
+    res = _run(feats([100.0, 100.0, 130.0, 130.0]), mkt(4), rules=free)
+    buy = res.trades[(res.trades.side == "buy") & (res.trades.coin_id == "alt")].iloc[0]
+    pnl_btc = buy.qty * (130.0 - 100.0) / 30_000
+    assert res.equity.iloc[-1].net_btc == pytest.approx(11.0 + pnl_btc, rel=1e-9)

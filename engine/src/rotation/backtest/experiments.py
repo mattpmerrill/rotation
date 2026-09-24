@@ -56,6 +56,8 @@ def metrics(res: Result) -> dict:
         "alt_entries": int((alt["side"] == "buy").sum()) if len(alt) else 0,
         "fees_btc_equiv": cost_btc,
         "avg_alt_weight": (e["alts_usd"] / e["value_usd"]).mean(),
+        "end_btc": net.iloc[-1],
+        "start_btc": net.iloc[0],
     }
 
 
@@ -133,18 +135,42 @@ def q5_score_threshold(r, feats, mkt):
     )
 
 
-def vault_policy(r, feats, mkt):
-    return compare(
-        [
-            Variant("Two-way Vault", with_rules(r, rebalance={"vault": "two_way"}), Options()),
-            Variant(
-                "Top-up-only Vault", with_rules(r, rebalance={"vault": "top_up_only"}), Options()
-            ),
-        ],
-        feats,
-        mkt,
-        *FULL,
-    )
+def no_core_sales(r: Rules) -> Rules:
+    """The same rules with the cycle-top exit switched off for the core (alts still sold)."""
+    tiers = [t.model_copy(update={"vault_to_stables": 0.0}) for t in r.euphoria_actions.tiers]
+    return with_rules(r, euphoria_actions={"tiers": tiers})
+
+
+def designs(r: Rules) -> list[Variant]:
+    """Whole-portfolio designs, all starting from the same BTC."""
+    usd = {"mode": "usd_buckets"}
+    return [
+        Variant("Your plan: BTC core + 10% alt sleeve", r, Options()),
+        Variant(
+            "Core only, with the cycle-top exit (no alts)",
+            with_rules(r, portfolio={"sleeve_frac": 0.0}),
+            Options(),
+        ),
+        Variant(
+            "Just hold the BTC",
+            with_rules(no_core_sales(r), portfolio={"sleeve_frac": 0.0}),
+            Options(),
+        ),
+        Variant(
+            "Program doc as written: USD buckets, two-way",
+            with_rules(r, portfolio=usd, rebalance={"vault": "two_way"}),
+            Options(),
+        ),
+        Variant(
+            "Program doc: USD buckets, Vault top-up only",
+            with_rules(r, portfolio=usd, rebalance={"vault": "top_up_only"}),
+            Options(),
+        ),
+    ]
+
+
+def portfolio_designs(r, feats, mkt, start: str = FULL[0], end: str = FULL[1]):
+    return compare(designs(r), feats, mkt, start, end)
 
 
 def q4_top_exits(signals: pd.DataFrame, flags_df: pd.DataFrame) -> pd.DataFrame:

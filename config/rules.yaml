@@ -160,6 +160,15 @@ euphoria_actions:
   pause_entries: true                 # DEFAULT: no new alt buys after a euphoria sale...
   reset_weeks: 8                      # DEFAULT: ...until 8 straight weeks below 3 flags
 
+portfolio:                            # Matt, 2026-09-24: BTC core + alt sleeve
+  mode: btc_sleeve                    # btc_sleeve: a BTC core that is never sold to rebalance, plus
+                                      #   an alt sleeve that runs all the rules; idle sleeve money is
+                                      #   held as BTC; bucket weights apply inside the sleeve.
+                                      # usd_buckets: the program doc's table as USD weights of the whole
+                                      #   portfolio (see the Phase 0 report for why that loses BTC).
+  initial_btc: 11
+  sleeve_frac: 0.10                   # 1.1 of 11 BTC. Losses are never topped up from the core.
+
 rebalance:                            # DEFAULT: how bucket targets are enforced
   weekday: 6                          # weekly, on the Sunday close
   sell_excess_band: 0.05              # bucket > target + 5% of portfolio -> sell lowest scores first

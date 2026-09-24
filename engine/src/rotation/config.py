@@ -285,6 +285,12 @@ class EuphoriaActions(_Model):
     reset_weeks: int
 
 
+class Portfolio(_Model):
+    mode: Literal["btc_sleeve", "usd_buckets"]
+    initial_btc: float
+    sleeve_frac: float
+
+
 class Rebalance(_Model):
     weekday: int
     sell_excess_band: float
@@ -344,6 +350,7 @@ class Rules(_Model):
     regime: RegimeRules
     flags: FlagRules
     euphoria_actions: EuphoriaActions
+    portfolio: Portfolio
     rebalance: Rebalance
     breakers: Breakers
     backtest: BacktestRules

@@ -4,12 +4,18 @@ Every decision is made on day t's close using only data up to t, and filled at t
 close with fees + slippage (crypto trades 24/7, so the next open is this close).
 All rule logic comes from rotation.rules; this file only keeps the books.
 
-Books, all in USD except the vault:
-  cash          dry powder + recycled profits (what new entries are paid from)
-  reserve       tax reserve (earmarked cash, counted in the portfolio value)
-  vault_btc     BTC held in the Vault (quantity)
-  vault_usd     Vault BTC moved to stables by euphoria actions, waiting for the rebuy
+Books:
+  vault_btc     the Vault / BTC core (quantity)
+  vault_usd     core BTC moved to stables by euphoria actions, waiting for the rebuy
+  reserve       tax reserve in USD (counted in value, excluded from the net-BTC headline)
   holdings      open alt positions
+  idle money    usd_buckets mode: `cash` in USD. btc_sleeve mode: `sleeve_btc`, the
+                sleeve's uninvested money held as BTC. Every spend/receive goes through
+                spend() / receive(), which is the only place the two modes differ on money.
+
+In btc_sleeve mode the bucket weights (minus Vault and leverage) are re-normalised and
+applied to the sleeve's value, the core is never sold to rebalance, and breakers watch
+the sleeve. In usd_buckets mode the table applies to the whole portfolio in USD.
 """
 
 from __future__ import annotations
@@ -79,7 +85,10 @@ class Sim:
         self.cost = r.backtest.fee_per_side + r.backtest.slippage_per_side
         self.days = {d: g.set_index("coin_id") for d, g in feats.groupby("date")}
         self.mkt = mkt
-        self.cash = r.backtest.initial_usd
+        self.sleeve = r.portfolio.mode == "btc_sleeve"
+        self.cash = 0.0 if self.sleeve else r.backtest.initial_usd
+        self.sleeve_btc = 0.0
+        self.sleeve_cost = 0.0
         self.reserve = 0.0
         self.vault_btc = 0.0
         self.vault_cost = 0.0
@@ -100,9 +109,66 @@ class Sim:
 
     # --- books ------------------------------------------------------------------
 
+    def alts_value(self) -> float:
+        return sum(h.pos.qty * h.last_px for h in self.holdings.values())
+
     def value(self, btc: float) -> float:
-        alts = sum(h.pos.qty * h.last_px for h in self.holdings.values())
-        return self.cash + self.reserve + self.vault_usd + self.vault_btc * btc + alts
+        return (
+            self.cash
+            + self.reserve
+            + self.vault_usd
+            + self.vault_btc * btc
+            + self.sleeve_btc * btc
+            + self.alts_value()
+        )
+
+    def book(self, btc: float) -> float:
+        """The value position sizes, buckets and breakers are measured against."""
+        if self.sleeve:
+            return self.sleeve_btc * btc + self.alts_value()
+        return self.value(btc)
+
+    def idle(self, btc: float) -> float:
+        """USD value of the money available for new entries."""
+        return self.sleeve_btc * btc if self.sleeve else self.cash
+
+    def weights(self, regime: str) -> dict[str, float]:
+        """Bucket targets as fractions of the book. Sleeve mode drops Vault and leverage
+        and re-normalises the rest (e.g. Expand: 20/15/10 alts + 10 dry -> 36/27/18/18%)."""
+        w = self.r.buckets.for_regime(regime)
+        keys = ("large", "mid", "small", "dry_powder")
+        if not self.sleeve:
+            return {k: getattr(w, k) for k in (*keys, "vault_btc")}
+        total = sum(getattr(w, k) for k in keys)
+        if total <= 0:
+            return {"large": 0.0, "mid": 0.0, "small": 0.0, "dry_powder": 1.0}
+        return {k: getattr(w, k) / total for k in keys}
+
+    def spend(self, usd: float, t, btc: float) -> None:
+        """Pay for an alt entry. Sleeve mode sells sleeve BTC (one more fee leg, and the
+        BTC's own gain reserves long-term tax)."""
+        if not self.sleeve:
+            self.cash -= usd
+            return
+        qty = min(usd / (btc * (1 - self.cost)), self.sleeve_btc)
+        basis = self.sleeve_cost * qty / self.sleeve_btc if self.sleeve_btc else 0.0
+        gain = qty * btc * (1 - self.cost) - basis
+        tax = self.r.routing.long_term_rate * gain
+        if tax > 0:
+            self.reserve += tax
+            qty = min(qty + tax / (btc * (1 - self.cost)), self.sleeve_btc)
+        self.sleeve_btc -= qty
+        self.sleeve_cost -= basis
+
+    def receive(self, usd: float, t, btc: float) -> None:
+        """Money back into idle funds. Sleeve mode buys BTC into the sleeve."""
+        if usd <= 0:
+            return
+        if not self.sleeve:
+            self.cash += usd
+            return
+        self.sleeve_btc += usd * (1 - self.cost) / btc
+        self.sleeve_cost += usd
 
     def bucket_value(self, bucket: str) -> float:
         return sum(h.pos.qty * h.last_px for h in self.holdings.values() if h.bucket == bucket)
@@ -172,11 +238,11 @@ class Sim:
         if gain > 0:
             self.reserve += routed.tax_reserve
             self.buy_btc(routed.vault_btc, t, btc, "profit_routing")
-            self.cash += basis + routed.dry_powder + routed.recycle
+            self.receive(basis + routed.dry_powder + routed.recycle, t, btc)
         else:
             release = min(self.reserve, -routed.tax_reserve)  # losses release reserve
             self.reserve -= release
-            self.cash += proceeds + release
+            self.receive(proceeds + release, t, btc)
         self.trades.append(
             {
                 "date": t,
@@ -198,10 +264,10 @@ class Sim:
             h.cost -= basis
             h.pos = replace(h.pos, qty=remaining)
 
-    def buy(self, coin: str, row: pd.Series, usd: float, t, bucket: str) -> None:
+    def buy(self, coin: str, row: pd.Series, usd: float, t, bucket: str, btc: float) -> None:
         px = row["close"]
         qty = usd * (1 - self.cost) / px
-        self.cash -= usd
+        self.spend(usd, t, btc)
         pos = open_position(coin, t.date(), px, qty, row["stop"])
         self.holdings[coin] = Holding(pos, usd, bucket, px, t)
         self.trades.append(
@@ -239,10 +305,9 @@ class Sim:
                     "delisted",
                 )
 
-        v = self.value(btc)
-        if not self.vault_btc and not self.holdings and not self.rows:  # first day
-            self.rebalance_vault(t, btc, v, self.regime(t, m), force=True)
-            v = self.value(btc)
+        if not self.rows:  # first day
+            self.start(t, btc, self.regime(t, m))
+        v = self.book(btc)
 
         # circuit breakers: level 1 freezes entries, level 2 forces Defend for a week;
         # after level 2 the peak re-bases so the breaker re-arms instead of latching
@@ -287,7 +352,7 @@ class Sim:
         self.euphoria(t, m, btc)
         self.rebuy(t, m, btc)
 
-        v = self.value(btc)
+        v = self.book(btc)
         for coin in list(self.holdings):  # trim at 15% back to 10%
             h = self.holdings[coin]
             usd = trim_value(h.pos.qty * h.last_px, v, r.positions)
@@ -341,7 +406,20 @@ class Sim:
 
     # --- rebalance + entries ------------------------------------------------------------
 
+    def start(self, t, btc: float, regime: str) -> None:
+        if self.sleeve:
+            # Matt already holds the BTC: no purchase fee on day one
+            total = self.r.portfolio.initial_btc
+            self.vault_btc = total * (1 - self.r.portfolio.sleeve_frac)
+            self.sleeve_btc = total * self.r.portfolio.sleeve_frac
+            self.vault_cost = self.vault_btc * btc
+            self.sleeve_cost = self.sleeve_btc * btc
+        else:
+            self.rebalance_vault(t, btc, self.value(btc), regime, force=True)
+
     def rebalance_vault(self, t, btc, v, regime, force=False) -> None:
+        if self.sleeve:
+            return  # the core is never sold or topped up to rebalance
         rb = self.r.rebalance
         w = self.r.buckets.for_regime(regime)
         gap = w.vault_btc * v - self.vault_btc * btc
@@ -356,10 +434,10 @@ class Sim:
 
     def rebalance(self, t, btc, regime, day) -> None:
         r = self.r
-        v = self.value(btc)
-        w = r.buckets.for_regime(regime)
+        v = self.book(btc)
+        w = self.weights(regime)
         for bucket in ALT_BUCKETS:
-            limit = (getattr(w, bucket) + r.rebalance.sell_excess_band) * v
+            limit = (w[bucket] + r.rebalance.sell_excess_band) * v
             held = sorted(
                 (c for c, h in self.holdings.items() if h.bucket == bucket),
                 key=lambda c: day.at[c, "score"] if day is not None and c in day.index else -1,
@@ -388,22 +466,23 @@ class Sim:
         if cands.empty:
             return
         cands = cands.sort_values(["score", "reward_risk"], ascending=False)
-        w = r.buckets.for_regime(regime)
+        w = self.weights(regime)
         for coin, row in cands.iterrows():
-            v = self.value(btc)
+            v = self.book(btc)
             bucket = bucket_for(row["rank"], r)
             if bucket is None:
                 continue
             if len(self.holdings) >= r.positions.max_positions:
                 if not self.try_rotate(t, btc, day, coin, row):
                     continue
-                v = self.value(btc)
-            room = getattr(w, bucket) * v - self.bucket_value(bucket)
-            spare = self.cash - w.dry_powder * v
+                v = self.book(btc)
+            room = w[bucket] * v - self.bucket_value(bucket)
+            # 5% headroom: in sleeve mode, spending also sells BTC to reserve its own tax
+            spare = min(self.idle(btc) - w["dry_powder"] * v, 0.95 * self.idle(btc))
             usd = min(r.positions.max_alt_weight * v * size[coin], room, spare)
             if usd < r.rebalance.min_trade_frac * v:
                 continue
-            self.buy(coin, row, usd, t, bucket)
+            self.buy(coin, row, usd, t, bucket, btc)
 
     def entry_size(self, day: pd.DataFrame) -> pd.Series:
         """Full / half / pass from score and reward:risk, using THIS run's rules (so score
@@ -455,7 +534,7 @@ class Sim:
 
     def record(self, t, btc, regime, m) -> None:
         v = self.value(btc)
-        alts = sum(h.pos.qty * h.last_px for h in self.holdings.values())
+        alts = self.alts_value()
         self.rows.append(
             {
                 "date": t,
@@ -467,6 +546,8 @@ class Sim:
                 "reserve": self.reserve,
                 "vault_btc": self.vault_btc,
                 "vault_usd": self.vault_usd,
+                "sleeve_btc": self.sleeve_btc,
+                "sleeve_value_btc": self.book(btc) / btc if self.sleeve else float("nan"),
                 "alts_usd": alts,
                 "positions": len(self.holdings),
                 "regime": regime,
