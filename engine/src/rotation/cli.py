@@ -160,5 +160,24 @@ def report_cmd() -> None:
     typer.echo(f"report: {report.build()}")
 
 
+@app.command("load")
+def load_cmd(
+    since: Annotated[str, typer.Option(help="First date of alt prices to load")] = "",
+    dry_run: bool = False,
+) -> None:
+    """Upsert the cache into Supabase (SUPABASE_DB_URL). Backtests don't need this."""
+    import pandas as pd
+
+    from rotation.config import get_config
+    from rotation.data import loader
+
+    since = since or str((pd.Timestamp.now() - pd.Timedelta(days=400)).date())
+    tables = loader.prepare(get_config(), since)
+    for name, df in tables.items():
+        typer.echo(f"{name}: {len(df)} rows")
+    if not dry_run:
+        typer.echo(f"loaded: {loader.load(tables)}")
+
+
 if __name__ == "__main__":
     app()
