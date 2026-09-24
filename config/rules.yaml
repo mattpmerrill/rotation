@@ -197,3 +197,23 @@ backtest:
   delisted_haircut: 0.30              # DEFAULT: coin data ends -> exit at last price minus 30%
   delisted_after_days: 7
   walk_forward: { train_days: 730, test_days: 180 }
+
+cycle:                                # BTC cycle harvest (Matt, 2026-09-24): the primary strategy
+  account:                            # Matt: BTC held in an IRA -> sales are tax-free, 1% fee per trade
+    fee_per_trade: 0.01
+    tax_rate: 0.0
+  halvings: [2012-11-28, 2016-07-09, 2020-05-11, 2024-04-19]   # add the next one when it happens
+  sell:
+    target_frac: 0.3333               # at least a third of the stack into USDT near the top
+    window_start_days: 500            # chosen on 2012-2020 (see docs/backtests/cycle-harvest.md)
+    window_end_days: 580              # leave-one-cycle-out pick with IRA terms (0% tax, 1% fee)
+    clock_share: 1.0                  # share of the target sold on the clock (rest: trend break)
+    clock_tranches: 4
+    trend_weekly_sma: 20
+  buy:
+    start_days_since_ath: 360
+    start_drawdown: 0.80
+    start_mvrv_below: 1.0
+    tranches: 4
+    spacing_days: 30
+    deadline_days_since_ath: 540

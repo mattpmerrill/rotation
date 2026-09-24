@@ -25,23 +25,28 @@ from rotation.rules.indicators import sma, weekly_close
 
 @dataclass(frozen=True)
 class SellRules:
-    target_frac: float = 1 / 3  # share of the stack to hold as USDT at the top
-    window_start_days: int = 450  # after the halving
-    window_end_days: int = 640
-    clock_share: float = 0.5  # share of the target sold on the clock; the rest on the trend break
-    clock_tranches: int = 4
-    trend_weekly_sma: int = 20  # sell the remaining target on a weekly close below this
+    target_frac: float  # share of the stack to hold as USDT at the top
+    window_start_days: int  # after the halving
+    window_end_days: int
+    clock_share: float  # share of the target sold on the clock; the rest on the trend break
+    clock_tranches: int
+    trend_weekly_sma: int  # sell the remaining target on a weekly close below this...
     trend_needs_new_ath: bool = True  # ...but only after a new ATH inside the window
 
 
 @dataclass(frozen=True)
 class BuyRules:
-    start_days_since_ath: int = 300  # begin deploying this long after the last ATH...
-    start_drawdown: float = 0.70  # ...or once BTC is this far below its ATH...
-    start_mvrv_below: float = 1.0  # ...or MVRV drops below this
-    tranches: int = 4
-    spacing_days: int = 30
-    deadline_days_since_ath: int = 540  # deploy whatever is left by then: never sit out a bull
+    start_days_since_ath: int  # begin deploying this long after the last ATH...
+    start_drawdown: float  # ...or once BTC is this far below its ATH...
+    start_mvrv_below: float  # ...or MVRV drops below this
+    tranches: int
+    spacing_days: int
+    deadline_days_since_ath: int  # deploy whatever is left by then: never sit out a bull
+
+
+def rules_from_config(c) -> tuple[SellRules, BuyRules]:
+    """c: config.Cycle (the `cycle:` section of rules.yaml)."""
+    return SellRules(**c.sell.model_dump()), BuyRules(**c.buy.model_dump())
 
 
 def cycle_features(

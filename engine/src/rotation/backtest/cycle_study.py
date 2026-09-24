@@ -9,6 +9,7 @@ Honesty rules:
 from __future__ import annotations
 
 import itertools
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -20,11 +21,11 @@ import numpy as np
 import pandas as pd
 
 from rotation.backtest.cycle_sim import run_cycle
-from rotation.config import REPO_ROOT
+from rotation.config import REPO_ROOT, get_config
 from rotation.data import cache
-from rotation.rules.cycle import BuyRules, SellRules, cycle_features
+from rotation.rules.cycle import cycle_features, rules_from_config
 
-HALVINGS = [pd.Timestamp(d) for d in ("2012-11-28", "2016-07-09", "2020-05-11", "2024-04-19")]
+HALVINGS = [pd.Timestamp(d) for d in get_config().rules.cycle.halvings]
 COMPLETE = [h.date() for h in HALVINGS[:3]]
 OUT = REPO_ROOT / "docs" / "backtests"
 
@@ -41,17 +42,21 @@ def load_features() -> pd.DataFrame:
     px = cache.read("universe", "prices")
     btc = px[px["coin_id"] == "bitcoin"].set_index("date")["price_usd"].sort_index()
     mvrv = cache.read("coinmetrics", "btc").set_index("date")["mvrv"]
-    return cycle_features(btc, mvrv, HALVINGS)
+    return cycle_features(btc, mvrv, HALVINGS, get_config().rules.cycle.sell.trend_weekly_sma)
 
 
-def rules_for(params: dict, target: float) -> tuple[SellRules, BuyRules]:
-    sell = SellRules(
+def rules_for(params: dict, target: float):
+    """Config rules with the grid's parameters and target swapped in."""
+    sell, buy = rules_from_config(get_config().rules.cycle)
+    sell = replace(
+        sell,
         target_frac=target,
         window_start_days=params["window_start_days"],
         window_end_days=params["window_end_days"],
         clock_share=params["clock_share"],
     )
-    buy = BuyRules(
+    buy = replace(
+        buy,
         start_days_since_ath=params["start_days_since_ath"],
         start_drawdown=params["start_drawdown"],
     )
@@ -89,7 +94,10 @@ def leave_one_out(g: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(out).set_index("held_out_cycle")
 
 
-def build(start_btc: float = 11.0, tax: float = 0.15, fee: float = 0.002) -> Path:
+def build(start_btc: float = 11.0, tax: float | None = None, fee: float | None = None) -> Path:
+    acct = get_config().rules.cycle.account
+    tax = acct.tax_rate if tax is None else tax
+    fee = acct.fee_per_trade if fee is None else fee
     f = load_features()
     img = OUT / "img"
     img.mkdir(parents=True, exist_ok=True)
@@ -105,7 +113,8 @@ def build(start_btc: float = 11.0, tax: float = 0.15, fee: float = 0.002) -> Pat
     chosen = loo3.loc[str(HALVINGS[3].date()), list(GRID)].to_dict()
     sell, buy = rules_for(chosen, 1 / 3)
     run = run_cycle(f, sell, buy, start_btc=start_btc, fee=fee, tax_rate=tax)
-    run0 = run_cycle(f, sell, buy, start_btc=start_btc, fee=fee, tax_rate=0.0)
+    alt_tax = 0.15 if tax == 0 else 0.0
+    run0 = run_cycle(f, sell, buy, start_btc=start_btc, fee=fee, tax_rate=alt_tax)
     run_half = run_cycle(
         f,
         *rules_for(loo2.loc[str(HALVINGS[3].date()), list(GRID)].to_dict(), 1 / 2),
@@ -216,7 +225,7 @@ Tax {tax:.0%}:
 
 {pc_md(run)}
 
-Tax 0%:
+Tax {alt_tax:.0%} (for comparison):
 
 {pc_md(run0)}
 

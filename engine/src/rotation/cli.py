@@ -180,11 +180,11 @@ def load_cmd(
 
 
 @app.command("cycle-report")
-def cycle_report_cmd(start_btc: float = 11.0, tax: float = 0.15) -> None:
-    """BTC cycle-harvest study: grid, leave-one-cycle-out, forward test, trades."""
+def cycle_report_cmd(start_btc: float = 11.0) -> None:
+    """BTC cycle-harvest study (fee and tax from config/rules.yaml `cycle.account`)."""
     from rotation.backtest import cycle_study
 
-    typer.echo(f"cycle report: {cycle_study.build(start_btc=start_btc, tax=tax)}")
+    typer.echo(f"cycle report: {cycle_study.build(start_btc=start_btc)}")
 
 
 if __name__ == "__main__":

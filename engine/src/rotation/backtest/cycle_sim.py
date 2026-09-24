@@ -41,8 +41,8 @@ def run_cycle(
     sell: SellRules,
     buy: BuyRules,
     start_btc: float = 11.0,
-    fee: float = 0.002,
-    tax_rate: float = 0.15,
+    fee: float = 0.01,
+    tax_rate: float = 0.0,
     start: str | None = None,
 ) -> CycleResult:
     f = feats.loc[start:] if start else feats
@@ -110,7 +110,10 @@ def run_cycle(
             for i, day in enumerate(clock_tranche_days(sell)):
                 if dsh >= day and i not in s.clock_done:
                     s.clock_done.add(i)
-                    do_sell(t, px, per_tranche, f"clock_{i + 1}")
+                    # never past the target: a trend break may already have sold the rest
+                    do_sell(
+                        t, px, min(per_tranche, max(target - s.sold_btc, 0.0)), f"clock_{i + 1}"
+                    )
             if row["days_since_ath"] == 0:
                 s.armed_ath = True
             armed = s.armed_ath or not sell.trend_needs_new_ath

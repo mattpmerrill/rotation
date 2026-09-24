@@ -8,6 +8,7 @@ result can be traced to the exact rules that produced it.
 from __future__ import annotations
 
 import hashlib
+from datetime import date
 from functools import cache
 from pathlib import Path
 from typing import Literal
@@ -335,6 +336,36 @@ class BacktestRules(_Model):
     walk_forward: WalkForward
 
 
+class CycleAccount(_Model):
+    fee_per_trade: float
+    tax_rate: float
+
+
+class CycleSell(_Model):
+    target_frac: float
+    window_start_days: int
+    window_end_days: int
+    clock_share: float
+    clock_tranches: int
+    trend_weekly_sma: int
+
+
+class CycleBuy(_Model):
+    start_days_since_ath: int
+    start_drawdown: float
+    start_mvrv_below: float
+    tranches: int
+    spacing_days: int
+    deadline_days_since_ath: int
+
+
+class Cycle(_Model):
+    account: CycleAccount
+    halvings: list[date]
+    sell: CycleSell
+    buy: CycleBuy
+
+
 class Rules(_Model):
     version: int
     universe: UniverseRules
@@ -353,6 +384,7 @@ class Rules(_Model):
     portfolio: Portfolio
     rebalance: Rebalance
     breakers: Breakers
+    cycle: Cycle
     backtest: BacktestRules
 
 
