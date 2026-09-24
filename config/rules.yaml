@@ -38,6 +38,8 @@ score:
   crowding:
     max_funding_8h: 0.0001            # 0.01%/8h
     max_oi_change_7d: 0.30
+    no_perp_market: pass              # DEFAULT: no perps listed = no leveraged crowd. pass | fail
+                                      # (funding but no OI history -> judged on funding alone)
   flow:
     fast_days: 7                      # DEFAULT: "volume rising" = 7D avg volume > 30D avg volume
     slow_days: 30
@@ -81,6 +83,8 @@ ladder:                               # gains measured in USD from average entry
 
 routing:
   tax_reserve_rate: 0.30              # of net short-term realized gain, taken first
+  long_term_rate: 0.15                # DEFAULT: gains on positions held >= 365 days
+  long_term_days: 365
   vault_btc: 0.50
   dry_powder: 0.25
   recycle: 0.25
@@ -101,6 +105,7 @@ leverage:
   max_multiple: 3
   margin_mode: isolated
   risk_per_trade: 0.01                # of total portfolio
+  maintenance_margin: 0.005           # DEFAULT: exchange MMR, for the liquidation price
   min_liq_to_stop_ratio: 2.0
   max_open: 2
   assets: [BTC, ETH, SOL]

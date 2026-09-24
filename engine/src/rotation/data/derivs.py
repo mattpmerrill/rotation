@@ -177,8 +177,8 @@ def oi_days_needed(fmap: pd.DataFrame, ranks: pd.DataFrame, lookback: int = 7) -
     out: dict[str, list] = {}
     for coin, g in t.groupby("coin_id"):
         days = pd.DatetimeIndex(g["date"])
-        allday = days.union_many([days - pd.Timedelta(days=k) for k in range(1, lookback + 1)])
-        out[coin_to_symbol[coin]] = sorted(allday)
+        shifted = [days - pd.Timedelta(days=k) for k in range(lookback + 1)]
+        out[coin_to_symbol[coin]] = sorted(set().union(*shifted))
     return out
 
 

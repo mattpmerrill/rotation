@@ -45,3 +45,21 @@ def test_overlap_gives_up_without_enough_shared_days():
         "2024-01": pd.DataFrame({"date": pd.date_range("2024-01-01", periods=31), "close": 1.0})
     }
     assert _overlap(["2024-01"], months.get, panel, from_end=True) is None
+
+
+def test_oi_days_needed_adds_lookback_and_skips_unranked_days():
+    from rotation.data.derivs import oi_days_needed
+
+    fmap = pd.DataFrame({"coin_id": ["sol"], "symbol": ["SOLUSDT"]})
+    ranks = pd.DataFrame(
+        {
+            "coin_id": ["sol", "sol", "other"],
+            "date": pd.to_datetime(["2021-01-10", "2021-01-11", "2021-01-10"]),
+            "rank": [5, 150, 3],
+        }
+    )
+    days = oi_days_needed(fmap, ranks, lookback=7)
+    assert list(days) == ["SOLUSDT"]
+    assert days["SOLUSDT"][0] == pd.Timestamp("2021-01-03")
+    assert days["SOLUSDT"][-1] == pd.Timestamp("2021-01-10")  # the rank-150 day is not needed
+    assert len(days["SOLUSDT"]) == 8

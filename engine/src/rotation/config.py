@@ -70,6 +70,7 @@ class Location(_Model):
 class Crowding(_Model):
     max_funding_8h: float
     max_oi_change_7d: float
+    no_perp_market: Literal["pass", "fail"]
 
 
 class Flow(_Model):
@@ -181,6 +182,8 @@ class Ladder(_Model):
 
 class Routing(_Model):
     tax_reserve_rate: float
+    long_term_rate: float
+    long_term_days: int
     vault_btc: float
     dry_powder: float
     recycle: float
@@ -211,6 +214,7 @@ class LeverageRules(_Model):
     max_multiple: float
     margin_mode: Literal["isolated", "cross"]
     risk_per_trade: float
+    maintenance_margin: float
     min_liq_to_stop_ratio: float
     max_open: int
     assets: list[str]
