@@ -10,7 +10,16 @@ import typer
 from dotenv import load_dotenv
 
 from rotation.config import load_config
-from rotation.data import backfill, binance_archive, cache, coinmetrics, http, prices, universe
+from rotation.data import (
+    backfill,
+    binance_archive,
+    cache,
+    coinmetrics,
+    derivs,
+    http,
+    prices,
+    universe,
+)
 
 app = typer.Typer(no_args_is_help=True)
 fetch = typer.Typer(no_args_is_help=True, help="Download market data into the Parquet cache.")
@@ -105,6 +114,34 @@ def prices_cmd() -> None:
     typer.echo(
         f"prices: {len(mapping)} coins on CoinMetrics, {share:.0%} of rows; {len(panel)} rows"
     )
+
+
+@app.command("derivs")
+def derivs_cmd() -> None:
+    """Map Binance perps to coins (price-validated), then fetch funding for all of them."""
+    import pandas as pd
+
+    logging.basicConfig(level=logging.WARNING)
+    panel = cache.read("universe", "prices")
+    meta = pd.read_parquet(cache.data_dir() / backfill.DATASET / "_coins.parquet")
+    coins = set(panel["coin_id"])
+    symbols = {k: v for k, v in zip(meta["id"], meta["symbol"], strict=True) if k in coins}
+    fmap = derivs.build_map(panel, symbols)
+    typer.echo(f"futures map: {len(fmap)} symbols -> {fmap['coin_id'].nunique()} coins")
+    funding = derivs.fetch_funding_all(fmap)
+    typer.echo(f"funding: {funding['coin_id'].nunique()} coins, {len(funding)} coin-days")
+
+
+@app.command("oi")
+def oi_cmd(workers: int = 16) -> None:
+    """Daily open interest for mapped perps on top-100 days (resumable, ~170k files)."""
+    logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(message)s")
+    fmap = cache.read("universe", "futures_map")
+    needed = derivs.oi_days_needed(fmap, cache.read("universe", "ranks"))
+    typer.echo(f"oi: {len(needed)} symbols, {sum(map(len, needed.values()))} days")
+    derivs.fetch_oi(needed, workers=workers)
+    oi = derivs.combine_oi(fmap)
+    typer.echo(f"oi done: {oi['coin_id'].nunique()} coins, {len(oi)} coin-days")
 
 
 if __name__ == "__main__":
