@@ -187,5 +187,42 @@ def cycle_report_cmd(start_btc: float = 11.0) -> None:
     typer.echo(f"cycle report: {cycle_study.build(start_btc=start_btc)}")
 
 
+@app.command("signal")
+def signal_cmd(
+    btc: Annotated[float, typer.Option(help="BTC held now")],
+    usdt: Annotated[float, typer.Option(help="USDT held now")] = 0.0,
+    sold: Annotated[float, typer.Option(help="BTC already sold this cycle")] = 0.0,
+    tranches_bought: Annotated[int, typer.Option(help="Buy tranches already done")] = 0,
+    day: Annotated[str, typer.Option(help="YYYY-MM-DD; default = latest data")] = "",
+    post: Annotated[bool, typer.Option(help="Post to DISCORD_WEBHOOK_URL")] = False,
+    only_if_action: Annotated[
+        bool, typer.Option(help="Post only when there is an action (or on Sundays)")
+    ] = False,
+) -> None:
+    """Today's BTC cycle-harvest signal: phase, any action due, and what is coming next."""
+    import os
+
+    import pandas as pd
+
+    from rotation import signal as sg
+    from rotation.config import get_config
+
+    c = get_config().rules.cycle
+    f = sg.live_features(c)
+    d = pd.Timestamp(day).date() if day else f.index[-1].date()
+    sig = sg.compute(f, c, d, btc, usdt, sold, tranches_bought)
+    text = sg.render(sig, btc, usdt)
+    typer.echo(text)
+    if post:
+        if only_if_action and not sig.actions and d.weekday() != 6:
+            typer.echo("(no action and not Sunday: not posted)")
+            return
+        url = os.environ.get("DISCORD_WEBHOOK_URL")
+        if not url:
+            raise typer.BadParameter("DISCORD_WEBHOOK_URL is not set")
+        sg.post_discord(text, url)
+        typer.echo("(posted to Discord)")
+
+
 if __name__ == "__main__":
     app()
