@@ -123,3 +123,26 @@ Measured from the portfolio's peak value in USD **[default: USD]**.
 
 Signals on the daily close, fills at the next day's open. 0.3% fee plus 0.1% slippage
 **[default]** per side. Walk-forward: 2-year train, 6-month test windows.
+
+## Defaults added while building Phase 0
+
+The program doc left these open; the engine needs an answer. Each is a number in
+`config/rules.yaml` marked `# DEFAULT`. Review and change freely.
+
+| Area | Default | Why it was needed |
+|---|---|---|
+| Not crowded, no perp market | passes | Coins with no perps have no leveraged crowd; with funding but no OI history, judged on funding alone |
+| BTC+ETH funding flag | the average of the two, above 0.05%/8h on each of the last 14 days | "BTC+ETH funding" was ambiguous |
+| Backstop "after 3+ flags" | 3+ flags seen within the last 26 weeks | "after" needed a window |
+| After a euphoria sale | no new alt buys until 8 straight weeks below 3 flags | otherwise the weekly rebalance buys the alts straight back |
+| Weekly rebalance | Sundays; a bucket more than 5 pts over target sells lowest scores first; trades under 0.5% of the portfolio skipped | bucket targets needed an enforcement rule |
+| **Vault rebalance** | **two-way (OPEN QUESTION)**: trim the Vault back to target when 5+ pts over | see the Phase 0 report: this choice dominates results |
+| Vault sales | reserve tax at the long-term rate | Vault BTC is usually held a year+ |
+| Long-term gains | 15% reserve on positions held 365+ days | the doc only gave a short-term rate |
+| Circuit breaker level 2 | forced Defend for 7 days, then the peak re-bases | as first written it latched Defend for years |
+| Rotation upside U | upside to the next ladder rung (candidate: +30%; runner: 0) | the entry target made rotation churn 728 times |
+| Rotation churn guards | max 1 rotation a week; don't rotate out of anything held under 14 days | |
+| Re-entry cooldown | 7 days after fully exiting a coin | prevented 33 same-day stop-and-rebuy whipsaws |
+| Leverage liquidation | 0.5% maintenance margin in the liquidation price | needed to apply "liquidation >= 2x stop distance" |
+| Backtest: dead coins | exit at last price minus 30% once data stops for 7 days | pessimistic on purpose |
+| Backtest: fills | at the signal day's close | crypto trades 24/7; Binance's next open equals the prior close (median gap 0.000%) |
