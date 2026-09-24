@@ -13,8 +13,9 @@ SELL, BUY = rules_from_config(load_config().rules.cycle)
 HALVING = pd.Timestamp("2020-01-01")
 
 
-def cycle(n_up=600, n_down=400, n_flat=300, top=100.0):
-    """Price climbs to `top`, crashes 80% over n_down days, then recovers slowly."""
+def cycle(n_up=560, n_down=400, n_flat=300, top=100.0):
+    """Price climbs to `top` (day 560: inside the 500-580 sell window), crashes 80% over
+    n_down days, then recovers slowly."""
     up = np.linspace(10, top, n_up)
     down = np.linspace(top, top * 0.2, n_down)
     flat = np.linspace(top * 0.2, top * 0.5, n_flat)
@@ -80,3 +81,13 @@ def test_trend_break_before_last_clock_tranche_never_oversells():
     res = run_cycle(feats(cycle()), SELL, BUY, start_btc=10.0, fee=0.0, tax_rate=0.0)
     sells = res.trades[res.trades.side == "sell"]
     assert sells.btc.sum() <= 10.0 * SELL.target_frac + 1e-9
+
+
+def test_a_top_after_the_window_costs_btc_but_not_the_stack():
+    """The known risk: the top comes after the sell window closes. The new-high rule buys
+    back higher: a slice of BTC is lost, the stack is not."""
+    late = cycle(n_up=700)  # top on day 700, window ends day 580
+    res = run_cycle(feats(late), SELL, BUY, start_btc=10.0, fee=0.0, tax_rate=0.0)
+    assert (res.trades.reason == "new_ath_redeploy").any()
+    end = res.daily.iloc[-1].btc_equiv
+    assert 9.0 < end < 10.0  # lost some BTC, bounded
