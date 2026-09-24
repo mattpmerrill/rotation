@@ -263,6 +263,7 @@ class EuphoriaTier(_Model):
 class Backstop(_Model):
     weekly_sma: int
     after_min_flags: int
+    armed_weeks: int
 
 
 class Rebuy(_Model):

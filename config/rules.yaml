@@ -124,9 +124,9 @@ flags:
   mvrv_z_above: 5.0
   mayer_multiple_above: 2.2
   funding:
-    assets: [BTC, ETH]
+    assets: [BTC, ETH]                # DEFAULT: the average of the two
     above_8h: 0.0005                  # 0.05%/8h
-    persist_days: 14
+    persist_days: 14                  # on every one of the last 14 days
   altseason_index_above: 75           # computed in-house: % of top-50 beating BTC over 90D
   altseason_window_days: 90
   dominance_drop_pts: 8
@@ -144,6 +144,7 @@ euphoria_actions:
   backstop:                           # weekly close below 20W SMA after >= 3 flags -> same as the 6-flag tier
     weekly_sma: 20
     after_min_flags: 3
+    armed_weeks: 26                   # DEFAULT: "after" = 3+ flags seen within the last 26 weeks
   rebuy:
     drawdown_from_ath: 0.50
     mvrv_z_below: 1.0

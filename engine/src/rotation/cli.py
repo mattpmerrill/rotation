@@ -17,6 +17,7 @@ from rotation.data import (
     coinmetrics,
     derivs,
     http,
+    market,
     prices,
     universe,
 )
@@ -142,6 +143,13 @@ def oi_cmd(workers: int = 16) -> None:
     derivs.fetch_oi(needed, workers=workers)
     oi = derivs.combine_oi(fmap)
     typer.echo(f"oi done: {oi['coin_id'].nunique()} coins, {len(oi)} coin-days")
+
+
+@app.command("market")
+def market_cmd() -> None:
+    """Daily market frame: dominance, altseason, breadth, memes, funding, MVRV inputs."""
+    m = market.build_market()
+    typer.echo(f"market: {len(m)} days, {m.index.min():%Y-%m-%d} -> {m.index.max():%Y-%m-%d}")
 
 
 if __name__ == "__main__":
