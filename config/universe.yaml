@@ -2,13 +2,80 @@
 # are manual overrides for what the categories miss or get wrong.
 # Values are CoinGecko coin ids.
 
-exclude_category_keywords:    # a coin is excluded if any CoinGecko category contains one of these
-  - stablecoin                # USD, EUR, gold-pegged stables
-  - wrapped                   # WBTC, WETH, ...
-  - bridged
-  - liquid-staking            # stETH, JitoSOL, ...
-  - liquid-restaking
-  - tokenized                 # tokenized stocks, gold (PAXG, XAUT), treasuries: not crypto beta
+# Exact CoinGecko category names (case-insensitive). Taken from the categories of
+# every coin that was ever in the raw top 200 since 2016. Deliberately NOT excluded:
+# "Stablecoin Issuer" (AAVE, MKR, ENA, WLFI), "Liquid Staking" and
+# "Liquid Staking Governance Tokens" (LDO), "Restaking", "Real World Assets (RWA)":
+# those tag real alts, not wrappers.
+exclude_categories:
+  # stablecoins
+  - Stablecoins
+  - USD Stablecoin
+  - EUR Stablecoin
+  - RUB Stablecoin
+  - TRY Stablecoin
+  - SGD Stablecoin
+  - Fiat-backed Stablecoin
+  - Crypto-backed Stablecoin
+  - Algorithmic Stablecoin
+  - Yield-Bearing Stablecoin
+  - US Treasury-backed Stablecoin
+  - Synthetic Dollar
+  - Bridged Stablecoin
+  # wrappers, bridges, receipts
+  - Wrapped-Tokens
+  - Crypto-Backed Tokens
+  - Tokenized BTC
+  - Bridged-Tokens
+  - Bridged USDC
+  - Bridged USDT
+  - Bridged DAI
+  - Bridged WETH
+  - Bridged WBTC
+  - Binance-Peg Tokens
+  - Compound Tokens
+  - cToken
+  - Aave Tokens
+  - LP Tokens
+  - Yield-Bearing Tokens
+  # liquid staking / restaking receipts
+  - Liquid Staking Tokens
+  - Liquid Staked ETH
+  - Liquid Staked SOL
+  - Liquid Staked BTC
+  - Liquid Staked HYPE
+  - Liquid Restaking Tokens
+  - Liquid Restaked ETH
+  # tokenized traditional assets: not crypto beta
+  - Tokenized Assets
+  - Tokenized Treasuries
+  - Tokenized Gold
+  - Tokenized Silver
+  - Tokenized Commodities
+  - Tokenized Real Estate
+  - Tokenized Private Credit
+  - Tokenized Credit
+  - Tokenized Money Market Fund (MMFs)
+
+# A coin is only ranked on days it looks like a real market. Filters CoinGecko rows with
+# impossible market caps (e.g. $2.9e21 on $563 of volume).
+ranking:
+  volume_window_days: 30
+  min_volume_days: 20            # needs volume data on 20 of the last 30 days
+  min_turnover: 0.0001           # 30D median volume / market cap >= 0.01%
+
+force_include_ids:            # real alts that carry a wrapper-style category anyway
+  - ethlend                   # LEND, Aave's predecessor token ("Aave Tokens")
+  - olympus                   # OHM ("Crypto-Backed Tokens")
+
+# Catches stablecoins CoinGecko never categorised (e.g. royal-dollar, #16 in 2026).
+# A coin is excluded if, on most of its ranked days, its price sat in the band and its
+# 30-day high/low range was under max_range.
+peg_detector:
+  window_days: 30
+  max_range: 0.03
+  price_band: [0.90, 1.25]      # USD and EUR pegs
+  min_share_of_days: 0.5
 
 exclude_ids:                  # always excluded, whatever the categories say
   - bitcoin                   # BTC is the benchmark and the Vault, not an alt
@@ -25,8 +92,12 @@ exclude_ids:                  # always excluded, whatever the categories say
   - wrapped-steth
   - wrapped-eeth
 
-meme_categories:
-  - meme-token
+meme_categories:              # exact CoinGecko names
+  - Meme
+  - Solana Meme
+  - AI Meme
+  - Base Meme
+  - IP Meme
 
 meme_ids: []                  # add coins CoinGecko fails to tag as memes
 

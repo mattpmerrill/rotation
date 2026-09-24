@@ -323,8 +323,24 @@ class Rules(_Model):
     backtest: BacktestRules
 
 
+class Ranking(_Model):
+    volume_window_days: int
+    min_volume_days: int
+    min_turnover: float
+
+
+class PegDetector(_Model):
+    window_days: int
+    max_range: float
+    price_band: tuple[float, float]
+    min_share_of_days: float
+
+
 class Universe(_Model):
-    exclude_category_keywords: list[str]
+    exclude_categories: list[str]
+    ranking: Ranking
+    force_include_ids: list[str]
+    peg_detector: PegDetector
     exclude_ids: list[str]
     meme_categories: list[str]
     meme_ids: list[str]

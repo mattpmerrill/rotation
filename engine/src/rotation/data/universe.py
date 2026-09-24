@@ -4,9 +4,10 @@ Two passes, because exclusion needs categories and categories cost one call per 
   1. rank every coin by raw market cap; coins that were ever in the raw top N are candidates
   2. fetch categories for candidates only, drop stables/wrapped/LSTs, rank again
 
-CoinGecko market caps have occasional one-day spikes (bad supply data). A spike can
-push a coin into the top 100 for a day, so days that jump 5x away from the coin's
-centered 7-day median are ignored for ranking.
+CoinGecko market caps have two kinds of bad data, both filtered before ranking:
+  - one-day spikes: days 5x away from the coin's centered 7-day median are ignored
+  - impossible caps on dead markets (e.g. $2.9e21 on $563 of volume): a coin is only
+    ranked on days it has enough volume history and a believable volume/market-cap ratio
 """
 
 from __future__ import annotations
@@ -28,9 +29,29 @@ def drop_spikes(df: pd.DataFrame, col: str = "market_cap_usd") -> pd.DataFrame:
     return df[keep]
 
 
-def rank_by_day(df: pd.DataFrame, exclude: set[str] = frozenset()) -> pd.DataFrame:
-    """Rank coins by market cap within each date (1 = largest). Ties broken by coin_id."""
+def eligible(
+    df: pd.DataFrame, window: int = 30, min_days: int = 20, min_turnover: float = 0.0001
+) -> pd.Series:
+    """True on days a coin looks like a real market: volume reported on `min_days` of the
+    last `window` days, and median volume / market cap >= `min_turnover`. Index-aligned."""
+    df = df.sort_values(["coin_id", "date"])
+    vol = df["volume_usd"].where(df["volume_usd"] > 0)
+    g = vol.groupby(df["coin_id"])
+    n = g.transform(lambda s: s.rolling(window, min_periods=1).count())
+    med = g.transform(lambda s: s.rolling(window, min_periods=1).median())
+    return (n >= min_days) & (med / df["market_cap_usd"] >= min_turnover)
+
+
+def rank_by_day(df: pd.DataFrame, exclude: set[str] = frozenset(), ranking=None) -> pd.DataFrame:
+    """Rank coins by market cap within each date (1 = largest). Ties broken by coin_id.
+
+    `ranking` is the universe.yaml ranking config; defaults to the loaded config."""
+    if ranking is None:
+        from rotation.config import get_config
+
+        ranking = get_config().universe.ranking
     df = df[~df["coin_id"].isin(exclude) & (df["market_cap_usd"] > 0)]
+    df = df[eligible(df, ranking.volume_window_days, ranking.min_volume_days, ranking.min_turnover)]
     df = drop_spikes(df)
     df = df.sort_values(["date", "market_cap_usd", "coin_id"], ascending=[True, False, True])
     df = df.assign(rank=df.groupby("date").cumcount() + 1)
@@ -45,21 +66,31 @@ def ever_in_top(ranked: pd.DataFrame, n: int, since: str | None = None) -> set[s
 def is_excluded(
     coin_id: str,
     categories: list[str],
-    exclude_keywords: list[str],
+    exclude_categories: list[str],
     exclude_ids: list[str],
+    force_include_ids: list[str] = (),
 ) -> bool:
-    """Excluded if listed by id, or if any category contains an exclusion keyword.
-
-    Matched loosely on purpose: a false exclusion costs one coin, a false inclusion puts a
-    stablecoin in the top 100."""
+    """Excluded if listed by id, or if any category exactly matches (case-insensitive).
+    force_include_ids wins over categories, but not over exclude_ids."""
     if coin_id in exclude_ids:
         return True
-    slugs = [_slug(c) for c in categories]
-    return any(k in s for k in exclude_keywords for s in slugs)
+    if coin_id in force_include_ids:
+        return False
+    wanted = {c.strip().casefold() for c in exclude_categories}
+    return any(c.strip().casefold() in wanted for c in categories)
 
 
-def _slug(s: str) -> str:
-    return "-".join(s.lower().replace("(", " ").replace(")", " ").split())
+def pegged_coins(df: pd.DataFrame, peg) -> set[str]:
+    """Coins whose price sat flat inside the peg band on most of their days: stablecoins
+    that CoinGecko never categorised. Expects coin_id, date, price_usd."""
+    df = df.sort_values(["coin_id", "date"])
+    g = df.groupby("coin_id")["price_usd"]
+    hi = g.transform(lambda s: s.rolling(peg.window_days, min_periods=peg.window_days).max())
+    lo = g.transform(lambda s: s.rolling(peg.window_days, min_periods=peg.window_days).min())
+    lo_band, hi_band = peg.price_band
+    flat = (hi / lo - 1 < peg.max_range) & df["price_usd"].between(lo_band, hi_band)
+    share = flat.groupby(df["coin_id"]).mean()
+    return set(share[share >= peg.min_share_of_days].index)
 
 
 # --- build (I/O) --------------------------------------------------------------
@@ -80,9 +111,7 @@ def build_ranks(since: str = "2016-01-01") -> pd.DataFrame:
     df = backfill.load()
     df = df[df["date"] >= since][["coin_id", "date", "market_cap_usd", "price_usd", "volume_usd"]]
 
-    candidates = ever_in_top(
-        rank_by_day(df[["coin_id", "date", "market_cap_usd"]]), CANDIDATE_RAW_TOP
-    )
+    candidates = ever_in_top(rank_by_day(df), CANDIDATE_RAW_TOP)
 
     cats = cache.read("coingecko_meta", "categories")
     have = set() if cats is None else set(cats["coin_id"])
@@ -100,8 +129,13 @@ def build_ranks(since: str = "2016-01-01") -> pd.DataFrame:
     excluded = {
         c
         for c in candidates
-        if is_excluded(c, list(cat_map.get(c, [])), u.exclude_category_keywords, u.exclude_ids)
+        if is_excluded(
+            c, list(cat_map.get(c, [])), u.exclude_categories, u.exclude_ids, u.force_include_ids
+        )
     }
+    excluded |= pegged_coins(df[df["coin_id"].isin(candidates)], u.peg_detector) - set(
+        u.force_include_ids
+    )
 
     ranked = rank_by_day(df[df["coin_id"].isin(candidates)], exclude=excluded)
     ranked = ranked[ranked["rank"] <= CANDIDATE_RAW_TOP]
