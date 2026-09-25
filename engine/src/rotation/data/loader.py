@@ -13,6 +13,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import re
 
 import pandas as pd
 
@@ -118,6 +119,18 @@ def _pg_array(v) -> str:
     return "{" + ",".join('"' + str(x).replace('"', '\\"') + '"' for x in v) + "}"
 
 
+def normalize_dsn(dsn: str) -> str:
+    """Percent-encode the password so a URL pasted from the dashboard works even when the
+    password contains '@', ':' or '/'. The password runs to the LAST '@'."""
+    from urllib.parse import quote, unquote
+
+    m = re.match(r"^(postgres(?:ql)?://)([^:/@]+):(.*)@([^@]+)$", dsn)
+    if not m:
+        return dsn
+    scheme, user, pw, rest = m.groups()
+    return f"{scheme}{user}:{quote(unquote(pw), safe='')}@{rest}"
+
+
 def load(tables: dict[str, pd.DataFrame], dsn: str | None = None) -> dict[str, int]:
     """COPY each frame into a temp table, then INSERT ... ON CONFLICT DO UPDATE."""
     import psycopg
@@ -125,6 +138,7 @@ def load(tables: dict[str, pd.DataFrame], dsn: str | None = None) -> dict[str, i
     dsn = dsn or os.environ.get("SUPABASE_DB_URL")
     if not dsn:
         raise RuntimeError("SUPABASE_DB_URL is not set (see .env.example)")
+    dsn = normalize_dsn(dsn)
     counts = {}
     with psycopg.connect(dsn) as conn, conn.cursor() as cur:
         for name, df in tables.items():  # dict order = FK order (coins first)

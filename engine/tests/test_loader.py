@@ -36,3 +36,14 @@ def test_prepared_tables_match_migration_columns_and_keys():
 
 def test_pg_array_quotes():
     assert _pg_array(["Layer 1 (L1)", 'say "hi"']) == '{"Layer 1 (L1)","say \\"hi\\""}'
+
+
+def test_normalize_dsn_encodes_password_up_to_the_last_at():
+    from rotation.data.loader import normalize_dsn
+
+    raw = "postgresql://postgres.ref:p@ss:w/rd@aws-0-us-west-1.pooler.supabase.com:5432/postgres"
+    assert normalize_dsn(raw) == (
+        "postgresql://postgres.ref:p%40ss%3Aw%2Frd@aws-0-us-west-1.pooler.supabase.com:5432/postgres"
+    )
+    already = "postgresql://postgres.ref:p%40ss@host:5432/postgres"
+    assert normalize_dsn(already) == already  # already-encoded passwords are left as they are
