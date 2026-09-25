@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --bg: #f4f6f5;
+  --surface: #ffffff;
+  --ink: #15191c;
+  --ink-2: #4f5961;
+  --ink-3: #6f7980;
+  --rule: #dce1df;
+  --btc: #b85f05;
+  --btc-soft: #fbe9d4;
+  --good: #1f6fbf;
+  --bad: #c4501c;
+  --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0f1214; --surface: #171c1f; --ink: #eceff0; --ink-2: #b3bcc2; --ink-3: #8a949c;
+    --rule: #2a3236; --btc: #f7a63d; --btc-soft: #3a2710; --good: #5aa2ee; --bad: #ef8a5a; --focus: #5aa2ee;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1214; --surface: #171c1f; --ink: #eceff0; --ink-2: #b3bcc2; --ink-3: #8a949c;
+  --rule: #2a3236; --btc: #f7a63d; --btc-soft: #3a2710; --good: #5aa2ee; --bad: #ef8a5a; --focus: #5aa2ee;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-rule: var(--rule);
+  --color-btc: var(--btc);
+  --color-btc-soft: var(--btc-soft);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-display: var(--font-plex-condensed), "Arial Narrow", system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, Menlo, monospace;
+}
+
+body { background: var(--bg); color: var(--ink); font-family: var(--font-sans); line-height: 1.55; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; }
+.label { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.field { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; width: 100%; color: var(--ink); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; padding: 9px 14px; font-weight: 600; font-size: 14px; }
+.btn-primary { background: var(--ink); color: var(--bg); }
+.btn-quiet { border: 1px solid var(--rule); background: var(--surface); color: var(--ink); }

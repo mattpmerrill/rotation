@@ -281,5 +281,54 @@ def daily_cmd(
         typer.echo("(posted to Discord)")
 
 
+@app.command("web-data")
+def web_data_cmd() -> None:
+    """Files the web app reads: cycle rules (from config), coin list, the explorer page."""
+    import json
+    import shutil
+
+    import pandas as pd
+
+    from rotation.config import REPO_ROOT, get_config
+
+    web = REPO_ROOT / "web"
+    c = get_config().rules.cycle
+    rules = {
+        "halvings": [str(h) for h in c.halvings],
+        "halving_interval_days": 1456,
+        "alt_slice_days": c.alts.slice_days,
+        "alt_max_rank": c.alts.max_rank,
+        "sell_window": [c.sell.window_start_days, c.sell.window_end_days],
+        "sell_tranches": c.sell.clock_tranches,
+        "sell_btc_frac": c.sell.target_frac,
+        "buy": c.buy.model_dump(),
+        "fee_per_trade": c.account.fee_per_trade,
+        "config_hash": get_config().config_hash,
+    }
+    (web / "lib").mkdir(exist_ok=True)
+    (web / "lib" / "cycle-rules.json").write_text(json.dumps(rules, indent=2) + "\n")
+
+    ranks = cache.read("universe", "ranks")
+    latest = ranks["date"].max()
+    now = ranks[ranks["date"] == latest].set_index("coin_id")["rank"]
+    meta = pd.read_parquet(cache.data_dir() / "coingecko_backfill" / "_coins.parquet")
+    meta = meta[meta["id"].isin(now.index)]
+    coins = sorted(
+        (
+            {"id": i, "symbol": s.upper(), "name": n, "rank": int(now[i])}
+            for i, s, n in zip(meta["id"], meta["symbol"], meta["name"], strict=True)
+        ),
+        key=lambda x: x["rank"],
+    )
+    (web / "lib" / "coins.json").write_text(
+        json.dumps({"as_of": str(latest.date()), "coins": coins}, separators=(",", ":")) + "\n"
+    )
+    shutil.copy(
+        REPO_ROOT / "docs" / "explorer" / "btc-stack-explorer.html",
+        web / "public" / "explorer.html",
+    )
+    typer.echo(f"web data: rules {rules['config_hash']}, {len(coins)} coins as of {latest.date()}")
+
+
 if __name__ == "__main__":
     app()
