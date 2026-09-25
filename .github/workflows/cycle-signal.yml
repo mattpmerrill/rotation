@@ -5,6 +5,11 @@ on:
   schedule:
     - cron: "15 13 * * *"   # 13:15 UTC daily, after CoinMetrics publishes the prior day
   workflow_dispatch:
+    inputs:
+      force_post:
+        description: "Post even if there is no action today (for testing)"
+        type: boolean
+        default: false
 
 jobs:
   signal:
@@ -27,4 +32,4 @@ jobs:
           fi
           uv run rotation signal --btc "$HOLDINGS_BTC" --usdt "${HOLDINGS_USDT:-0}" \
             --sold "${SOLD_THIS_CYCLE:-0}" --tranches-bought "${TRANCHES_BOUGHT:-0}" \
-            --post --only-if-action
+            --post $([ "${{ inputs.force_post }}" = "true" ] || echo --only-if-action)
