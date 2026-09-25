@@ -77,6 +77,7 @@ header { display: grid; gap: 10px; }
 .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
 .axis text { fill: var(--ink-3); font: 11px var(--mono); }
 .tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); min-width: 210px; display: grid; gap: 3px; }
+.tip[hidden] { display: none; }
 .tip .row { display: flex; justify-content: space-between; gap: 14px; align-items: center; }
 .tip .row span:first-child { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
 .scroll { overflow-x: auto; }
@@ -106,6 +107,15 @@ ul.find { margin: 0; padding-left: 18px; display: grid; gap: 8px; max-width: 72c
 ul.find b { color: var(--ink); font-weight: 600; }
 .note { font-size: 13px; color: var(--ink-3); }
 .coins { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+.picks { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.pick { display: grid; gap: 4px; }
+.pick label { font: 500 11.5px var(--mono); color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; }
+.pick input { font: 500 14px var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; width: 100%; box-sizing: border-box; }
+.pick input:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.pick input[aria-invalid="true"] { border-color: var(--bad); }
+.pick .hint { font-size: 12px; color: var(--ink-3); min-height: 1.2em; }
+.warn { font-size: 13.5px; color: var(--ink); background: var(--btc-soft); border-left: 3px solid var(--btc); border-radius: 6px; padding: 9px 12px; max-width: none; }
+td.miss { color: var(--ink-3); font-size: 13px; white-space: normal; min-width: 180px; }
 @media (max-width: 560px) {
   .heat-grid { grid-template-columns: 70px repeat(6, minmax(40px, 1fr)); }
   .cell { font-size: 11.5px; height: 36px; }
@@ -117,6 +127,7 @@ ul.find b { color: var(--ink); font-weight: 600; }
   <header>
     <div class="eyebrow">Rotation · measured in bitcoin</div>
     <h1>Which strategy ends a cycle with the most BTC?</h1>
+    <p><a href="#lab" style="color:var(--btc);font-weight:600">Build your own five-alt basket in the Basket Lab ↓</a></p>
     <p>Every line starts with <b>1 BTC</b> at a halving and is scored in BTC at the next one (or today). All strategies sell near the top in the halving-clock window (days <span class="num" id="win-days"></span> after the halving) and rebuy in the bear with the same rules. Assumes no tax and a <span class="num" id="fee"></span> fee per trade.</p>
   </header>
 
@@ -179,6 +190,27 @@ ul.find b { color: var(--ink); font-weight: 600; }
       <h3>Four slices: at the halving, +60, +120 and +180 days</h3>
       <div class="tiles" id="stagger"></div>
     </div>
+  </section>
+
+  <section class="panel" aria-labelledby="lab-h" id="lab">
+    <div class="stack">
+      <div class="eyebrow">Basket Lab</div>
+      <h2 id="lab-h">Build your own five-alt basket</h2>
+      <p>Pick any five alts that ranked in the top 200. Each is run through the plan: 1 BTC bought in four slices (the halving, +60, +120, +180 days), held without selling, sold in the sell window, and rebought as BTC in the bear. A coin that wasn't trading yet on a buy date keeps that slice in BTC.</p>
+    </div>
+    <div class="picks" id="picks"></div>
+    <div class="controls">
+      <div class="seg"><label class="cap" id="pre-l">Fill with</label><div class="opts" role="group" aria-labelledby="pre-l" id="presets"></div></div>
+    </div>
+    <p class="warn" id="lab-warn">Picking coins by looking at what already happened is the easiest way to fool yourself. Trust a basket that holds up in every cycle and beats most random baskets, not one big number.</p>
+    <div class="scroll"><table id="lab-tbl"></table></div>
+    <p class="note">"Random baskets": 1,000 random five-coin baskets drawn from the top 20 on that halving date, scored the same way. The percentile is where your basket lands, measured when the sell window opens.</p>
+    <div class="controls">
+      <div class="seg"><label class="cap" id="lcyc-l">Chart cycle</label><div class="opts" role="group" aria-labelledby="lcyc-l" id="lcyc"></div></div>
+    </div>
+    <div class="legend" id="lab-legend"></div>
+    <div class="chart" id="lab-chart"></div>
+    <div class="scroll"><table id="lab-coins"></table></div>
   </section>
 
   <section class="panel" aria-labelledby="calc-h">
@@ -434,6 +466,174 @@ ul.find b { color: var(--ink); font-weight: 600; }
       <div class="v">${fmt(s.at_window)} BTC</div><div class="d">at the window · worst ${fmt(s.worst)} · end ${fmt(s.end)}</div></div>`).join('');
   }
 
+  // ---------------------------------------------------------------- Basket Lab
+  const L = D.lab;
+  const LCYC = Object.keys(L.cycles);
+  const label = (id) => { const n = L.names[id]; return n ? `${n[0]} · ${n[1]}` : id; };
+  const byLabel = new Map(); const bySym = new Map();
+  for (const id of Object.keys(L.names)) {
+    byLabel.set(label(id).toLowerCase(), id);
+    const sym = L.names[id][0].toLowerCase();
+    // several coins share a ticker; the one that ranked highest wins a bare-ticker lookup
+    const best = (x) => Math.min(...LCYC.map((c) => L.cycles[c].coins[x]?.rank ?? 999));
+    if (!bySym.has(sym) || best(id) < best(bySym.get(sym))) bySym.set(sym, id);
+  }
+  const resolve = (txt) => { const t = txt.trim().toLowerCase(); return byLabel.get(t) || bySym.get(t) || null; };
+  const DEFAULT = ['ethereum', 'binancecoin', 'ripple', 'solana', 'chainlink'];
+  let picks = (() => { try { const p = JSON.parse(localStorage.getItem('lab-picks')); return Array.isArray(p) && p.length === 5 ? p : DEFAULT; } catch { return DEFAULT; } })();
+  let labCycle = LCYC.includes('2020') ? '2020' : LCYC[0];
+
+  function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const windowIdx = (c) => { let k = 0; c.dates.forEach((d, i) => { if (d <= c.window_date) k = i; }); return k; };
+  const basketSeries = (c, ids) => {
+    const n = c.dates.length; const out = new Array(n).fill(0);
+    for (const id of ids) { const s = c.coins[id]?.s; for (let i = 0; i < n; i++) out[i] += (s ? s[i] : 1) / ids.length; }
+    return out;
+  };
+  const score = (c, ser) => { const w = windowIdx(c); return { win: ser[w], end: ser[ser.length - 1], worst: Math.min(...ser.slice(0, w + 1)) }; };
+  const randomDist = {};
+  for (const y of LCYC) {
+    const c = L.cycles[y], r = rng(20260925 + +y), pool = c.top20, vals = [];
+    for (let k = 0; k < 1000; k++) {
+      const pick = new Set(); while (pick.size < Math.min(5, pool.length)) pick.add(pool[Math.floor(r() * pool.length)]);
+      vals.push(score(c, basketSeries(c, [...pick])).win);
+    }
+    randomDist[y] = vals.sort((a, b) => a - b);
+  }
+
+  function renderPicks() {
+    const host = $('picks'); host.innerHTML = '';
+    if (!$('coin-list')) {
+      const dl = document.createElement('datalist'); dl.id = 'coin-list';
+      const ids = Object.keys(L.names).sort((a, b) => (Math.min(...LCYC.map((c) => L.cycles[c].coins[a]?.rank ?? 999)) - Math.min(...LCYC.map((c) => L.cycles[c].coins[b]?.rank ?? 999))));
+      dl.innerHTML = ids.map((id) => `<option value="${label(id).replace(/"/g, '&quot;')}"></option>`).join('');
+      document.body.appendChild(dl);
+    }
+    picks.forEach((id, i) => {
+      const w = document.createElement('div'); w.className = 'pick';
+      const latest = LCYC[LCYC.length - 1];
+      const rk = L.cycles[latest].coins[id]?.rank;
+      w.innerHTML = `<label for="pick-${i}">Alt ${i + 1}</label><input id="pick-${i}" list="coin-list" autocomplete="off" value="${label(id).replace(/"/g, '&quot;')}"><span class="hint">${rk ? `#${rk} at the ${latest} halving` : 'not top 200 at the latest halving'}</span>`;
+      const inp = w.querySelector('input');
+      inp.addEventListener('change', () => {
+        const id2 = resolve(inp.value);
+        if (!id2) { inp.setAttribute('aria-invalid', 'true'); w.querySelector('.hint').textContent = 'Not found: type a ticker or pick from the list'; return; }
+        if (picks.includes(id2) && picks[i] !== id2) { inp.setAttribute('aria-invalid', 'true'); w.querySelector('.hint').textContent = 'Already in the basket'; return; }
+        picks[i] = id2; try { localStorage.setItem('lab-picks', JSON.stringify(picks)); } catch {}
+        renderLab();
+      });
+      host.appendChild(w);
+    });
+  }
+
+  function renderLabTable() {
+    let h = '<thead><tr><th>Cycle</th><th class="r">At the sell window</th><th class="r">End</th><th class="r">Worst point</th><th class="r">vs holding BTC</th><th class="r">vs five largest</th><th class="r">Beat random baskets</th><th>Not held this cycle</th></tr></thead><tbody>';
+    for (const y of LCYC) {
+      const c = L.cycles[y];
+      const me = score(c, basketSeries(c, picks)), rule = score(c, c.rule);
+      const dist = randomDist[y]; const below = dist.filter((v) => v < me.win).length / dist.length;
+      const pillv = (v) => `<span class="pill ${v >= 0 ? 'up' : 'down'}">${pct(v)}</span>`;
+      const missing = picks.filter((id) => !c.coins[id] || c.coins[id].slices < 4).map((id) => {
+        const k = c.coins[id]?.slices ?? 0; return `${L.names[id]?.[0] || id} ${k ? `(${k}/4 slices)` : '(not trading or not top 200)'}`;
+      });
+      h += `<tr><td>${y}${c.complete ? '' : ' (so far)'}</td><td class="r num">${fmt(me.win)}</td><td class="r num">${fmt(me.end)}</td><td class="r num">${fmt(me.worst)}</td>
+        <td class="r">${pillv(me.win - 1)}</td><td class="r">${pillv(me.win / rule.win - 1)}</td><td class="r num">${Math.round(below * 100)}%</td>
+        <td class="miss">${missing.length ? missing.join(', ') + ': held as BTC' : '–'}</td></tr>`;
+    }
+    $('lab-tbl').innerHTML = h + '</tbody>';
+  }
+
+  function renderLabChart() {
+    const host = $('lab-chart'); host.innerHTML = '';
+    const c = L.cycles[labCycle];
+    const dates = c.dates.map((d) => new Date(d + 'T00:00:00Z'));
+    const lines = [
+      { name: 'Your basket', color: '--s1', v: basketSeries(c, picks) },
+      { name: 'Five largest on each buy date', color: '--s2', v: c.rule },
+      { name: 'Hold BTC', color: '--s-hold', dash: true, v: dates.map(() => 1) },
+    ];
+    $('lab-legend').innerHTML = lines.map((l) => `<span class="chip" style="cursor:default"><span class="sw ${l.dash ? 'dash' : ''}" style="background:var(${l.color})"></span>${l.name}</span>`).join('');
+    const W = 1000, H = 340, m = { l: 52, r: 18, t: 12, b: 34 };
+    const allv = lines.flatMap((l) => l.v);
+    const lo = Math.max(0.05, Math.min(...allv, 1) * 0.9), hi = Math.max(...allv, 1.1) * 1.08;
+    const t0 = dates[0].getTime(), t1 = dates[dates.length - 1].getTime();
+    const x = (t) => m.l + (t - t0) / (t1 - t0) * (W - m.l - m.r);
+    const y = (v) => m.t + (Math.log(hi) - Math.log(v)) / (Math.log(hi) - Math.log(lo)) * (H - m.t - m.b);
+    const wx = x(new Date(c.window_date + 'T00:00:00Z').getTime());
+    let s = `<line x1="${wx}" x2="${wx}" y1="${m.t}" y2="${H - m.b}" stroke="var(--btc)" stroke-dasharray="4 3"/><text x="${wx + 4}" y="${m.t + 12}" fill="var(--btc)" style="font:500 11px var(--mono)">sell window opens</text><g class="axis">`;
+    for (const v of [0.1, 0.2, 0.25, 0.5, 1, 1.5, 2, 3, 5, 10, 20, 50, 100].filter((v) => v >= lo && v <= hi)) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+    for (let yr = new Date(t0).getUTCFullYear(); yr <= new Date(t1).getUTCFullYear(); yr++) {
+      const t = Date.UTC(yr, 0, 1); if (t < t0 || t > t1) continue;
+      s += `<text x="${x(t)}" y="${H - m.b + 19}" text-anchor="middle">${yr}</text>`;
+    }
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${H - m.b}" y2="${H - m.b}" stroke="var(--rule)"/></g>`;
+    for (const l of lines) {
+      s += `<path d="${l.v.map((v, i) => `${i ? 'L' : 'M'}${x(dates[i].getTime()).toFixed(1)},${y(v).toFixed(1)}`).join('')}" fill="none" stroke="var(${l.color})" stroke-width="2" ${l.dash ? 'stroke-dasharray="5 4"' : ''}/>`;
+      const e = l.v.length - 1;
+      s += `<circle cx="${x(dates[e].getTime())}" cy="${y(l.v[e])}" r="4" fill="var(${l.color})" stroke="var(--surface)" stroke-width="2"/>`;
+    }
+    s += `<line id="lxh" y1="${m.t}" y2="${H - m.b}" stroke="var(--ink-3)" stroke-dasharray="3 3" visibility="hidden"/><rect id="lhit" x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent"/>`;
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', `Your basket vs the five-largest rule and holding BTC, ${labCycle} cycle`);
+    svg.innerHTML = s; host.appendChild(svg);
+    const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; host.appendChild(tip);
+    const move = (ev) => {
+      const r = svg.getBoundingClientRect();
+      const px = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left) / r.width * W;
+      const t = t0 + (px - m.l) / (W - m.l - m.r) * (t1 - t0);
+      let i = 0; dates.forEach((d, k) => { if (Math.abs(d - t) < Math.abs(dates[i] - t)) i = k; });
+      const xh = svg.querySelector('#lxh'); xh.setAttribute('x1', x(dates[i].getTime())); xh.setAttribute('x2', x(dates[i].getTime())); xh.setAttribute('visibility', 'visible');
+      tip.innerHTML = `<div class="row"><b>${c.dates[i]}</b></div>` + lines.map((l) => `<div class="row"><span><span class="sw ${l.dash ? 'dash' : ''}" style="background:var(${l.color})"></span>${l.name}</span><span class="num">${fmt(l.v[i])}</span></div>`).join('');
+      tip.hidden = false;
+      tip.style.left = Math.min(Math.max(0, x(dates[i].getTime()) / W * r.width + 14), r.width - tip.offsetWidth) + 'px'; tip.style.top = '8px';
+    };
+    const hit = svg.querySelector('#lhit');
+    hit.addEventListener('mousemove', move); hit.addEventListener('touchmove', move, { passive: true });
+    hit.addEventListener('mouseleave', () => { tip.hidden = true; svg.querySelector('#lxh').setAttribute('visibility', 'hidden'); });
+
+    const w = windowIdx(c);
+    const rows = picks.map((id) => {
+      const k = c.coins[id]; const s2 = k ? k.s : null;
+      return { id, rank: k?.rank, slices: k?.slices ?? 0, win: s2 ? s2[w] : 1, end: s2 ? s2[s2.length - 1] : 1 };
+    });
+    const gain = rows.reduce((a, r) => a + (r.win - 1), 0);
+    let h = `<thead><tr><th>Coin (${labCycle} cycle)</th><th class="r">Rank at the halving</th><th class="r">Slices bought</th><th class="r">1 BTC became, at the window</th><th class="r">End</th><th class="r">Share of the basket's gain</th></tr></thead><tbody>`;
+    for (const r of rows.sort((a, b) => b.win - a.win)) {
+      h += `<tr><td>${label(r.id)}</td><td class="r num">${r.rank ?? '–'}</td><td class="r num">${r.slices}/4</td><td class="r num">${fmt(r.win)}</td><td class="r num">${fmt(r.end)}</td><td class="r num">${gain > 0 ? Math.round((r.win - 1) / gain * 100) + '%' : '–'}</td></tr>`;
+    }
+    $('lab-coins').innerHTML = h + '</tbody>';
+  }
+
+  function renderLab() {
+    renderPicks();
+    const latest = LCYC[LCYC.length - 1];
+    const presets = [
+      ['default', 'ETH, BNB, XRP, SOL, LINK', DEFAULT],
+      ['largest', `Five largest at the ${latest} halving`, L.cycles[latest].rule_top5_first_slice],
+      ['random', 'Random from a top 20', null],
+    ];
+    $('presets').innerHTML = '';
+    for (const [key, text, ids] of presets) {
+      const b = document.createElement('button'); b.type = 'button'; b.id = `pre-${key}`; b.textContent = text; b.setAttribute('aria-pressed', 'false');
+      b.onclick = () => {
+        if (ids) picks = [...ids];
+        else { const pool = L.cycles[latest].top20, r = rng(Date.now()), s = new Set(); while (s.size < 5) s.add(pool[Math.floor(r() * pool.length)]); picks = [...s]; }
+        try { localStorage.setItem('lab-picks', JSON.stringify(picks)); } catch {}
+        renderLab();
+      };
+      $('presets').appendChild(b);
+    }
+    $('lcyc').innerHTML = '';
+    for (const y of LCYC) {
+      const b = document.createElement('button'); b.type = 'button'; b.id = `lcyc-${y}`; b.textContent = L.cycles[y].complete ? y : `${y} (so far)`;
+      b.setAttribute('aria-pressed', String(y === labCycle));
+      b.onclick = () => { labCycle = y; renderLab(); };
+      $('lcyc').appendChild(b);
+    }
+    renderLabTable(); renderLabChart();
+  }
+
   function renderCalc() {
     const peak = +$('c-peak').value, trig = +$('c-trig').value, frac = +$('c-frac').value, fall = +$('c-fall').value;
     $('c-peak-v').textContent = `${peak.toFixed(2)}×`; $('c-trig-v').textContent = `+${Math.round(trig * 100)}%`;
@@ -482,7 +682,7 @@ ul.find b { color: var(--ink); font-weight: 600; }
     renderTiles(); renderLegend(); renderChart(); renderTable(); renderHeat();
   }
   ['c-peak', 'c-trig', 'c-frac', 'c-fall'].forEach((id) => $(id).addEventListener('input', renderCalc));
-  render(); renderCalc(); renderEntry(); renderFindings();
+  render(); renderCalc(); renderEntry(); renderLab(); renderFindings();
   window.addEventListener('resize', () => renderChart());
 })();
 </script>

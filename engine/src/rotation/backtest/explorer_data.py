@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from rotation.backtest.alt_harvest import MATT_BASKET, AltRules, grid, simulate
+from rotation.backtest.basket_lab import build_lab
 from rotation.backtest.cycle_sim import run_cycle
 from rotation.config import REPO_ROOT, get_config
 from rotation.data import cache
@@ -98,6 +99,12 @@ def build() -> dict:
     )
     out["grid"] = g.round(4).to_dict(orient="records")
     out["entry"] = entry_timing(cf, alt, ranks, btc, halvings, sell2, buy, fee)
+    meta = pd.read_parquet(cache.data_dir() / "coingecko_backfill" / "_coins.parquet")
+    names = {
+        i: [sym.upper(), nm]
+        for i, sym, nm in zip(meta["id"], meta["symbol"], meta["name"], strict=True)
+    }
+    out["lab"] = build_lab(cf, alt, ranks, names, halvings, sell2, buy, fee, btc.index[-1])
     out["labels"] = {k: v[0] for k, v in ALT_VARIANTS.items()}
     OUT.write_text(json.dumps(out, separators=(",", ":")))
     return out
