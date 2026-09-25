@@ -91,3 +91,13 @@ def test_a_top_after_the_window_costs_btc_but_not_the_stack():
     assert (res.trades.reason == "new_ath_redeploy").any()
     end = res.daily.iloc[-1].btc_equiv
     assert 9.0 < end < 10.0  # lost some BTC, bounded
+
+
+def test_mvrv_lag_is_bridged_for_up_to_three_days():
+    p = cycle()
+    mv = pd.Series(2.0, index=p.index)
+    mv.iloc[-2:] = np.nan  # publication lag on the last two days
+    mv.iloc[100:110] = np.nan  # a long gap stays a gap
+    f = cycle_features(p, mv, [HALVING])
+    assert f["mvrv"].iloc[-1] == 2.0
+    assert f["mvrv"].iloc[109] != f["mvrv"].iloc[109]  # NaN

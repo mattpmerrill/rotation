@@ -55,7 +55,8 @@ def cycle_features(
     """Daily inputs the rules need, each computed from data up to that day only."""
     f = pd.DataFrame(index=btc.index)
     f["btc"] = btc
-    f["mvrv"] = mvrv.reindex(btc.index)
+    # CoinMetrics publishes MVRV about a day after price: carry the last value up to 3 days
+    f["mvrv"] = mvrv.reindex(btc.index).ffill(limit=3)
     ath = btc.cummax()
     f["ath"] = ath
     f["drawdown"] = 1 - btc / ath
