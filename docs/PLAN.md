@@ -116,10 +116,17 @@ writes only their own rows; everyone reads `cycle_state` and market data.
 
 Estimate: 1-2 weeks. No hurry: the next trade is the first alt slice around April 2028.
 
-### Open decisions
+### Decisions made (2026-09-25)
 
-- Friends in v1, or v1 for Matt only and friends in v2?
-- Which coins Matt's IRA offers (the Basket Lab should only suggest those).
+- Logins for everyone in v1: email/password and Google (Supabase Auth).
+- Coins: any alt in the top 100 on the buy date (Matt's IRA offers nearly all of them).
+
+### Status (2026-09-25)
+
+Built: people/plans/trades/actions tables with RLS (cross-user isolation tested), the
+per-person plan calculator (replays the backtest exactly), the daily job (cycle state +
+actions + public Discord brief), and the app (cycle clock, sign-in, my plan, my stack; Basket
+Lab served from the explorer). Deployed on Vercel as `rotation-web` (root `web/`).
 
 ## Phase 0 (done, 2026-09-23 to 09-25)
 
