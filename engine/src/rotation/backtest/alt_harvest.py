@@ -50,7 +50,8 @@ def simulate(
     days = cf.loc[start:end]
     px0 = alt_px.loc[start]
     coins = [c for c in coins if c in alt_px.columns and not np.isnan(px0.get(c, np.nan))]
-    each = start_btc * days.iloc[0]["btc"] * (1 - fee) / len(coins)
+    # BTC -> USD -> alt: two trades, two fees (an IRA trades everything against USD)
+    each = start_btc * days.iloc[0]["btc"] * (1 - fee) ** 2 / len(coins)
     qty = {c: each / px0[c] for c in coins}
     ref = {c: px0[c] / (days.iloc[0]["btc"] if a.basis == "btc" else 1.0) for c in coins}
     btc, usdt = 0.0, 0.0

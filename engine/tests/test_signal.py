@@ -89,9 +89,12 @@ def test_public_sell_alert_shows_a_share_not_an_amount():
     sig = compute(f, C, day, btc=11.0, usdt=0.0)
     public = render(sig, 11.0, 0.0)
     _assert_private_bits_absent(public, 11.0, 0.0)
-    assert "SELL 1/12 of the BTC you held when the window opened" in public
+    from rotation.signal import _frac
+
+    per = C.sell.target_frac * C.sell.clock_share / C.sell.clock_tranches
+    assert f"SELL {_frac(per)} of the BTC you held when the window opened" in public
     private = render(sig, 11.0, 0.0, private=True)
-    assert "Holdings: 11.0000 BTC" in private and "SELL 0.9166 BTC" in private
+    assert "Holdings: 11.0000 BTC" in private and f"SELL {11.0 * per:.4f} BTC" in private
 
 
 def test_public_buy_alert_shows_a_share_not_an_amount():
