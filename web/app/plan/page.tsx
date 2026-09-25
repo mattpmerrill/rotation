@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, currentUser } from "@/lib/supabase/server";
-import { COINS, COINS_AS_OF, RULES, addDays, btc, coinById, cycleMilestones, niceDate, usd, type CycleState } from "@/lib/cycle";
+import { RULES, addDays, btc, cycleMilestones, niceDate, usd, type CycleState } from "@/lib/cycle";
+import { liveRanks } from "@/lib/ranks";
 import { savePlan } from "./actions";
 
 type Plan = { alt_budget_btc: number; sell_btc_frac: number; basket: string[] };
@@ -18,6 +19,8 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
     supabase.from("cycle_state").select("*").order("day", { ascending: false }).limit(1).maybeSingle(),
   ]);
   const s = stateRow as CycleState | null;
+  const ranks = await liveRanks(supabase);
+  const coinById = new Map(ranks.coins.map((c) => [c.id, c]));
   const { data: acts } = s
     ? await supabase.from("actions").select("*").eq("day", s.day)
     : { data: [] as Action[] };
@@ -100,7 +103,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           <fieldset className="grid gap-2">
             <legend className="text-sm">Your five alts <span className="text-ink-3">(test combinations in the <a href="/explorer.html#lab" className="underline">Basket Lab</a>)</span></legend>
             <datalist id="coins">
-              {COINS.map((c) => <option key={c.id} value={c.id} label={`#${c.rank} ${c.symbol} · ${c.name}`} />)}
+              {ranks.coins.map((c) => <option key={c.id} value={c.id} label={`#${c.rank} ${c.symbol} · ${c.name}`} />)}
             </datalist>
             <div className="grid gap-2 sm:grid-cols-5">
               {[0, 1, 2, 3, 4].map((i) => {
@@ -109,14 +112,21 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                 return (
                   <label key={i} className="grid gap-1 text-xs text-ink-3">Alt {i + 1}
                     <input id={`coin${i}`} name={`coin${i}`} list="coins" defaultValue={id} placeholder="e.g. ethereum" className="field text-sm text-ink" autoComplete="off" />
-                    <span className={c && c.rank > RULES.alt_max_rank ? "text-bad" : ""}>
-                      {c ? `${c.symbol} · #${c.rank}${c.rank > RULES.alt_max_rank ? " (outside the top 100)" : ""}` : " "}
+                    <span className={(c && c.rank > RULES.alt_max_rank) || (id && !c) ? "text-bad" : ""}>
+                      {c
+                        ? `${c.symbol} · #${c.rank}${c.rank > RULES.alt_max_rank ? " (outside the top 100)" : ""}`
+                        : id
+                          ? "not in today's top 200"
+                          : "\u00a0"}
                     </span>
                   </label>
                 );
               })}
             </div>
-            <p className="text-xs text-ink-3">Ranks as of {niceDate(COINS_AS_OF)}. A coin must be in the top {RULES.alt_max_rank} on the day you buy it.</p>
+            <p className="text-xs text-ink-3">
+              Ranks {ranks.live ? "updated daily" : "from a snapshot"}, as of {niceDate(ranks.asOf)} (stablecoins and wrapped coins don&apos;t count).
+              A coin must be in the top {RULES.alt_max_rank} on the day you buy it.
+            </p>
           </fieldset>
           <div><button className="btn btn-primary">Save plan</button></div>
         </form>
