@@ -210,6 +210,9 @@ cycle:                                # BTC cycle harvest (Matt, 2026-09-24): th
     clock_share: 1.0                  # share of the target sold on the clock (rest: trend break)
     clock_tranches: 4
     trend_weekly_sma: 20
+  alts:                               # Matt, 2026-09-25: the alt basket (per-person budget + coins in the app)
+    slice_days: [0, 60, 120, 180]     # buy in 4 equal slices from the halving to +180 days
+    max_rank: 100                     # a coin must be in the top 100 on the buy date
   buy:
     start_days_since_ath: 360
     start_drawdown: 0.80

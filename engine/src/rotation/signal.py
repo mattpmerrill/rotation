@@ -30,6 +30,7 @@ class Action:
     usd: float = 0.0
     reason: str = ""
     share: str = ""  # public wording: how much to act on, as a share (never an amount)
+    step: str = ""  # plan step id, e.g. "btc_sell_2", "rebuy_1": logged trades mark it done
 
 
 @dataclass
@@ -112,7 +113,14 @@ def compute(
                 why = f"clock tranche {n} of {sell.clock_tranches}"
                 share = f"{_frac(due / stack)} of the BTC you held when the window opened"
             sig.actions.append(
-                Action("sell", btc=due, usd=due * sig.price, reason=why, share=share)
+                Action(
+                    "sell",
+                    btc=due,
+                    usd=due * sig.price,
+                    reason=why,
+                    share=share,
+                    step=f"btc_sell_{n}",
+                )
             )
         tranche_frac = _frac(sell.target_frac * sell.clock_share / sell.clock_tranches)
         for d in clock_dates:
@@ -145,6 +153,7 @@ def compute(
                     btc=usdt / sig.price,
                     reason="new all-time high: the bottom was missed, buy back now",
                     share="all of your USDT reserve",
+                    step="rebuy_all",
                 )
             )
         elif row["days_since_ath"] >= buy.deadline_days_since_ath:
@@ -156,6 +165,7 @@ def compute(
                     btc=usdt / sig.price,
                     reason=f"deadline: {buy.deadline_days_since_ath} days since the high",
                     share="all of your remaining USDT reserve",
+                    step="rebuy_all",
                 )
             )
         else:
@@ -175,6 +185,7 @@ def compute(
                             usd=amount,
                             btc=amount / sig.price,
                             reason=f"tranche {buy_tranches_done + 1} of {buy.tranches}",
+                            step=f"rebuy_{buy_tranches_done + 1}",
                             share="all of your remaining USDT reserve"
                             if left == 1
                             else f"1/{left} of your remaining USDT reserve",

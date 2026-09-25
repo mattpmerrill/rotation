@@ -359,10 +359,16 @@ class CycleBuy(_Model):
     deadline_days_since_ath: int
 
 
+class CycleAlts(_Model):
+    slice_days: list[int]
+    max_rank: int
+
+
 class Cycle(_Model):
     account: CycleAccount
     halvings: list[date]
     sell: CycleSell
+    alts: CycleAlts
     buy: CycleBuy
 
 
