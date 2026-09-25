@@ -56,3 +56,19 @@ def test_brief_announces_rebuys_for_usdt_holders():
     day = (ath + pd.Timedelta(days=CFG.rules.cycle.buy.start_days_since_ath)).date()
     sig, steps = public_steps(f, CFG, day)
     assert "BTC BUY (if you hold USDT from the top)" in public_brief(sig, steps)
+
+
+def test_rank_markets_skips_btc_and_excluded_coins():
+    from rotation.daily import rank_markets
+
+    m = pd.DataFrame(
+        {
+            "id": ["bitcoin", "ethereum", "tether", "ripple", "newcoin", "nocap"],
+            "market_cap": [2e12, 4e11, 1.5e11, 1e11, 5e10, None],
+            "current_price": [84000, 3000, 1, 2, 5, 1],
+            "total_volume": [1, 1, 1, 1, 1, 1],
+        }
+    )
+    r = rank_markets(m, excluded={"tether"}).set_index("id")["rank"]
+    assert r["ethereum"] == 1 and r["ripple"] == 2 and r["newcoin"] == 3
+    assert pd.isna(r["bitcoin"]) and pd.isna(r["tether"]) and pd.isna(r["nocap"])

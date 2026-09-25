@@ -32,7 +32,11 @@ def prepare(cfg: Config, since: str) -> dict[str, pd.DataFrame]:
     cats = cache.read("coingecko_meta", "categories")
     meta = pd.read_parquet(cache.data_dir() / "coingecko_backfill" / "_coins.parquet")
 
-    coin_ids = set(ranks["coin_id"]) | {"bitcoin"}
+    # ranked coins, plus every coin the backtest excluded (stables, wrapped, tokenized...) so
+    # the daily job knows they are excluded when they show up in today's market list
+    audit = cache.data_dir() / "universe" / "excluded_audit.csv"
+    excluded_ids = set(pd.read_csv(audit)["coin_id"]) if audit.exists() else set()
+    coin_ids = set(ranks["coin_id"]) | {"bitcoin"} | excluded_ids
     u = cfg.universe
     excl = {c.casefold() for c in u.exclude_categories}
     memes = {c.casefold() for c in u.meme_categories}
@@ -47,7 +51,7 @@ def prepare(cfg: Config, since: str) -> dict[str, pd.DataFrame]:
         }
     )
     coins["is_excluded"] = [
-        i in u.exclude_ids or any(c.strip().casefold() in excl for c in cs)
+        i in u.exclude_ids or i in excluded_ids or any(c.strip().casefold() in excl for c in cs)
         for i, cs in zip(coins["id"], coins["categories"], strict=True)
     ]
     coins["is_meme"] = [

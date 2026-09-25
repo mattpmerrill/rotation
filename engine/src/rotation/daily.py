@@ -3,6 +3,7 @@
   1. BTC price + MVRV (CoinMetrics) -> cycle features -> the shared cycle state
   2. every plan + trade log (Supabase) -> that person's steps for today -> `actions`
   3. the public Discord brief: what is due today, as shares of a stack (never amounts)
+  4. today's prices and ranks for the top 250 alts plus every basket/held coin
 
 Reads and writes with the database owner's connection (SUPABASE_DB_URL), which bypasses
 RLS by design: this job is the only writer of cycle_state and actions.
@@ -17,6 +18,7 @@ from datetime import date
 import pandas as pd
 
 from rotation.config import Config
+from rotation.data.universe import is_excluded
 from rotation.person import Done, Holdings, Plan, Step, person_steps
 from rotation.signal import Signal
 
@@ -92,16 +94,75 @@ def _frame(cur, sql: str) -> pd.DataFrame:
     return pd.DataFrame(cur.fetchall(), columns=[d.name for d in cur.description])
 
 
-def alt_prices(coins: set[str]) -> dict[str, float]:
-    """Today's USD prices from CoinGecko (free Demo key is enough). Missing -> omitted."""
-    if not coins or not os.environ.get("COINGECKO_API_KEY"):
+def rank_markets(markets: pd.DataFrame, excluded: set[str]) -> pd.DataFrame:
+    """Rank by market cap the way the backtest did: stablecoins, wrapped coins and BTC
+    itself don't take a place. Coins without a market cap get no rank."""
+    m = markets[markets["market_cap"].fillna(0) > 0].copy()
+    m = m.sort_values("market_cap", ascending=False)
+    eligible = ~m["id"].isin(excluded | {"bitcoin"})
+    m["rank"] = pd.NA
+    m.loc[eligible, "rank"] = range(1, int(eligible.sum()) + 1)
+    return pd.concat([m, markets[~markets["id"].isin(m["id"])].assign(rank=pd.NA)])
+
+
+def refresh_prices(cur, cfg: Config, day: date, wanted: set[str]) -> dict[str, float]:
+    """Save today's prices for the top 250 plus every basket/held coin to daily_prices.
+    Needs COINGECKO_API_KEY (the free Demo key is enough); without it, returns {}."""
+    if not os.environ.get("COINGECKO_API_KEY"):
         return {}
     from rotation.data.coingecko import CoinGecko
 
-    body = CoinGecko()._get(
-        "/simple/price", {"ids": ",".join(sorted(coins)), "vs_currencies": "usd"}
-    )
-    return {k: float(v["usd"]) for k, v in (body or {}).items() if "usd" in v}
+    cg = CoinGecko()
+    markets = cg.markets()
+    cur.execute("select id, is_excluded from public.coins")
+    known = dict(cur.fetchall())
+    # a coin never seen before: classify it by its CoinGecko categories, like the backtest
+    u = cfg.universe
+    for r in markets.itertuples():
+        if r.id in known or r.id == "bitcoin":
+            continue
+        cats = cg.coin_categories(r.id)
+        excl = is_excluded(r.id, cats, u.exclude_categories, u.exclude_ids, u.force_include_ids)
+        cur.execute(
+            """insert into public.coins (id, symbol, name, categories, is_excluded)
+               values (%s, %s, %s, %s, %s) on conflict (id) do nothing""",
+            (r.id, r.symbol, r.name, cats, excl),
+        )
+        known[r.id] = excl
+    excluded = {i for i, x in known.items() if x} | set(u.exclude_ids)
+    ranked = rank_markets(markets, excluded)
+    prices = dict(zip(ranked["id"], ranked["current_price"].astype(float), strict=True))
+    extra = cg.simple_prices(wanted - set(prices))
+    prices.update(extra)
+
+    rows = [
+        (
+            r.id,
+            r.symbol,
+            r.name,
+            r.current_price,
+            r.total_volume,
+            r.market_cap,
+            None if pd.isna(r.rank) else int(r.rank),
+        )
+        for r in ranked.itertuples()
+        if r.id != "bitcoin" and not pd.isna(r.current_price)
+    ] + [(cid, cid, cid, px, None, None, None) for cid, px in extra.items()]
+    for cid, sym, name, px, vol, mcap, rank in rows:
+        # new coins get a row in `coins` first (daily_prices references it)
+        cur.execute(
+            "insert into public.coins (id, symbol, name) values (%s, %s, %s) on conflict (id) do nothing",
+            (cid, sym, name),
+        )
+        cur.execute(
+            """insert into public.daily_prices (coin_id, date, close, volume_usd, market_cap_usd,
+                 rank, source) values (%s,%s,%s,%s,%s,%s,'coingecko_live')
+               on conflict (coin_id, date) do update set close = excluded.close,
+                 volume_usd = excluded.volume_usd, market_cap_usd = excluded.market_cap_usd,
+                 rank = excluded.rank, source = excluded.source""",
+            (cid, day, px, vol, mcap, rank),
+        )
+    return prices
 
 
 def run(cfg: Config, f: pd.DataFrame, day: date, dsn: str) -> tuple[str, int]:
@@ -148,7 +209,7 @@ def run(cfg: Config, f: pd.DataFrame, day: date, dsn: str) -> tuple[str, int]:
         coins = {x for b in plans["basket"] for x in (b or [])} | set(
             holdings.loc[~holdings["asset"].isin(["bitcoin", "usdt"]), "asset"]
         )
-        prices = alt_prices(coins)
+        prices = refresh_prices(cur, cfg, day, coins)
 
         cur.execute("delete from public.actions where day = %s", (day,))
         for p in plans.itertuples():

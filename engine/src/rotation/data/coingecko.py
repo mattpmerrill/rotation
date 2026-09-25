@@ -55,6 +55,21 @@ class CoinGecko:
         """status='inactive' (Analyst+) returns delisted coins: needed to avoid survivorship bias."""
         return pd.DataFrame(self._get("/coins/list", {"status": status}))
 
+    def markets(self, per_page: int = 250) -> pd.DataFrame:
+        """Today's top coins by market cap: id, symbol, name, price, market cap, volume."""
+        body = self._get(
+            "/coins/markets",
+            {"vs_currency": "usd", "order": "market_cap_desc", "per_page": per_page, "page": 1},
+        )
+        cols = ["id", "symbol", "name", "current_price", "market_cap", "total_volume"]
+        return pd.DataFrame(body or [], columns=cols)
+
+    def simple_prices(self, ids: set[str]) -> dict[str, float]:
+        if not ids:
+            return {}
+        body = self._get("/simple/price", {"ids": ",".join(sorted(ids)), "vs_currencies": "usd"})
+        return {k: float(v["usd"]) for k, v in (body or {}).items() if "usd" in v}
+
     def coin_categories(self, coin_id: str) -> list[str]:
         body = self._get(
             f"/coins/{coin_id}",
