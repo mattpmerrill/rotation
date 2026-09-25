@@ -211,8 +211,10 @@ def signal_cmd(
     f = sg.live_features(c)
     d = pd.Timestamp(day).date() if day else f.index[-1].date()
     sig = sg.compute(f, c, d, btc, usdt, sold, tranches_bought)
-    text = sg.render(sig, btc, usdt)
-    typer.echo(text)
+    public = sg.render(sig, btc, usdt)
+    private = sg.render(sig, btc, usdt, private=True)
+    # Actions logs are readable by repo collaborators: print only the public text there
+    typer.echo(public if os.environ.get("GITHUB_ACTIONS") else private)
     if post:
         if only_if_action and not sig.actions and d.weekday() != 6:
             typer.echo("(no action and not Sunday: not posted)")
@@ -220,8 +222,12 @@ def signal_cmd(
         url = os.environ.get("DISCORD_WEBHOOK_URL")
         if not url:
             raise typer.BadParameter("DISCORD_WEBHOOK_URL is not set")
-        sg.post_discord(text, url)
+        sg.post_discord(public, url)
         typer.echo("(posted to Discord)")
+        private_url = os.environ.get("DISCORD_PRIVATE_WEBHOOK_URL")
+        if private_url:
+            sg.post_discord(private, private_url)
+            typer.echo("(private copy posted)")
 
 
 if __name__ == "__main__":

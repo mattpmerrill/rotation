@@ -3,12 +3,17 @@
 Stateless: the caller passes current holdings plus what has already been done this cycle
 (BTC sold, buy tranches done), so it runs anywhere (laptop, GitHub Actions) and is exact.
 Every number comes from the same rule functions the backtest used (rules/cycle.py).
+
+Privacy (Matt, 2026-09-24): the public message never shows holdings or amounts, only the
+share of a stack to act on, so the channel can't infer anyone's BTC. Exact amounts are only
+in the private rendering.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from fractions import Fraction
 
 import pandas as pd
 
@@ -24,6 +29,7 @@ class Action:
     btc: float = 0.0
     usd: float = 0.0
     reason: str = ""
+    share: str = ""  # public wording: how much to act on, as a share (never an amount)
 
 
 @dataclass
@@ -41,6 +47,12 @@ class Signal:
     phase: str
     actions: list[Action] = field(default_factory=list)
     upcoming: list[tuple[date, str]] = field(default_factory=list)
+
+
+def _frac(x: float) -> str:
+    """0.083325 -> '1/12'."""
+    f = Fraction(x).limit_denominator(100)
+    return f"{f.numerator}/{f.denominator}" if f.denominator != 1 else str(f.numerator)
 
 
 def compute(
@@ -90,21 +102,32 @@ def compute(
         due = min(max(planned - sold_this_cycle, 0.0), max(target - sold_this_cycle, 0.0))
         if due > 1e-8:
             n = sum(1 for d in clock_dates if d <= day)
-            sig.actions.append(
-                Action(
-                    "sell",
-                    btc=due,
-                    usd=due * sig.price,
-                    reason=f"clock tranche {n} of {sell.clock_tranches}",
+            stack = btc + sold_this_cycle
+            if planned == target and n < sell.clock_tranches:
+                why, share = (
+                    "trend broke after a new high",
+                    (f"the rest of your {_frac(sell.target_frac)} target"),
                 )
+            else:
+                why = f"clock tranche {n} of {sell.clock_tranches}"
+                share = f"{_frac(due / stack)} of the BTC you held when the window opened"
+            sig.actions.append(
+                Action("sell", btc=due, usd=due * sig.price, reason=why, share=share)
             )
+        tranche_frac = _frac(sell.target_frac * sell.clock_share / sell.clock_tranches)
         for d in clock_dates:
             if d > day:
-                sig.upcoming.append((d, f"sell ~{per:.4f} BTC (clock tranche)"))
+                sig.upcoming.append((d, f"sell tranche ({tranche_frac} of your stack)"))
     elif dsh < sell.window_start_days:
         sig.phase = "HOLD (before the sell window)"
         sig.upcoming.append(
-            (clock_dates[0], f"sell window opens: {sell.clock_tranches} tranches of ~{per:.4f} BTC")
+            (
+                clock_dates[0],
+                (
+                    f"sell window opens: {sell.clock_tranches} tranches, "
+                    f"{_frac(sell.target_frac)} of your stack in total"
+                ),
+            )
         )
     else:
         sig.phase = "WAITING FOR THE BOTTOM" if usdt > 1 else "HOLD (after the sell window)"
@@ -121,6 +144,7 @@ def compute(
                     usd=usdt,
                     btc=usdt / sig.price,
                     reason="new all-time high: the bottom was missed, buy back now",
+                    share="all of your USDT reserve",
                 )
             )
         elif row["days_since_ath"] >= buy.deadline_days_since_ath:
@@ -131,6 +155,7 @@ def compute(
                     usd=usdt,
                     btc=usdt / sig.price,
                     reason=f"deadline: {buy.deadline_days_since_ath} days since the high",
+                    share="all of your remaining USDT reserve",
                 )
             )
         else:
@@ -142,13 +167,17 @@ def compute(
                 sig.phase = "BUYING"
                 due_n = sum(1 for d in dates if d <= day)
                 if due_n > buy_tranches_done and buy_tranches_done < buy.tranches:
-                    amount = usdt / (buy.tranches - buy_tranches_done)
+                    left = buy.tranches - buy_tranches_done
+                    amount = usdt / left
                     sig.actions.append(
                         Action(
                             "buy",
                             usd=amount,
                             btc=amount / sig.price,
                             reason=f"tranche {buy_tranches_done + 1} of {buy.tranches}",
+                            share="all of your remaining USDT reserve"
+                            if left == 1
+                            else f"1/{left} of your remaining USDT reserve",
                         )
                     )
                 for d in dates:
@@ -184,8 +213,8 @@ def live_features(c: Cycle) -> pd.DataFrame:
     return cycle_features(btc, mvrv, halvings, c.sell.trend_weekly_sma)
 
 
-def render(sig: Signal, btc: float, usdt: float) -> str:
-    """Plain-text message for Discord / the terminal."""
+def render(sig: Signal, btc: float, usdt: float, private: bool = False) -> str:
+    """Plain-text message. Public (default): no holdings, no amounts. Private: both."""
     lines = [
         f"**Rotation · BTC cycle harvest · {sig.day:%a %d %b %Y}**",
         (
@@ -193,15 +222,23 @@ def render(sig: Signal, btc: float, usdt: float) -> str:
             f"{sig.days_since_ath} days ago) · MVRV {sig.mvrv:.2f}"
         ),
         f"Day {sig.days_since_halving} since the {sig.last_halving:%b %Y} halving · next halving ~{sig.next_halving_est:%b %Y} (est.)",
-        f"Holdings: {btc:.4f} BTC + ${usdt:,.0f} USDT = {btc + usdt / sig.price:.4f} BTC equivalent",
         f"Phase: **{sig.phase}**",
     ]
+    if private:
+        lines.insert(
+            3,
+            f"Holdings: {btc:.4f} BTC + ${usdt:,.0f} USDT = "
+            f"{btc + usdt / sig.price:.4f} BTC equivalent",
+        )
     if sig.actions:
         lines.append("")
         lines.append("**Action today:**")
         for a in sig.actions:
             verb = "SELL" if a.kind == "sell" else "BUY"
-            lines.append(f"• {verb} {a.btc:.4f} BTC (~${a.usd:,.0f}): {a.reason}")
+            if private:
+                lines.append(f"• {verb} {a.btc:.4f} BTC (~${a.usd:,.0f}): {a.reason}")
+            else:
+                lines.append(f"• {verb} {a.share}: {a.reason}")
     else:
         lines.append("No action today.")
     if sig.upcoming:

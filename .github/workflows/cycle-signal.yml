@@ -16,7 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: engine } }
     env:
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}                   # public: shares only
+      DISCORD_PRIVATE_WEBHOOK_URL: ${{ secrets.DISCORD_PRIVATE_WEBHOOK_URL }}   # optional: exact amounts
       HOLDINGS_BTC: ${{ secrets.HOLDINGS_BTC }}
       HOLDINGS_USDT: ${{ secrets.HOLDINGS_USDT }}
       SOLD_THIS_CYCLE: ${{ secrets.SOLD_THIS_CYCLE }}

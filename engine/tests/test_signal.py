@@ -59,3 +59,47 @@ def test_render_mentions_phase_and_action():
     sig = compute(f, C, pd.Timestamp("2021-11-01").date(), btc=10.0, usdt=0.0)
     text = render(sig, 10.0, 0.0)
     assert "SELL WINDOW" in text and "SELL" in text
+
+
+# --- privacy (Matt, 2026-09-24): the public alert never reveals holdings or amounts ------
+
+
+def _synthetic():
+    import numpy as np
+
+    from rotation.rules.cycle import cycle_features
+
+    h = pd.Timestamp("2020-01-01")
+    p = np.r_[np.linspace(10, 100, 560), np.linspace(100, 20, 400), np.linspace(20, 50, 300)]
+    idx = pd.date_range(h, periods=len(p))
+    return cycle_features(pd.Series(p, index=idx), pd.Series(2.0, index=idx), [h]), h
+
+
+def _assert_private_bits_absent(text, btc, usdt):
+    assert "Holdings" not in text
+    assert f"{btc:.4f}" not in text
+    if usdt:
+        assert f"{usdt:,.0f}" not in text
+    assert " BTC (~$" not in text
+
+
+def test_public_sell_alert_shows_a_share_not_an_amount():
+    f, h = _synthetic()
+    day = (h + pd.Timedelta(days=C.sell.window_start_days)).date()
+    sig = compute(f, C, day, btc=11.0, usdt=0.0)
+    public = render(sig, 11.0, 0.0)
+    _assert_private_bits_absent(public, 11.0, 0.0)
+    assert "SELL 1/12 of the BTC you held when the window opened" in public
+    private = render(sig, 11.0, 0.0, private=True)
+    assert "Holdings: 11.0000 BTC" in private and "SELL 0.9166 BTC" in private
+
+
+def test_public_buy_alert_shows_a_share_not_an_amount():
+    f, _h = _synthetic()
+    ath = f.index[f["days_since_ath"] == 0][-1]  # the LAST day at the high
+    day = (ath + pd.Timedelta(days=C.buy.start_days_since_ath)).date()
+    sig = compute(f, C, day, btc=7.3, usdt=123_456.0, sold_this_cycle=3.6)
+    public = render(sig, 7.3, 123_456.0)
+    _assert_private_bits_absent(public, 7.3, 123_456.0)
+    assert "BUY 1/4 of your remaining USDT reserve" in public
+    assert "123,456" in render(sig, 7.3, 123_456.0, private=True)
