@@ -160,6 +160,27 @@ ul.find b { color: var(--ink); font-weight: 600; }
     <div class="scale"><span>worse than never selling</span><span class="bar"></span><span>better</span></div>
   </section>
 
+  <section class="panel" aria-labelledby="when-h">
+    <div class="stack">
+      <h3 id="when-h">When should you buy the alts?</h3>
+      <p>Same basket (the five largest alts on the day you buy), held without selling until the sell window, then everything sold at the top. Scored in BTC on the day the window opens, from 1 BTC. Above 1.00 means the alts beat simply holding BTC.</p>
+    </div>
+    <div class="stack">
+      <h3 id="now-h">If you started today, <span class="num" id="today-dsa"></span> days after the top: the same move in past cycles</h3>
+      <div class="scroll"><table id="replay"></table></div>
+    </div>
+    <div class="stack">
+      <h3>Buy day relative to the halving</h3>
+      <div class="scroll"><div class="heat" id="offsets"></div></div>
+      <div class="scale"><span>lost BTC vs holding</span><span class="bar"></span><span>gained BTC</span></div>
+      <p class="note">Blank: no point-in-time ranking yet (the data starts in January 2016).</p>
+    </div>
+    <div class="stack">
+      <h3>Four slices: at the halving, +60, +120 and +180 days</h3>
+      <div class="tiles" id="stagger"></div>
+    </div>
+  </section>
+
   <section class="panel" aria-labelledby="calc-h">
     <div class="stack">
       <h3 id="calc-h">The math of selling on fixed gains</h3>
@@ -373,6 +394,46 @@ ul.find b { color: var(--ink); font-weight: 600; }
     $('pb-label').textContent = `${Math.round(Number(S.pullback) * 100)}%`;
   }
 
+  function renderEntry() {
+    const E = D.entry;
+    $('today-dsa').textContent = E.today_days_since_ath;
+    const div = (v) => {
+      const t = Math.max(-1, Math.min(1, Math.log(v) / Math.log(2.2)));
+      const mix = (a, b, w) => `color-mix(in srgb, var(${b}) ${Math.round(Math.abs(w) * 100)}%, var(${a}))`;
+      if (t >= 0) return t < 0.5 ? mix('--mid', '--good-2', t * 2) : mix('--good-2', '--good', (t - 0.5) * 2);
+      return -t < 0.5 ? mix('--mid', '--bad-2', -t * 2) : mix('--bad-2', '--bad', (-t - 0.5) * 2);
+    };
+    const ink = (v) => Math.abs(Math.log(v) / Math.log(2.2)) > 0.6 ? '#fff' : 'var(--ink)';
+    const pill = (v) => `<span class="pill ${v >= 1 ? 'up' : 'down'}">${pct(v - 1)}</span>`;
+
+    let h = '<thead><tr><th>Start the alt basket</th><th>Date</th><th class="r">At the sell window</th><th class="r">vs holding BTC</th><th class="r">Worst point</th><th>Basket</th></tr></thead><tbody>';
+    let last = '';
+    for (const r of E.replay) {
+      if (r.cycle !== last) { h += `<tr><td colspan="6" style="font:600 13px var(--display);color:var(--ink-2);padding-top:14px">${r.cycle} cycle</td></tr>`; last = r.cycle; }
+      const strong = r.start === 'Same point as today' ? ' style="font-weight:600"' : '';
+      h += `<tr><td${strong}>${r.start}</td><td class="num">${r.date}</td><td class="r num">${fmt(r.at_window)}</td><td class="r">${pill(r.at_window)}</td><td class="r num">${fmt(r.worst)}</td><td class="coins">${r.coins.map((c) => c.replace(/-/g, ' ')).join(', ')}</td></tr>`;
+    }
+    $('replay').innerHTML = h + '</tbody>';
+
+    const halvs = [...new Set(E.offsets.map((o) => o.halving))].sort();
+    const offs = [...new Set(E.offsets.map((o) => o.offset))].sort((a, b) => a - b);
+    const label = (o) => o === 0 ? 'at the halving' : (o < 0 ? `${-o} days before` : `${o} days after`);
+    let g = `<div class="heat-grid" style="grid-template-columns:130px repeat(${halvs.length}, minmax(64px, 1fr))" role="table" aria-label="Alt basket value in BTC by buy day"><div class="h">buy day ↓ · halving →</div>`;
+    g += halvs.map((y) => `<div class="h">${y}</div>`).join('');
+    for (const o of offs) {
+      g += `<div class="h rh">${label(o)}</div>`;
+      for (const y of halvs) {
+        const r = E.offsets.find((x) => x.halving === y && x.offset === o);
+        g += r ? `<div class="cell" style="background:${div(r.at_window)};color:${ink(r.at_window)}" title="${label(o)}, ${y} halving: ${fmt(r.at_window)} BTC">${fmt(r.at_window)}</div>`
+               : '<div class="cell" style="background:transparent;color:var(--ink-3)">–</div>';
+      }
+    }
+    $('offsets').innerHTML = g + '</div>';
+
+    $('stagger').innerHTML = E.stagger.map((s) => `<div class="tile"><div class="k">${s.halving} halving</div>
+      <div class="v">${fmt(s.at_window)} BTC</div><div class="d">at the window · worst ${fmt(s.worst)} · end ${fmt(s.end)}</div></div>`).join('');
+  }
+
   function renderCalc() {
     const peak = +$('c-peak').value, trig = +$('c-trig').value, frac = +$('c-frac').value, fall = +$('c-fall').value;
     $('c-peak-v').textContent = `${peak.toFixed(2)}×`; $('c-trig-v').textContent = `+${Math.round(trig * 100)}%`;
@@ -398,7 +459,10 @@ ul.find b { color: var(--ink); font-weight: 600; }
     const at = (cy, k) => D.grid.find((g) => g.cycle === cy && g.basket === 'top5' && g.sell_frac === 0)?.at_window;
     const ex = (cy) => D.grid.find((g) => g.cycle === cy && g.basket === 'top5' && g.trigger === 0.25 && g.sell_frac === 0.25 && g.basis === 'usd' && Math.abs(g.pullback - 0.1) < 1e-9)?.at_window;
     const cy = CYCLES;
+    const st = D.entry.stagger, rp = D.entry.replay.filter((r) => r.start === 'Same point as today');
     const li = [
+      `<b>Don't buy the alts now.</b> Starting the basket ${D.entry.today_days_since_ath} days after the top, where we are today, lost BTC in both past cycles (${rp.map((r) => `${r.cycle}: ${fmt(r.at_window)} BTC`).join(', ')}). BTC leads out of the bear and alts bleed against it for about a year. Even buying the exact bear bottom lost.`,
+      `<b>Buy them between the halving and about six months after, in slices.</b> Four equal buys at the halving, +60, +120 and +180 days beat holding BTC in every cycle when the window opened (${st.map((s) => `${s.halving}: ${fmt(s.at_window)}`).join(', ')}). Expect the basket to drop to about half its BTC value at some point before the alt run.`,
       `<b>Holding the five largest alts from the halving to the sell window beat holding BTC in every cycle tested</b> (${cy.map((c) => `${c}: ${fmt(at(c))} BTC`).join(', ')} from 1 BTC). That is the honest basket: the top five on the halving date, dead coins included.`,
       `<b>Selling 25% every time an alt gains 25% in dollars did worse than never selling</b> (${cy.map((c) => `${c}: ${fmt(ex(c))}`).join(', ')}). In the 2020 cycle it ended below just holding BTC. A 25% move is normal alt noise; it sells the winners before the run that matters.`,
       `<b>If you sell on the way up, measure the gain against BTC, not dollars, and use a big step.</b> Selling 10% each time an alt doubles against BTC came out close to never selling, while banking some BTC along the way.`,
@@ -418,7 +482,7 @@ ul.find b { color: var(--ink); font-weight: 600; }
     renderTiles(); renderLegend(); renderChart(); renderTable(); renderHeat();
   }
   ['c-peak', 'c-trig', 'c-frac', 'c-fall'].forEach((id) => $(id).addEventListener('input', renderCalc));
-  render(); renderCalc(); renderFindings();
+  render(); renderCalc(); renderEntry(); renderFindings();
   window.addEventListener('resize', () => renderChart());
 })();
 </script>
