@@ -117,7 +117,7 @@ ul.find b { color: var(--ink); font-weight: 600; }
   <header>
     <div class="eyebrow">Rotation · measured in bitcoin</div>
     <h1>Which strategy ends a cycle with the most BTC?</h1>
-    <p>Every line starts with <b>1 BTC</b> at a halving and is scored in BTC at the next one (or today). All strategies sell near the top in the halving-clock window (days <span class="num" id="win-days"></span> after the halving) and rebuy in the bear with the same rules. Your IRA terms: no tax, <span class="num" id="fee"></span> fee per trade.</p>
+    <p>Every line starts with <b>1 BTC</b> at a halving and is scored in BTC at the next one (or today). All strategies sell near the top in the halving-clock window (days <span class="num" id="win-days"></span> after the halving) and rebuy in the bear with the same rules. Assumes no tax and a <span class="num" id="fee"></span> fee per trade.</p>
   </header>
 
   <section class="controls" aria-label="Choose what to compare">
@@ -221,7 +221,7 @@ ul.find b { color: var(--ink); font-weight: 600; }
     { key: 'alt_25usd', name: 'Alts, sell 25% at +25% (USD)', color: '--s4', alt: true },
     { key: 'alt_100btc', name: 'Alts, sell 10% at +100% vs BTC', color: '--s5', alt: true },
   ];
-  const BASKETS = { top5: 'Top 5 at the halving', yours: 'Your 5 (hindsight)' };
+  const BASKETS = { top5: 'Top 5 at the halving', yours: 'ETH, BNB, XRP, SOL, LINK' };
   const CYCLES = Object.keys(D.cycles);
   const load = (k, d) => { try { return localStorage.getItem(k) || d; } catch { return d; } };
   const save = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
@@ -466,8 +466,8 @@ ul.find b { color: var(--ink); font-weight: 600; }
       `<b>Holding the five largest alts from the halving to the sell window beat holding BTC in every cycle tested</b> (${cy.map((c) => `${c}: ${fmt(at(c))} BTC`).join(', ')} from 1 BTC). That is the honest basket: the top five on the halving date, dead coins included.`,
       `<b>Selling 25% every time an alt gains 25% in dollars did worse than never selling</b> (${cy.map((c) => `${c}: ${fmt(ex(c))}`).join(', ')}). In the 2020 cycle it ended below just holding BTC. A 25% move is normal alt noise; it sells the winners before the run that matters.`,
       `<b>If you sell on the way up, measure the gain against BTC, not dollars, and use a big step.</b> Selling 10% each time an alt doubles against BTC came out close to never selling, while banking some BTC along the way.`,
-      `<b>Your exact five look spectacular in 2020, mostly because of SOL</b> (up about 400× in dollars). Nobody could pick that in May 2020. Judge the idea by the top-5 basket.`,
-      `<b>Small sample.</b> Three cycles, and alts beat BTC in the bull phase of each. Across 2019 to 2026 as a whole, a top-20 alt basket lost 80% against BTC, so the exit (the halving-clock window) is doing the work. Check that your IRA can hold these coins; BNB in particular is rarely available.`,
+      `<b>The ETH, BNB, XRP, SOL, LINK basket looks spectacular in 2020, mostly because of SOL</b> (up about 400× in dollars). Nobody could pick that in May 2020. Judge the idea by the top-5 basket.`,
+      `<b>Small sample.</b> Three cycles, and alts beat BTC in the bull phase of each. Across 2019 to 2026 as a whole, a top-20 alt basket lost 80% against BTC, so the exit (the halving-clock window) is doing the work. Check that your account can hold these coins; BNB in particular is rarely available in US retirement accounts.`,
     ];
     $('findings').innerHTML = li.map((x) => `<li>${x}</li>`).join('');
     $('gen').textContent = `Backtest data generated ${D.generated} by the Rotation engine. Prices: CoinGecko point-in-time data and CoinMetrics. Fees ${Math.round(D.fee * 100)}% per trade, no tax. Not financial advice.`;
