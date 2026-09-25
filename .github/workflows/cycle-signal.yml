@@ -1,6 +1,7 @@
 name: cycle-signal
-# Daily BTC cycle-harvest signal -> Discord. Posts only when an action is due, plus a
-# Sunday summary. Holdings are secrets (not variables) so collaborators can't read them.
+# Daily job: shared cycle state + every person's actions -> Supabase; public brief -> Discord
+# (shares only, never holdings or amounts). Posts on action days, plus a Sunday summary.
+# Holdings come from each person's trade log in the app, not from secrets.
 on:
   schedule:
     - cron: "15 13 * * *"   # 13:15 UTC daily, after CoinMetrics publishes the prior day
@@ -12,25 +13,21 @@ on:
         default: false
 
 jobs:
-  signal:
+  daily:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: engine } }
     env:
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}                   # public: shares only
-      DISCORD_PRIVATE_WEBHOOK_URL: ${{ secrets.DISCORD_PRIVATE_WEBHOOK_URL }}   # optional: exact amounts
-      HOLDINGS_BTC: ${{ secrets.HOLDINGS_BTC }}
-      HOLDINGS_USDT: ${{ secrets.HOLDINGS_USDT }}
-      SOLD_THIS_CYCLE: ${{ secrets.SOLD_THIS_CYCLE }}
-      TRANCHES_BOUGHT: ${{ secrets.TRANCHES_BOUGHT }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}   # public: shares only
+      COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}       # optional: alt prices (free Demo key)
+      COINGECKO_PLAN: demo
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --frozen
-      - name: Signal
+      - name: Daily job
         run: |
-          if [ -z "$DISCORD_WEBHOOK_URL" ] || [ -z "$HOLDINGS_BTC" ]; then
-            echo "DISCORD_WEBHOOK_URL / HOLDINGS_BTC secrets not set yet: skipping"; exit 0
+          if [ -z "$SUPABASE_DB_URL" ] || [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "SUPABASE_DB_URL / DISCORD_WEBHOOK_URL secrets not set: skipping"; exit 0
           fi
-          uv run rotation signal --btc "$HOLDINGS_BTC" --usdt "${HOLDINGS_USDT:-0}" \
-            --sold "${SOLD_THIS_CYCLE:-0}" --tranches-bought "${TRANCHES_BOUGHT:-0}" \
-            --post $([ "${{ inputs.force_post }}" = "true" ] || echo --only-if-action)
+          uv run rotation daily --post $([ "${{ inputs.force_post }}" = "true" ] || echo --only-if-action)
