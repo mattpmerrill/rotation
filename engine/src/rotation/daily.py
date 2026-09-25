@@ -165,8 +165,9 @@ def refresh_prices(cur, cfg: Config, day: date, wanted: set[str]) -> dict[str, f
     return prices
 
 
-def run(cfg: Config, f: pd.DataFrame, day: date, dsn: str) -> tuple[str, int]:
-    """Write cycle_state + everyone's actions for `day`. Returns (public brief, people)."""
+def run(cfg: Config, f: pd.DataFrame, day: date, dsn: str) -> tuple[str, int, int]:
+    """Write cycle_state + everyone's actions + today's prices for `day`.
+    Returns (public brief, people, coins priced)."""
     import psycopg
 
     c = cfg.rules.cycle
@@ -237,4 +238,4 @@ def run(cfg: Config, f: pd.DataFrame, day: date, dsn: str) -> tuple[str, int]:
                     (p.user_id, day, s.kind, s.asset, s.qty, s.usd, s.step, s.reason, s.share),
                 )
         conn.commit()
-    return brief, len(plans)
+    return brief, len(plans), len(prices)

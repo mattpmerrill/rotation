@@ -269,9 +269,9 @@ def daily_cmd(
     dsn = os.environ.get("SUPABASE_DB_URL")
     if not dsn:
         raise typer.BadParameter("SUPABASE_DB_URL is not set")
-    brief, people = daily.run(cfg, f, day, normalize_dsn(dsn))
+    brief, people, priced = daily.run(cfg, f, day, normalize_dsn(dsn))
     typer.echo(brief)
-    typer.echo(f"(cycle state + actions written for {people} people)")
+    typer.echo(f"(cycle state + actions written for {people} people; {priced} coins priced)")
     if post:
         _, steps = daily.public_steps(f, cfg, day)
         if only_if_action and not steps and day.weekday() != 6:
