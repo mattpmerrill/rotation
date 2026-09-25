@@ -230,5 +230,21 @@ def signal_cmd(
             typer.echo("(private copy posted)")
 
 
+@app.command("explorer")
+def explorer_cmd() -> None:
+    """Rebuild the Strategy Explorer page: docs/explorer/btc-stack-explorer.html."""
+    import json
+
+    from rotation.backtest import explorer_data
+    from rotation.config import REPO_ROOT
+
+    data = explorer_data.build()
+    tpl = (REPO_ROOT / "docs" / "explorer" / "template.html").read_text()
+    blob = json.dumps(data, separators=(",", ":"))
+    out = REPO_ROOT / "docs" / "explorer" / "btc-stack-explorer.html"
+    out.write_text(tpl.replace("__DATA__", blob))
+    typer.echo(f"explorer: {out} (publish it as the BTC Stack Explorer artifact)")
+
+
 if __name__ == "__main__":
     app()

@@ -1,0 +1,424 @@
+<title>BTC Stack Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f6f5;
+  --surface: #ffffff;
+  --ink: #15191c;
+  --ink-2: #4f5961;
+  --ink-3: #7b858c;
+  --rule: #dce1df;
+  --grid: #e8ecea;
+  --btc: #b85f05;
+  --btc-soft: #fbe9d4;
+  --window: rgba(247, 147, 26, 0.10);
+  --s-hold: #7b858c;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+  --good: #1f6fbf; --good-2: #9cc3ec; --mid: #eef0ef; --bad-2: #f2b89c; --bad: #c4501c;
+  --focus: #2a78d6;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0f1214; --surface: #171c1f; --ink: #eceff0; --ink-2: #b3bcc2; --ink-3: #87919a;
+    --rule: #2a3236; --grid: #20272a; --btc: #f7a63d; --btc-soft: #3a2710; --window: rgba(247, 147, 26, 0.12);
+    --s-hold: #87919a;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+    --good: #5aa2ee; --good-2: #24476b; --mid: #22292c; --bad-2: #6b3420; --bad: #ef8a5a;
+    --focus: #5aa2ee;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1214; --surface: #171c1f; --ink: #eceff0; --ink-2: #b3bcc2; --ink-3: #87919a;
+  --rule: #2a3236; --grid: #20272a; --btc: #f7a63d; --btc-soft: #3a2710; --window: rgba(247, 147, 26, 0.12);
+  --s-hold: #87919a;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+  --good: #5aa2ee; --good-2: #24476b; --mid: #22292c; --bad-2: #6b3420; --bad: #ef8a5a;
+  --focus: #5aa2ee;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 34px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: 0.005em; }
+h1 { font-size: clamp(28px, 4.2vw, 40px); font-weight: 700; line-height: 1.1; }
+h2 { font-size: 22px; font-weight: 600; }
+h3 { font-size: 16px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; color: var(--ink-2); }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--btc); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+header { display: grid; gap: 10px; }
+.controls { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: end; }
+.seg { display: grid; gap: 6px; }
+.seg label.cap { font-size: 12px; color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; font-family: var(--mono); }
+.seg .opts { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { font: 500 14px var(--body); color: var(--ink-2); background: transparent; border: 0; padding: 7px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg button:focus-visible, .chip:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; display: grid; gap: 14px; }
+.stack { display: grid; gap: 10px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.tile { border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; background: var(--surface); }
+.tile .k { font-size: 12.5px; color: var(--ink-2); display: flex; align-items: center; gap: 7px; }
+.tile .v { font-family: var(--mono); font-size: 22px; font-variant-numeric: tabular-nums; }
+.tile .d { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+.sw { width: 12px; height: 3px; border-radius: 2px; flex: none; }
+.sw.dash { background: repeating-linear-gradient(90deg, var(--s-hold) 0 4px, transparent 4px 7px) !important; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.chip { display: inline-flex; align-items: center; gap: 7px; font: 500 13px var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.chip[aria-pressed="false"] { color: var(--ink-3); opacity: 0.6; }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.axis text { fill: var(--ink-3); font: 11px var(--mono); }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); min-width: 210px; display: grid; gap: 3px; }
+.tip .row { display: flex; justify-content: space-between; gap: 14px; align-items: center; }
+.tip .row span:first-child { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th { font: 500 12px var(--mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); }
+td.r, th.r { text-align: right; }
+td .pill { font: 500 11.5px var(--mono); padding: 2px 7px; border-radius: 999px; }
+.pill.up { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good); }
+.pill.down { background: color-mix(in srgb, var(--bad) 16%, transparent); color: var(--bad); }
+.heat { display: grid; gap: 4px; }
+.heat-grid { display: grid; grid-template-columns: 92px repeat(6, minmax(56px, 1fr)); gap: 3px; }
+.heat-grid .h { font: 500 11.5px var(--mono); color: var(--ink-3); display: flex; align-items: end; justify-content: center; padding-bottom: 4px; text-align: center; }
+.heat-grid .rh { justify-content: flex-end; align-items: center; padding-right: 8px; padding-bottom: 0; }
+.cell { border-radius: 5px; height: 42px; display: grid; place-items: center; font: 500 13px var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.cell.base { outline: 2px solid var(--ink); outline-offset: -2px; }
+.scale { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-3); flex-wrap: wrap; }
+.scale .bar { width: 160px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--bad), var(--bad-2), var(--mid), var(--good-2), var(--good)); }
+.calc { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; align-items: start; }
+.slider { display: grid; gap: 4px; }
+.slider label { font-size: 13px; color: var(--ink-2); display: flex; justify-content: space-between; }
+.slider input { width: 100%; accent-color: var(--btc); }
+.out { display: grid; gap: 8px; }
+.out .line { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed var(--rule); padding-bottom: 6px; font-size: 14px; }
+.out .line b { font-family: var(--mono); font-weight: 500; }
+ul.find { margin: 0; padding-left: 18px; display: grid; gap: 8px; max-width: 72ch; color: var(--ink-2); }
+ul.find b { color: var(--ink); font-weight: 600; }
+.note { font-size: 13px; color: var(--ink-3); }
+.coins { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+@media (max-width: 560px) {
+  .heat-grid { grid-template-columns: 70px repeat(6, minmax(40px, 1fr)); }
+  .cell { font-size: 11.5px; height: 36px; }
+}
+@media (prefers-reduced-motion: no-preference) { .chip, .seg button { transition: background .15s, color .15s, opacity .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Rotation · measured in bitcoin</div>
+    <h1>Which strategy ends a cycle with the most BTC?</h1>
+    <p>Every line starts with <b>1 BTC</b> at a halving and is scored in BTC at the next one (or today). All strategies sell near the top in the halving-clock window (days <span class="num" id="win-days"></span> after the halving) and rebuy in the bear with the same rules. Your IRA terms: no tax, <span class="num" id="fee"></span> fee per trade.</p>
+  </header>
+
+  <section class="controls" aria-label="Choose what to compare">
+    <div class="seg"><label class="cap" id="cyc-l">Cycle</label><div class="opts" role="group" aria-labelledby="cyc-l" id="cyc"></div></div>
+    <div class="seg"><label class="cap" id="bsk-l">Alt basket</label><div class="opts" role="group" aria-labelledby="bsk-l" id="bsk"></div></div>
+  </section>
+
+  <section class="stack" aria-labelledby="sum-h">
+    <h2 id="sum-h">1 BTC became</h2>
+    <div class="tiles" id="tiles"></div>
+    <p class="coins" id="coins"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="chart-h">
+    <div class="stack">
+      <h3 id="chart-h">BTC held over the cycle (USDT and alts counted at market, log scale)</h3>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="chart" id="chart"></div>
+    <p class="note">Shaded: the sell window. Weekly points. Hover or tap for values.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="tbl-h">
+    <h3 id="tbl-h">The numbers</h3>
+    <div class="scroll"><table id="tbl"></table></div>
+    <p class="note">"At the sell window" is the clean test of the alts themselves: value in BTC on the day the window opens, before anything is sold at the top. "End" also includes the top sale and bear rebuy.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="heat-h">
+    <div class="stack">
+      <h3 id="heat-h">Does selling alts on the way up help?</h3>
+      <p>Each cell: sell <b>this share</b> of an alt every time it gains <b>this much</b>, then buy BTC after a <span id="pb-label">10%</span> BTC pullback. Blue beats never selling (the outlined cell), orange loses to it.</p>
+    </div>
+    <div class="controls">
+      <div class="seg"><label class="cap" id="bas-l">Gain measured</label><div class="opts" role="group" aria-labelledby="bas-l" id="bas"></div></div>
+      <div class="seg"><label class="cap" id="pb-l">BTC pullback to buy</label><div class="opts" role="group" aria-labelledby="pb-l" id="pb"></div></div>
+      <div class="seg"><label class="cap" id="met-l">Score</label><div class="opts" role="group" aria-labelledby="met-l" id="met"></div></div>
+    </div>
+    <div class="scroll"><div class="heat" id="heat"></div></div>
+    <div class="scale"><span>worse than never selling</span><span class="bar"></span><span>better</span></div>
+  </section>
+
+  <section class="panel" aria-labelledby="calc-h">
+    <div class="stack">
+      <h3 id="calc-h">The math of selling on fixed gains</h3>
+      <p>An alt runs up and later falls back. Selling a share at every step locks in gains but leaves less of the position for the rest of the run. Move the sliders to see which one wins.</p>
+    </div>
+    <div class="calc">
+      <div class="stack">
+        <div class="slider"><label for="c-peak">Alt's peak vs BTC <b class="num" id="c-peak-v"></b></label><input id="c-peak" type="range" min="1.25" max="20" step="0.25" value="4"></div>
+        <div class="slider"><label for="c-trig">Sell every time it gains <b class="num" id="c-trig-v"></b></label><input id="c-trig" type="range" min="0.1" max="1.5" step="0.05" value="0.25"></div>
+        <div class="slider"><label for="c-frac">Sell this share each time <b class="num" id="c-frac-v"></b></label><input id="c-frac" type="range" min="0.05" max="0.5" step="0.05" value="0.25"></div>
+        <div class="slider"><label for="c-fall">Then it falls back from the peak <b class="num" id="c-fall-v"></b></label><input id="c-fall" type="range" min="0" max="0.9" step="0.05" value="0.2"></div>
+      </div>
+      <div class="out" id="calc-out"></div>
+    </div>
+  </section>
+
+  <section class="stack" aria-labelledby="find-h">
+    <h2 id="find-h">What the backtest says</h2>
+    <ul class="find" id="findings"></ul>
+    <p class="note" id="gen"></p>
+  </section>
+</div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById('data').textContent);
+  const $ = (id) => document.getElementById(id);
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const fmt = (x, d = 2) => (x == null || isNaN(x)) ? '–' : x.toFixed(d);
+  const pct = (x) => (x >= 0 ? '+' : '') + Math.round(x * 100) + '%';
+
+  const STRATS = [
+    { key: 'hold', name: 'Hold BTC', color: '--s-hold', dash: true, alt: false },
+    { key: 'harvest_third', name: 'Cycle harvest, sell ⅓', color: '--s1', alt: false },
+    { key: 'harvest_half', name: 'Cycle harvest, sell ½', color: '--s2', alt: false },
+    { key: 'alt_never', name: 'Alts, never sell until the top', color: '--s3', alt: true },
+    { key: 'alt_25usd', name: 'Alts, sell 25% at +25% (USD)', color: '--s4', alt: true },
+    { key: 'alt_100btc', name: 'Alts, sell 10% at +100% vs BTC', color: '--s5', alt: true },
+  ];
+  const BASKETS = { top5: 'Top 5 at the halving', yours: 'Your 5 (hindsight)' };
+  const CYCLES = Object.keys(D.cycles);
+  const load = (k, d) => { try { return localStorage.getItem(k) || d; } catch { return d; } };
+  const save = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+  const S = {
+    cycle: load('cycle', '2020'), basket: load('basket', 'top5'),
+    basis: 'usd', pullback: '0.1', metric: 'at_window',
+    on: Object.fromEntries(STRATS.map((s) => [s.key, true])),
+  };
+  if (!CYCLES.includes(S.cycle)) S.cycle = '2020';
+
+  $('win-days').textContent = `${D.window[0]}–${D.window[1]}`;
+  $('fee').textContent = `${Math.round(D.fee * 100)}%`;
+
+  function seg(el, opts, key, after) {
+    el.innerHTML = '';
+    for (const [val, label] of opts) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = label; b.id = `${el.id}-${String(val).replace('.', '_')}`;
+      b.setAttribute('aria-pressed', String(S[key] === val));
+      b.onclick = () => { S[key] = val; save(key, val); render(); after && after(); };
+      el.appendChild(b);
+    }
+  }
+
+  const seriesFor = (s) => {
+    const c = D.cycles[S.cycle];
+    const k = s.alt ? `${s.key}_${S.basket}` : s.key;
+    return c.series[k] || [];
+  };
+
+  function windowDates(c) {
+    const st = new Date(c.start + 'T00:00:00Z');
+    const a = new Date(st.getTime() + D.window[0] * 864e5), b = new Date(st.getTime() + D.window[1] * 864e5);
+    return [a, b];
+  }
+
+  function renderTiles() {
+    const c = D.cycles[S.cycle];
+    const tiles = $('tiles'); tiles.innerHTML = '';
+    for (const s of STRATS) {
+      const ser = seriesFor(s); const v = ser.length ? ser[ser.length - 1][1] : NaN;
+      const t = document.createElement('div'); t.className = 'tile';
+      t.innerHTML = `<div class="k"><span class="sw ${s.dash ? 'dash' : ''}" style="background:var(${s.color})"></span>${s.name}</div>
+        <div class="v">${fmt(v)} BTC</div><div class="d">${s.key === 'hold' ? 'the baseline' : pct(v - 1) + ' vs holding'}</div>`;
+      tiles.appendChild(t);
+    }
+    const names = (arr) => arr.map((x) => x.replace(/-/g, ' ')).join(', ');
+    $('coins').textContent = `${c.complete ? '' : 'In progress: the ' + S.cycle + ' cycle is scored at today\'s price. '}Alt basket this cycle: ${names(c.coins[S.basket])}.` +
+      (S.basket === 'yours' ? ' Chosen with hindsight: these are today\'s survivors.' : ' The five largest alts on the halving date, the basket you could have picked then.');
+  }
+
+  function renderLegend() {
+    const lg = $('legend'); lg.innerHTML = '';
+    for (const s of STRATS) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.id = `lg-${s.key}`;
+      b.setAttribute('aria-pressed', String(S.on[s.key]));
+      b.innerHTML = `<span class="sw ${s.dash ? 'dash' : ''}" style="background:var(${s.color})"></span>${s.name}`;
+      b.onclick = () => { S.on[s.key] = !S.on[s.key]; render(); };
+      lg.appendChild(b);
+    }
+  }
+
+  function renderChart() {
+    const host = $('chart'); host.innerHTML = '';
+    const W = 1000, H = 400, m = { l: 52, r: 18, t: 12, b: 34 };
+    const c = D.cycles[S.cycle];
+    const vis = STRATS.filter((s) => S.on[s.key]).map((s) => ({ s, pts: seriesFor(s).map(([d, v]) => [new Date(d + 'T00:00:00Z'), v]) }));
+    const all = vis.flatMap((x) => x.pts);
+    if (!all.length) { host.innerHTML = '<p class="note">Turn on a strategy above to see its line.</p>'; return; }
+    const t0 = new Date(c.start + 'T00:00:00Z').getTime(), t1 = Math.max(...all.map((p) => p[0].getTime()));
+    let lo = Math.min(...all.map((p) => p[1])), hi = Math.max(...all.map((p) => p[1]));
+    lo = Math.max(0.05, Math.min(lo, 1) * 0.9); hi = Math.max(hi, 1.1) * 1.08;
+    const x = (t) => m.l + (t - t0) / (t1 - t0) * (W - m.l - m.r);
+    const y = (v) => m.t + (Math.log(hi) - Math.log(v)) / (Math.log(hi) - Math.log(lo)) * (H - m.t - m.b);
+    const ticks = [0.1, 0.2, 0.25, 0.5, 1, 1.5, 2, 3, 5, 10, 20, 30, 50].filter((v) => v >= lo && v <= hi);
+    const [wa, wb] = windowDates(c);
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', `BTC held over the ${S.cycle} cycle for each strategy`);
+    let h = '';
+    h += `<rect x="${x(wa.getTime())}" y="${m.t}" width="${Math.max(2, x(wb.getTime()) - x(wa.getTime()))}" height="${H - m.t - m.b}" fill="var(--window)"/>`;
+    h += `<text x="${x(wa.getTime()) + 4}" y="${m.t + 13}" fill="var(--btc)" style="font:500 11px var(--mono)">sell window</text>`;
+    h += '<g class="axis">';
+    for (const v of ticks) h += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+    const y0 = new Date(t0).getUTCFullYear(), y1 = new Date(t1).getUTCFullYear();
+    for (let yr = y0; yr <= y1 + 1; yr++) {
+      const t = Date.UTC(yr, 0, 1); if (t < t0 || t > t1) continue;
+      h += `<line x1="${x(t)}" x2="${x(t)}" y1="${H - m.b}" y2="${H - m.b + 5}" stroke="var(--ink-3)"/><text x="${x(t)}" y="${H - m.b + 19}" text-anchor="middle">${yr}</text>`;
+    }
+    h += `<line x1="${m.l}" x2="${W - m.r}" y1="${H - m.b}" y2="${H - m.b}" stroke="var(--rule)"/></g>`;
+    for (const { s, pts } of vis) {
+      const d = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p[0].getTime()).toFixed(1)},${y(p[1]).toFixed(1)}`).join('');
+      h += `<path d="${d}" fill="none" stroke="var(${s.color})" stroke-width="2" ${s.dash ? 'stroke-dasharray="5 4"' : ''} stroke-linejoin="round"/>`;
+      const e = pts[pts.length - 1];
+      h += `<circle cx="${x(e[0].getTime())}" cy="${y(e[1])}" r="4" fill="var(${s.color})" stroke="var(--surface)" stroke-width="2"/>`;
+    }
+    h += `<line id="xh" y1="${m.t}" y2="${H - m.b}" stroke="var(--ink-3)" stroke-dasharray="3 3" visibility="hidden"/>`;
+    h += `<rect id="hit" x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent"/>`;
+    svg.innerHTML = h;
+    host.appendChild(svg);
+    const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; host.appendChild(tip);
+    const base = vis[0].pts;
+    const move = (ev) => {
+      const r = svg.getBoundingClientRect();
+      const px = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left) / r.width * W;
+      const t = t0 + (px - m.l) / (W - m.l - m.r) * (t1 - t0);
+      let i = 0, best = Infinity;
+      base.forEach((p, k) => { const dd = Math.abs(p[0].getTime() - t); if (dd < best) { best = dd; i = k; } });
+      const when = base[i][0];
+      const xh = svg.querySelector('#xh'); xh.setAttribute('x1', x(when.getTime())); xh.setAttribute('x2', x(when.getTime())); xh.setAttribute('visibility', 'visible');
+      const rows = vis.map(({ s, pts }) => {
+        let j = 0, bb = Infinity; pts.forEach((p, k) => { const dd = Math.abs(p[0] - when); if (dd < bb) { bb = dd; j = k; } });
+        return `<div class="row"><span><span class="sw ${s.dash ? 'dash' : ''}" style="background:var(${s.color})"></span>${s.name}</span><span class="num">${fmt(pts[j][1])}</span></div>`;
+      }).join('');
+      const bp = D.cycles[S.cycle].btc_price.reduce((a, p) => Math.abs(new Date(p[0] + 'T00:00:00Z') - when) < Math.abs(new Date(a[0] + 'T00:00:00Z') - when) ? p : a);
+      tip.innerHTML = `<div class="row"><b>${when.toISOString().slice(0, 10)}</b><span class="num">BTC $${Math.round(bp[1]).toLocaleString()}</span></div>${rows}`;
+      tip.hidden = false;
+      const left = (x(when.getTime()) / W) * r.width;
+      tip.style.left = Math.min(Math.max(0, left + 14), r.width - tip.offsetWidth) + 'px';
+      tip.style.top = '8px';
+    };
+    const hit = svg.querySelector('#hit');
+    hit.addEventListener('mousemove', move); hit.addEventListener('touchmove', move, { passive: true });
+    hit.addEventListener('mouseleave', () => { tip.hidden = true; svg.querySelector('#xh').setAttribute('visibility', 'hidden'); });
+  }
+
+  function renderTable() {
+    const c = D.cycles[S.cycle]; const [wa] = windowDates(c);
+    const at = (ser) => { let v = NaN; for (const [d, x] of ser) { if (new Date(d + 'T00:00:00Z') <= wa) v = x; } return v; };
+    const half = seriesFor(STRATS[2]); const halfEnd = half[half.length - 1][1];
+    let h = `<thead><tr><th>Strategy</th><th class="r">At the sell window</th><th class="r">End</th><th class="r">vs holding</th><th class="r">vs harvest ½</th></tr></thead><tbody>`;
+    for (const s of STRATS) {
+      const ser = seriesFor(s); const end = ser[ser.length - 1][1];
+      const vsH = end - 1, vsHalf = end / halfEnd - 1;
+      const pill = (v, show) => show ? `<span class="pill ${v >= 0 ? 'up' : 'down'}">${pct(v)}</span>` : '–';
+      h += `<tr><td><span style="display:inline-flex;align-items:center;gap:8px"><span class="sw ${s.dash ? 'dash' : ''}" style="background:var(${s.color})"></span>${s.name}</span></td>
+        <td class="r num">${fmt(at(ser))}</td><td class="r num">${fmt(end)}</td><td class="r">${pill(vsH, s.key !== 'hold')}</td><td class="r">${pill(vsHalf, s.key !== 'harvest_half')}</td></tr>`;
+    }
+    $('tbl').innerHTML = h + '</tbody>';
+  }
+
+  function renderHeat() {
+    const rows = D.grid.filter((g) => g.cycle === S.cycle && g.basket === S.basket);
+    const base = rows.find((g) => g.sell_frac === 0);
+    const cells = rows.filter((g) => g.sell_frac > 0 && g.basis === S.basis && String(g.pullback) === S.pullback);
+    const trig = [...new Set(cells.map((g) => g.trigger))].sort((a, b) => a - b);
+    const frac = [...new Set(cells.map((g) => g.sell_frac))].sort((a, b) => a - b);
+    const bv = base ? base[S.metric] : 1;
+    const vals = cells.map((g) => Math.log(g[S.metric] / bv)); const span = Math.max(0.05, ...vals.map(Math.abs));
+    const color = (v) => {
+      const t = Math.log(v / bv) / span;
+      const mix = (a, b, w) => `color-mix(in srgb, var(${b}) ${Math.round(Math.abs(w) * 100)}%, var(${a}))`;
+      if (t >= 0) return t < 0.5 ? mix('--mid', '--good-2', t * 2) : mix('--good-2', '--good', (t - 0.5) * 2);
+      return -t < 0.5 ? mix('--mid', '--bad-2', -t * 2) : mix('--bad-2', '--bad', (-t - 0.5) * 2);
+    };
+    const ink = (v) => Math.abs(Math.log(v / bv) / span) > 0.6 ? '#fff' : 'var(--ink)';
+    let h = `<div class="heat-grid" role="table" aria-label="BTC value by trigger and sell share"><div class="h">gain ↓ · sell →</div>`;
+    h += `<div class="h">never</div>` + frac.map((f) => `<div class="h">${Math.round(f * 100)}%</div>`).join('');
+    for (const t of trig) {
+      h += `<div class="h rh">+${Math.round(t * 100)}%</div>`;
+      h += `<div class="cell base" style="background:var(--mid)" title="Never sell until the top">${fmt(bv)}</div>`;
+      for (const f of frac) {
+        const g = cells.find((c) => c.trigger === t && c.sell_frac === f);
+        const v = g ? g[S.metric] : NaN;
+        h += `<div class="cell" style="background:${color(v)};color:${ink(v)}" title="Sell ${Math.round(f * 100)}% at +${Math.round(t * 100)}%: ${fmt(v)} BTC">${fmt(v)}</div>`;
+      }
+    }
+    $('heat').innerHTML = h + '</div>';
+    $('pb-label').textContent = `${Math.round(Number(S.pullback) * 100)}%`;
+  }
+
+  function renderCalc() {
+    const peak = +$('c-peak').value, trig = +$('c-trig').value, frac = +$('c-frac').value, fall = +$('c-fall').value;
+    $('c-peak-v').textContent = `${peak.toFixed(2)}×`; $('c-trig-v').textContent = `+${Math.round(trig * 100)}%`;
+    $('c-frac-v').textContent = `${Math.round(frac * 100)}%`; $('c-fall-v').textContent = `−${Math.round(fall * 100)}%`;
+    const n = Math.floor(Math.log(peak) / Math.log(1 + trig) + 1e-9);
+    let banked = 0, left = 1;
+    for (let k = 1; k <= n; k++) { const q = left * frac; banked += q * Math.pow(1 + trig, k); left -= q; }
+    const end = peak * (1 - fall);
+    const holdPeak = peak, holdEnd = end, sellPeak = banked + left * peak, sellEnd = banked + left * end;
+    const line = (a, b) => `<div class="line"><span>${a}</span><b>${b}</b></div>`;
+    const win = sellEnd > holdEnd ? 'Selling on the way up wins' : 'Holding to the top wins';
+    $('calc-out').innerHTML =
+      line('Times it triggers', n) +
+      line('Position left for the rest of the run', `${Math.round(left * 100)}%`) +
+      line('Value at the peak: hold / sell on gains', `${fmt(holdPeak)} / ${fmt(sellPeak)} BTC`) +
+      line(`After a ${Math.round(fall * 100)}% fall: hold / sell on gains`, `${fmt(holdEnd)} / ${fmt(sellEnd)} BTC`) +
+      (sellEnd > holdEnd
+        ? `<p><b>${win}</b> here, because the alt gives back ${Math.round(fall * 100)}% before you exit. That is the case gain triggers are built for. With the halving-clock exit you sell near the top, so the give-back is usually much smaller: try 10 to 30%.</p>`
+        : `<p><b>${win}</b> here. Each trigger sold part of a position that kept climbing, and the exit came before the alt gave much back. This is the usual case with the halving-clock exit, which is why selling on small gains lost BTC in the backtest.</p>`);
+  }
+
+  function renderFindings() {
+    const at = (cy, k) => D.grid.find((g) => g.cycle === cy && g.basket === 'top5' && g.sell_frac === 0)?.at_window;
+    const ex = (cy) => D.grid.find((g) => g.cycle === cy && g.basket === 'top5' && g.trigger === 0.25 && g.sell_frac === 0.25 && g.basis === 'usd' && Math.abs(g.pullback - 0.1) < 1e-9)?.at_window;
+    const cy = CYCLES;
+    const li = [
+      `<b>Holding the five largest alts from the halving to the sell window beat holding BTC in every cycle tested</b> (${cy.map((c) => `${c}: ${fmt(at(c))} BTC`).join(', ')} from 1 BTC). That is the honest basket: the top five on the halving date, dead coins included.`,
+      `<b>Selling 25% every time an alt gains 25% in dollars did worse than never selling</b> (${cy.map((c) => `${c}: ${fmt(ex(c))}`).join(', ')}). In the 2020 cycle it ended below just holding BTC. A 25% move is normal alt noise; it sells the winners before the run that matters.`,
+      `<b>If you sell on the way up, measure the gain against BTC, not dollars, and use a big step.</b> Selling 10% each time an alt doubles against BTC came out close to never selling, while banking some BTC along the way.`,
+      `<b>Your exact five look spectacular in 2020, mostly because of SOL</b> (up about 400× in dollars). Nobody could pick that in May 2020. Judge the idea by the top-5 basket.`,
+      `<b>Small sample.</b> Three cycles, and alts beat BTC in the bull phase of each. Across 2019 to 2026 as a whole, a top-20 alt basket lost 80% against BTC, so the exit (the halving-clock window) is doing the work. Check that your IRA can hold these coins; BNB in particular is rarely available.`,
+    ];
+    $('findings').innerHTML = li.map((x) => `<li>${x}</li>`).join('');
+    $('gen').textContent = `Backtest data generated ${D.generated} by the Rotation engine. Prices: CoinGecko point-in-time data and CoinMetrics. Fees ${Math.round(D.fee * 100)}% per trade, no tax. Not financial advice.`;
+  }
+
+  function render() {
+    seg($('cyc'), CYCLES.map((c) => [c, D.cycles[c].complete ? c : `${c} (so far)`]), 'cycle');
+    seg($('bsk'), Object.entries(BASKETS), 'basket');
+    seg($('bas'), [['usd', 'in USD'], ['btc', 'vs BTC']], 'basis');
+    seg($('pb'), [['0.05', '5%'], ['0.1', '10%'], ['0.15', '15%'], ['0.2', '20%']], 'pullback');
+    seg($('met'), [['at_window', 'At the sell window'], ['btc_end', 'End of cycle']], 'metric');
+    renderTiles(); renderLegend(); renderChart(); renderTable(); renderHeat();
+  }
+  ['c-peak', 'c-trig', 'c-frac', 'c-fall'].forEach((id) => $(id).addEventListener('input', renderCalc));
+  render(); renderCalc(); renderFindings();
+  window.addEventListener('resize', () => renderChart());
+})();
+</script>
