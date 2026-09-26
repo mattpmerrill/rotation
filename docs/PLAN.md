@@ -56,6 +56,8 @@ From 1 BTC, 1% fee per trade, using the two cycles the alt data covers
 | 20 | Name: **1 Bitty Challenge**. | 2026-09-26 |
 | 21 | Picker previews include coins that weren't trading yet: their share waits in BTC and buys in at the coin's first weekly price. | 2026-09-26 |
 | 22 | A "Joi's top picks" tab: five baskets that did best in past cycles, with why, computed by the same code as the picker. | 2026-09-26 |
+| 23 | **Waiting slots**: some of a basket's 2-8 picks can wait as BTC and be filled later with any top-100 coin, until rebuying starts. A fill sells exactly one slot's share. Trades now have kinds (buy_in, fill, sell, rebuy); people log only sells and rebuys, so alts can't be bought outside the buy-in and fills. | 2026-09-26 |
+| 24 | A "Best time to buy" tab: how buying alts went by point in the cycle (top 10 at the time, and per coin), with an indicator for today (`docs/backtests/buy-timing.md`). | 2026-09-26 |
 
 ## Running a challenge
 

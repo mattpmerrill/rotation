@@ -18,3 +18,14 @@ export const tradeInput = z.object({
 });
 
 export type TradeInput = z.infer<typeof tradeInput>;
+
+/** Filling a waiting slot. The BTC sold is always one slot's share, worked out on the server. */
+export const fillInput = z.object({
+  entryId: z.coerce.number().int().positive(),
+  coin: z.string().min(1, "Pick a coin."),
+  tradedOn: z.string().refine(isDay, "Pick a date."),
+  btcPriceUsd: z.coerce.number().positive("Enter BTC's price."),
+  coinPriceUsd: z.coerce.number().positive("Enter the coin's price."),
+  coinQty: z.coerce.number().positive("Enter how much you bought."),
+  feeRate: z.coerce.number().min(0).max(0.1),
+});

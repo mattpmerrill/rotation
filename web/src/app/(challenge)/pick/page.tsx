@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { requireViewer } from "@/data/viewer";
 import { PickerFlow } from "@/features/picker/components/PickerFlow";
 import { getPickerData } from "@/features/picker/queries";
+import { getTiming } from "@/features/timing/queries";
+import Link from "next/link";
 import { Notice } from "@/ui/Notice";
 
 export const metadata: Metadata = { title: "Pick a basket" };
@@ -24,6 +26,7 @@ export default async function PickPage({ searchParams }: { searchParams: Promise
           bought in on your exchange, log it here: up to 1 BTC, split equally unless you change the amounts.
         </p>
       </section>
+      <TimingNote />
       <PickerFlow
         coins={data.coins}
         daysSinceHalving={data.daysSinceHalving}
@@ -31,7 +34,24 @@ export default async function PickPage({ searchParams }: { searchParams: Promise
         window={data.window}
         prices={data.prices}
         initialBasket={initialBasket}
+        btcIcon={data.btcIcon}
       />
     </>
+  );
+}
+
+/** A one-line reminder of how buying at this point in the cycle has gone before. */
+async function TimingNote() {
+  const { market, cycle } = await getTiming(null);
+  const { wins, of } = market.now;
+  if (!of) return null;
+  return (
+    <p className={`panel px-5 py-4 text-sm ${wins === 0 ? "border-loss/40" : ""}`}>
+      <span className="font-semibold">Timing check:</span> buying the top 10 alts around day {cycle.daysSinceHalving}{" "}
+      after the halving beat holding BTC in {wins} of {of} past cycles.{" "}
+      <Link href="/timing" className="text-gold font-semibold underline-offset-4 hover:underline">
+        See the best time to buy
+      </Link>
+    </p>
   );
 }

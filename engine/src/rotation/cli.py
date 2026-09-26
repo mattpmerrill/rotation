@@ -276,6 +276,15 @@ def challenge_exits_cmd() -> None:
     typer.echo(challenge_exits.write())
 
 
+@app.command("buy-timing")
+def buy_timing_cmd() -> None:
+    """Research: when buying alts paid off -> docs/backtests/buy-timing.md + the app's data."""
+    from rotation.backtest import buy_timing
+
+    for out in buy_timing.write():
+        typer.echo(out)
+
+
 @app.command("web-data")
 def web_data_cmd() -> None:
     """Static data the web app ships with: the picker's history and the reference dates."""

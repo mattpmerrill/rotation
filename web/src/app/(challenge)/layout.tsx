@@ -30,6 +30,7 @@ export default async function ChallengeLayout({ children }: { children: React.Re
                 <NavLink href="/pick">Pick a basket</NavLink>
               )}
               <NavLink href="/picks">Joi’s top picks</NavLink>
+              <NavLink href="/timing">Best time to buy</NavLink>
             </nav>
           )}
           <div className="ml-auto flex items-center gap-4">

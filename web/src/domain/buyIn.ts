@@ -16,16 +16,25 @@ export interface BuyInInput {
   /** USD price of each basket coin on the buy-in day. */
   coinPricesUsd: Record<string, number>;
   basket: string[];
+  /** Waiting slots: each keeps an equal share of the BTC as BTC. */
+  slots: number;
   feeRate: number;
 }
 
+/** BTC the buy-in sells: the coins' share. The waiting slots' share stays BTC. */
+export function btcSoldAtBuyIn(btcIn: number, coins: number, slots: number): number {
+  return (btcIn * coins) / (coins + slots);
+}
+
 /**
- * The trades that swap `btcIn` BTC into the basket in equal dollar amounts: sell the BTC for
- * USDT (less the fee), then spend the USDT equally, each buy's fee included, so nothing is left.
+ * The trades that swap the coins' share of `btcIn` into the basket in equal dollar amounts:
+ * sell that BTC for USDT (less the fee), then spend the USDT equally, each buy's fee included,
+ * so nothing is left. Each waiting slot's share stays as BTC.
  */
-export function planBuyIn({ btcIn, btcPriceUsd, coinPricesUsd, basket, feeRate }: BuyInInput): DraftTrade[] {
-  const gross = btcIn * btcPriceUsd;
-  const sale: DraftTrade = { asset: BTC, side: "sell", qty: btcIn, priceUsd: btcPriceUsd, feeUsd: gross * feeRate };
+export function planBuyIn({ btcIn, btcPriceUsd, coinPricesUsd, basket, slots, feeRate }: BuyInInput): DraftTrade[] {
+  const sold = btcSoldAtBuyIn(btcIn, basket.length, slots);
+  const gross = sold * btcPriceUsd;
+  const sale: DraftTrade = { asset: BTC, side: "sell", qty: sold, priceUsd: btcPriceUsd, feeUsd: gross * feeRate };
   const perCoin = (gross - sale.feeUsd) / basket.length;
   const buys = basket.map((asset): DraftTrade => {
     const priceUsd = coinPricesUsd[asset];
@@ -41,13 +50,21 @@ export function usdtAfter(trades: DraftTrade[]): number {
 }
 
 /** The same rules the database enforces, as messages a person can act on. */
-export function checkBuyIn(btcIn: number, basket: string[], trades: DraftTrade[]): string[] {
+export function checkBuyIn(btcIn: number, basket: string[], slots: number, trades: DraftTrade[]): string[] {
   const errors: string[] = [];
   if (!(btcIn > 0) || btcIn > RULES.maxBtcIn) errors.push(`Put in more than 0 and at most ${RULES.maxBtcIn} BTC.`);
 
   const sales = trades.filter((t) => t.asset === BTC);
-  if (sales.length !== 1 || sales[0].side !== "sell" || Math.abs(sales[0].qty - btcIn) > 1e-9)
-    errors.push("The buy-in sells exactly the BTC you put in.");
+  if (
+    sales.length !== 1 ||
+    sales[0].side !== "sell" ||
+    Math.abs(sales[0].qty - btcSoldAtBuyIn(btcIn, basket.length, slots)) > 1e-9
+  )
+    errors.push(
+      slots
+        ? "The buy-in sells the coins' share of your BTC and keeps the slots' share."
+        : "The buy-in sells exactly the BTC you put in.",
+    );
 
   const buys = trades.filter((t) => t.asset !== BTC);
   if (buys.some((t) => t.side !== "buy" || !basket.includes(t.asset)))

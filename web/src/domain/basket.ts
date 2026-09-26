@@ -11,18 +11,19 @@ export interface EligibleCoin {
 }
 
 /**
- * Check a pick against the rules: 2-8 different coins, each in the top 100 today (the
- * ranking already leaves out BTC, stablecoins and wrapped or staked tokens). Returns the
- * problems, if any.
+ * Check a pick against the rules: 2-8 picks, where a pick is a coin or a waiting slot, with
+ * at least one coin. Coins are different and each in the top 100 today (the ranking already
+ * leaves out BTC, stablecoins and wrapped or staked tokens). Returns the problems, if any.
  */
-export function checkBasket(ids: string[], eligible: EligibleCoin[]): { errors: string[] } {
+export function checkBasket(ids: string[], eligible: EligibleCoin[], slots = 0): { errors: string[] } {
   const errors: string[] = [];
   const byId = new Map(eligible.map((c) => [c.id, c]));
   const unique = new Set(ids);
 
   if (unique.size !== ids.length) errors.push("Each coin can be in the basket once.");
-  if (unique.size < RULES.basketMin) errors.push(`Pick at least ${RULES.basketMin} coins.`);
-  if (unique.size > RULES.basketMax) errors.push(`Pick at most ${RULES.basketMax} coins.`);
+  if (unique.size < 1) errors.push("Pick at least one coin.");
+  else if (unique.size + slots < RULES.basketMin) errors.push(`Pick at least ${RULES.basketMin} coins or slots.`);
+  if (unique.size + slots > RULES.basketMax) errors.push(`Pick at most ${RULES.basketMax} coins and slots in all.`);
   for (const id of unique) {
     if (id === BTC) errors.push("BTC is what you're measuring against, so it can't be in the basket.");
     else if (!byId.has(id)) errors.push(`${id} isn't in today's top ${RULES.maxRank}.`);

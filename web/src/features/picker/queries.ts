@@ -1,6 +1,6 @@
 import "server-only";
 import { findEntryFor, getCurrentChallenge } from "@/data/challenge";
-import { getEligibleCoins, getPriceBook } from "@/data/prices";
+import { getCoins, getEligibleCoins, getPriceBook } from "@/data/prices";
 import { marketReference } from "@/data/reference";
 import type { Viewer } from "@/data/viewer";
 import type { EligibleCoin } from "@/domain/basket";
@@ -23,6 +23,8 @@ export type PickerData =
       window: [string, string];
       /** Closes for BTC and every eligible coin over the window, to fill buy-in prices. */
       prices: PriceBook;
+      /** BTC's icon, for waiting slots. */
+      btcIcon: string | null;
     };
 
 export async function getPickerData(viewer: Viewer): Promise<PickerData> {
@@ -34,7 +36,10 @@ export async function getPickerData(viewer: Viewer): Promise<PickerData> {
   const today = todayUtc();
   const from = [challenge.openedOn, addDays(today, -BUY_IN_LOOKBACK_DAYS)].sort().at(-1)!;
   const { coins, asOf } = await getEligibleCoins();
-  const prices = await getPriceBook([BTC, ...coins.map((c) => c.id)], addDays(from, -7));
+  const [prices, btc] = await Promise.all([
+    getPriceBook([BTC, ...coins.map((c) => c.id)], addDays(from, -7)),
+    getCoins([BTC]),
+  ]);
   return {
     status: "ready",
     challenge,
@@ -49,5 +54,6 @@ export async function getPickerData(viewer: Viewer): Promise<PickerData> {
     sellWindowDays: marketReference.sellWindowDays,
     window: [from, today],
     prices,
+    btcIcon: btc[BTC]?.image ?? null,
   };
 }

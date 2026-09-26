@@ -14,6 +14,7 @@ export function buyInMessage(entry: Entry, coins: Record<string, Coin>): string 
 }
 
 export function tradeMessage(entry: Entry, trade: Trade, coins: Record<string, Coin>): string {
+  if (trade.kind === "fill") return `**${entry.playerName}** filled a waiting slot with ${symbol(coins, trade.asset)}.`;
   if (trade.asset === BTC) return `**${entry.playerName}** rebought BTC.`;
   return `**${entry.playerName}** sold ${symbol(coins, trade.asset)}.`;
 }

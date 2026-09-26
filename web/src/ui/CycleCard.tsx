@@ -36,7 +36,7 @@ export function CycleCard({
               <span className="font-semibold">{m.symbol}</span>
               <span className="text-ink-3 text-xs">
                 {c.neverListed
-                  ? "not trading yet: held as BTC"
+                  ? "held as BTC the whole time"
                   : c.boughtLate
                     ? `bought when it started trading, ${formatMonth(c.boughtLate)}`
                     : null}

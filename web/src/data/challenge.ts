@@ -1,13 +1,14 @@
 import "server-only";
 import type { DraftTrade } from "@/domain/buyIn";
-import type { Challenge, Entry, Side, Trade } from "@/domain/types";
+import type { Challenge, Entry, Side, Trade, TradeKind } from "@/domain/types";
 import type { Database } from "./database.types";
 import { supabaseServer, type Db } from "./supabase/server";
 
 type EntryRow = Database["public"]["Tables"]["entries"]["Row"] & { profiles: { display_name: string | null } | null };
 type TradeRow = Database["public"]["Tables"]["entry_trades"]["Row"];
 
-const ENTRY_COLUMNS = "id, challenge_id, user_id, started_on, btc_in, basket, created_at, profiles(display_name)";
+const ENTRY_COLUMNS =
+  "id, challenge_id, user_id, started_on, btc_in, basket, open_slots, created_at, profiles(display_name)";
 
 const toEntry = (r: EntryRow): Entry => ({
   id: r.id,
@@ -17,6 +18,7 @@ const toEntry = (r: EntryRow): Entry => ({
   startedOn: r.started_on,
   btcIn: Number(r.btc_in),
   basket: r.basket,
+  openSlots: r.open_slots,
 });
 
 const toTrade = (r: TradeRow): Trade => ({
@@ -28,6 +30,7 @@ const toTrade = (r: TradeRow): Trade => ({
   qty: Number(r.qty),
   priceUsd: Number(r.price_usd),
   feeUsd: Number(r.fee_usd),
+  kind: r.kind as TradeKind,
   note: r.note,
 });
 
@@ -82,25 +85,45 @@ export async function listTrades(entryIds: number[], db?: Db): Promise<Trade[]> 
   return data.map(toTrade);
 }
 
+const toRpcTrades = (trades: DraftTrade[]) =>
+  trades.map((t) => ({ asset: t.asset, side: t.side, qty: t.qty, price_usd: t.priceUsd, fee_usd: t.feeUsd }));
+
 /** Start the viewer's entry: the entry and its buy-in trades in one transaction. */
-export async function startEntry(startedOn: string, btcIn: number, basket: string[], trades: DraftTrade[]) {
+export async function startEntry(
+  startedOn: string,
+  btcIn: number,
+  basket: string[],
+  slots: number,
+  trades: DraftTrade[],
+) {
   const db = await supabaseServer();
   const { data, error } = await db.rpc("start_entry", {
     p_started_on: startedOn,
     p_btc_in: btcIn,
     p_basket: basket,
-    p_trades: trades.map((t) => ({
-      asset: t.asset,
-      side: t.side,
-      qty: t.qty,
-      price_usd: t.priceUsd,
-      fee_usd: t.feeUsd,
-    })),
+    p_slots: slots,
+    p_trades: toRpcTrades(trades),
   });
   return { entryId: data ?? null, error: error?.message ?? null };
 }
 
-export async function addTrade(entryId: number, t: DraftTrade & { tradedOn: string; note: string | null }) {
+/** Fill one of the viewer's waiting slots with `coin`: one slot's BTC sold, the coin bought. */
+export async function fillSlot(entryId: number, tradedOn: string, coin: string, trades: DraftTrade[]) {
+  const db = await supabaseServer();
+  const { error } = await db.rpc("fill_slot", {
+    p_entry_id: entryId,
+    p_traded_on: tradedOn,
+    p_coin: coin,
+    p_trades: toRpcTrades(trades),
+  });
+  return error?.message ?? null;
+}
+
+/** Log a sell (alt -> USDT) or a rebuy (USDT -> BTC). The only kinds people log directly. */
+export async function addTrade(
+  entryId: number,
+  t: DraftTrade & { kind: "sell" | "rebuy"; tradedOn: string; note: string | null },
+) {
   const db = await supabaseServer();
   const { error } = await db.from("entry_trades").insert({
     entry_id: entryId,
@@ -110,6 +133,7 @@ export async function addTrade(entryId: number, t: DraftTrade & { tradedOn: stri
     qty: t.qty,
     price_usd: t.priceUsd,
     fee_usd: t.feeUsd,
+    kind: t.kind,
     note: t.note,
   });
   return error?.message ?? null;

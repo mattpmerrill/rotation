@@ -4,6 +4,7 @@ import { useState } from "react";
 import { checkBasket, type EligibleCoin } from "@/domain/basket";
 import { RULES } from "@/domain/rules";
 import type { Coin, PriceBook } from "@/domain/types";
+import { buttonClass } from "@/ui/Button";
 import { CoinTag } from "@/ui/CoinTag";
 import { Notice } from "@/ui/Notice";
 import { Section } from "@/ui/Section";
@@ -19,7 +20,9 @@ export function PickerFlow({
   window,
   prices,
   initialBasket = [],
+  btcIcon,
 }: {
+  btcIcon: string | null;
   /** Coins to start with, e.g. from "Try this basket" on Joi's top picks. */
   initialBasket?: string[];
   coins: EligibleCoin[];
@@ -33,8 +36,17 @@ export function PickerFlow({
   );
   const toggle = (id: string) => setBasket((b) => (b.includes(id) ? b.filter((x) => x !== id) : [...b, id]));
   const symbols = Object.fromEntries(coins.map((c) => [c.id, c.symbol]));
-  const byId: Record<string, Coin> = Object.fromEntries(coins.map((c) => [c.id, c]));
-  const check = checkBasket(basket, coins);
+  const [slots, setSlots] = useState(0);
+  const slotIds = Array.from({ length: slots }, (_, i) => `slot-${i + 1}`);
+  const byId: Record<string, Coin> = {
+    ...Object.fromEntries(coins.map((c) => [c.id, c])),
+    // waiting slots show in the preview as BTC held the whole time
+    ...Object.fromEntries(
+      slotIds.map((id) => [id, { id, symbol: "Waiting BTC", name: "Waiting slot", image: btcIcon }]),
+    ),
+  };
+  const picks = basket.length + slots;
+  const check = checkBasket(basket, coins, slots);
   const ready = check.errors.length === 0;
 
   return (
@@ -43,27 +55,46 @@ export function PickerFlow({
         title="Choose your coins"
         action={
           <span className="text-ink-3 text-sm">
-            {basket.length} of {RULES.basketMin}–{RULES.basketMax}
+            {picks} of {RULES.basketMin}–{RULES.basketMax} picks
           </span>
         }
       >
-        {basket.length > 0 && (
+        {picks > 0 && (
           <div className="flex flex-wrap gap-1.5" aria-label="Your basket">
             {basket.map((id) => (
               <button key={id} type="button" onClick={() => toggle(id)} aria-label={`Remove ${symbols[id]}`}>
                 <CoinTag symbol={`${symbols[id]} ✕`} image={byId[id]?.image} />
               </button>
             ))}
+            {slotIds.map((id) => (
+              <button key={id} type="button" onClick={() => setSlots((n) => n - 1)} aria-label="Remove a waiting slot">
+                <CoinTag symbol="Waiting BTC ✕" image={btcIcon} dashed />
+              </button>
+            ))}
           </div>
         )}
-        <CoinPicker coins={coins} selected={basket} onToggle={toggle} />
+        <div className="border-btc/40 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed px-4 py-3">
+          <p className="text-ink-2 max-w-xl text-sm">
+            <span className="text-ink font-semibold">Waiting slots</span> keep their share of your BTC as BTC. Fill one
+            later with any top-100 coin, even one that launches after you start, up until you begin rebuying.
+          </p>
+          <button
+            type="button"
+            onClick={() => setSlots((n) => n + 1)}
+            disabled={picks >= RULES.basketMax}
+            className={buttonClass("quiet")}
+          >
+            Add a waiting slot
+          </button>
+        </div>
+        <CoinPicker coins={coins} selected={basket} onToggle={toggle} max={RULES.basketMax - slots} />
         {basket.length > 0 && !ready && <p className="text-ink-3 text-sm">{check.errors[0]}</p>}
       </Section>
 
-      {basket.length > 0 && (
+      {picks > 0 && (
         <Section title="How it did in past cycles" panel>
           <PreviewPanel
-            basket={basket}
+            basket={[...basket, ...slotIds]}
             coins={byId}
             daysSinceHalving={daysSinceHalving}
             sellWindowDays={sellWindowDays}
@@ -73,7 +104,7 @@ export function PickerFlow({
 
       {ready && (
         <Section title="Buy in" panel>
-          <BuyInForm basket={basket} symbols={symbols} prices={prices} window={window} />
+          <BuyInForm basket={basket} slots={slots} symbols={symbols} prices={prices} window={window} />
         </Section>
       )}
 

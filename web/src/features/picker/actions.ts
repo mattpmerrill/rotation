@@ -37,10 +37,13 @@ export async function startChallenge(_: BuyInState, form: FormData): Promise<Buy
     return { errors: [`The buy-in date must be between ${earliest} and today.`] };
 
   const { coins } = await getEligibleCoins();
-  const errors = [...checkBasket(input.basket, coins).errors, ...checkBuyIn(input.btcIn, input.basket, input.trades)];
+  const errors = [
+    ...checkBasket(input.basket, coins, input.slots).errors,
+    ...checkBuyIn(input.btcIn, input.basket, input.slots, input.trades),
+  ];
   if (errors.length) return { errors };
 
-  const { entryId, error } = await startEntry(input.startedOn, input.btcIn, input.basket, input.trades);
+  const { entryId, error } = await startEntry(input.startedOn, input.btcIn, input.basket, input.slots, input.trades);
   if (error || !entryId) return { errors: [error ?? "The buy-in wasn't saved. Try again."] };
   revalidatePath("/", "layout");
   redirect(`/entries/${entryId}`);

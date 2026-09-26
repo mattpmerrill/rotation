@@ -13,6 +13,14 @@ export type Day = string;
 
 export type Side = "buy" | "sell";
 
+/**
+ * What a trade was for. The database lets people log only sells and rebuys themselves;
+ * buy-ins and slot fills go through their own functions.
+ *   buy_in  the start: BTC sold, basket bought     fill   a waiting slot filled: BTC sold, coin bought
+ *   sell    an alt sold for USDT                   rebuy  BTC bought with USDT
+ */
+export type TradeKind = "buy_in" | "fill" | "sell" | "rebuy";
+
 export interface Trade {
   id: number;
   entryId: number;
@@ -22,6 +30,7 @@ export interface Trade {
   qty: number;
   priceUsd: number;
   feeUsd: number;
+  kind: TradeKind;
   note: string | null;
 }
 
@@ -34,6 +43,8 @@ export interface Entry {
   startedOn: Day;
   btcIn: number;
   basket: string[];
+  /** Picks still waiting as BTC, to be filled with a coin later. */
+  openSlots: number;
 }
 
 export interface Challenge {

@@ -17,8 +17,14 @@ const draftTrade = z.object({
 export const buyInInput = z.object({
   startedOn: z.string().refine(isDay, "Pick the day you bought in."),
   btcIn: z.number().positive().max(RULES.maxBtcIn, `Put in at most ${RULES.maxBtcIn} BTC.`),
-  basket: z.array(z.string().min(1)).min(RULES.basketMin).max(RULES.basketMax),
-  trades: z.array(draftTrade).min(RULES.basketMin + 1),
+  basket: z.array(z.string().min(1)).min(1).max(RULES.basketMax),
+  /** Waiting slots, kept as BTC to fill later. */
+  slots: z
+    .number()
+    .int()
+    .min(0)
+    .max(RULES.basketMax - 1),
+  trades: z.array(draftTrade).min(2),
 });
 
 export type BuyInInput = z.infer<typeof buyInInput>;

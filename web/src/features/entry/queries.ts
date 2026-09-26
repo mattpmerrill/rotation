@@ -1,5 +1,6 @@
 import "server-only";
 import { findEntryFor, getCurrentChallenge } from "@/data/challenge";
+import { getEligibleCoins, getPriceBook } from "@/data/prices";
 import { getMarketState, type MarketState } from "@/data/market";
 import { marketReference } from "@/data/reference";
 import { loadCurrentChallenge } from "@/data/snapshot";
@@ -7,9 +8,11 @@ import type { Viewer } from "@/data/viewer";
 import { coinChanges, type CoinChange } from "@/domain/coins";
 import { cycleReference, type CycleReference } from "@/domain/cycle";
 import { altHoldings, balancesOn } from "@/domain/holdings";
+import { slotShare, slotsClosedReason, waitingBtc } from "@/domain/slots";
 import { standingOf, type Standing } from "@/domain/standings";
 import { BTC, USDT, type Coin, type Entry, type PriceBook, type Trade } from "@/domain/types";
-import { todayUtc } from "@/lib/days";
+import type { EligibleCoin } from "@/domain/basket";
+import { addDays, todayUtc } from "@/lib/days";
 
 export interface EntryView {
   entry: Entry;
@@ -24,6 +27,16 @@ export interface EntryView {
   prices: PriceBook;
   cycle: CycleReference;
   market: MarketState | null;
+  slots: {
+    open: number;
+    waitingBtc: number;
+    /** BTC one fill sells. */
+    share: number;
+    /** Why no slot can be filled now, or null. */
+    closedReason: string | null;
+    /** For the owner's fill form: today's top 100 (minus the basket) and their recent closes. */
+    fill: { coins: EligibleCoin[]; prices: PriceBook; from: string } | null;
+  };
   rebuyRule: typeof marketReference.rebuy;
 }
 
@@ -36,9 +49,11 @@ export async function getEntryView(entryId: number, viewer: Viewer): Promise<Ent
   const trades = snap.trades.filter((t) => t.entryId === entry.id);
   const balances = balancesOn(entry, trades);
   const assets = [BTC, ...entry.basket];
+  const closedReason = slotsClosedReason(entry, trades);
+  const isOwner = entry.userId === viewer.id;
   return {
     entry,
-    isOwner: entry.userId === viewer.id,
+    isOwner,
     standing: standingOf(entry, trades, snap.prices, today),
     coins: snap.coins,
     changes: coinChanges(entry, trades, snap.prices, today),
@@ -53,6 +68,13 @@ export async function getEntryView(entryId: number, viewer: Viewer): Promise<Ent
     ),
     market,
     rebuyRule: marketReference.rebuy,
+    slots: {
+      open: entry.openSlots,
+      waitingBtc: waitingBtc(entry, trades),
+      share: slotShare(entry, trades),
+      closedReason,
+      fill: isOwner && !closedReason ? await fillOptions(entry, today) : null,
+    },
   };
 }
 
@@ -61,4 +83,14 @@ export async function getMyEntryId(viewer: Viewer): Promise<number | null> {
   const challenge = await getCurrentChallenge();
   if (!challenge) return null;
   return (await findEntryFor(viewer.id, challenge.id))?.id ?? null;
+}
+
+/** A slot can be filled with any of today's top 100 not already in the basket, dated up to
+ *  30 days back (and not before the buy-in). */
+async function fillOptions(entry: Entry, today: string) {
+  const from = [entry.startedOn, addDays(today, -30)].sort().at(-1)!;
+  const { coins } = await getEligibleCoins();
+  const candidates = coins.filter((c) => !entry.basket.includes(c.id));
+  const prices = await getPriceBook([BTC, ...candidates.map((c) => c.id)], addDays(from, -7));
+  return { coins: candidates, prices, from };
 }

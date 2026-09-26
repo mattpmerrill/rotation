@@ -1,5 +1,5 @@
 /** Shared test data: one entry that buys SOL and LINK with 1 BTC. Test-only. */
-import type { Entry, PriceBook, Trade } from "./types";
+import type { Entry, PriceBook, Trade, TradeKind } from "./types";
 
 export const entry: Entry = {
   id: 1,
@@ -9,14 +9,19 @@ export const entry: Entry = {
   startedOn: "2026-10-01",
   btcIn: 1,
   basket: ["solana", "chainlink"],
+  openSlots: 0,
 };
 
 let nextId = 1;
-export const trade = (t: Omit<Trade, "id" | "entryId" | "note" | "feeUsd"> & { feeUsd?: number }): Trade => ({
+/** A trade; its kind defaults from what it does (alt sold: sell, BTC bought: rebuy, else buy_in). */
+export const trade = (
+  t: Omit<Trade, "id" | "entryId" | "note" | "feeUsd" | "kind"> & { feeUsd?: number; kind?: TradeKind },
+): Trade => ({
   id: nextId++,
   entryId: entry.id,
   note: null,
   feeUsd: 0,
+  kind: t.asset === "bitcoin" ? (t.side === "buy" ? "rebuy" : "buy_in") : t.side === "sell" ? "sell" : "buy_in",
   ...t,
 });
 

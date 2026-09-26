@@ -197,6 +197,7 @@ export type Database = {
           challenge_id: number
           created_at: string
           id: number
+          open_slots: number
           started_on: string
           user_id: string
         }
@@ -206,6 +207,7 @@ export type Database = {
           challenge_id: number
           created_at?: string
           id?: never
+          open_slots?: number
           started_on: string
           user_id?: string
         }
@@ -215,6 +217,7 @@ export type Database = {
           challenge_id?: number
           created_at?: string
           id?: never
+          open_slots?: number
           started_on?: string
           user_id?: string
         }
@@ -242,6 +245,7 @@ export type Database = {
           entry_id: number
           fee_usd: number
           id: number
+          kind: string
           note: string | null
           price_usd: number
           qty: number
@@ -254,6 +258,7 @@ export type Database = {
           entry_id: number
           fee_usd?: number
           id?: never
+          kind: string
           note?: string | null
           price_usd: number
           qty: number
@@ -266,6 +271,7 @@ export type Database = {
           entry_id?: number
           fee_usd?: number
           id?: never
+          kind?: string
           note?: string | null
           price_usd?: number
           qty?: number
@@ -411,6 +417,15 @@ export type Database = {
       }
     }
     Functions: {
+      fill_slot: {
+        Args: {
+          p_coin: string
+          p_entry_id: number
+          p_traded_on: string
+          p_trades: Json
+        }
+        Returns: undefined
+      }
       is_member: { Args: never; Returns: boolean }
       price_series: {
         Args: { p_coins: string[]; p_from: string }
@@ -424,6 +439,7 @@ export type Database = {
         Args: {
           p_basket: string[]
           p_btc_in: number
+          p_slots: number
           p_started_on: string
           p_trades: Json
         }

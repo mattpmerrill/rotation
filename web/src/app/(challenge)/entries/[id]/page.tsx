@@ -7,9 +7,10 @@ import { ScoreHero } from "@/features/entry/components/ScoreHero";
 import { ValueChart } from "@/features/entry/components/ValueChart";
 import { getEntryView } from "@/features/entry/queries";
 import { TradeForm } from "@/features/trades/components/TradeForm";
+import { FillSlotForm } from "@/features/trades/components/FillSlotForm";
 import { TradeLog } from "@/features/trades/components/TradeLog";
 import { BTC } from "@/domain/types";
-import { formatDay } from "@/lib/format";
+import { formatBtc, formatDay } from "@/lib/format";
 import { Section } from "@/ui/Section";
 
 export const metadata: Metadata = { title: "Basket" };
@@ -53,6 +54,26 @@ export default async function EntryPage({ params }: { params: Promise<{ id: stri
         )}
       </Section>
 
+      {view.slots.open > 0 && (
+        <Section title={view.slots.open === 1 ? "A waiting slot" : `${view.slots.open} waiting slots`} panel>
+          {view.slots.fill ? (
+            <FillSlotForm
+              entryId={entry.id}
+              share={view.slots.share}
+              coins={view.slots.fill.coins}
+              prices={view.slots.fill.prices}
+              from={view.slots.fill.from}
+            />
+          ) : (
+            <p className="text-ink-2 text-sm">
+              {view.slots.closedReason && view.slots.waitingBtc === 0
+                ? view.slots.closedReason
+                : `${formatBtc(view.slots.waitingBtc)} is waiting as BTC, to buy a coin later.`}
+            </p>
+          )}
+        </Section>
+      )}
+
       {isOwner && !finished && (
         <Section title="Log a trade" panel>
           <TradeForm
@@ -67,7 +88,7 @@ export default async function EntryPage({ params }: { params: Promise<{ id: stri
       )}
 
       <Section title="Trades">
-        <TradeLog trades={view.trades} coins={view.coins} entry={entry} canEdit={isOwner} />
+        <TradeLog trades={view.trades} coins={view.coins} canEdit={isOwner} />
       </Section>
 
       <Section title="Reference dates" panel>

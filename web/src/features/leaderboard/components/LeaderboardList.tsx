@@ -32,7 +32,15 @@ export function LeaderboardList({ rows }: { rows: LeaderboardRow[] }) {
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <CoinStack coins={r.coins} />
-                  <span className="text-ink-3 text-xs">{r.coins.map((c) => c.symbol).join(" ")}</span>
+                  <span className="text-ink-3 text-xs">
+                    {r.coins.map((c) => c.symbol).join(" ")}
+                    {r.openSlots > 0 && (
+                      <span className="text-gold">
+                        {" "}
+                        + {r.openSlots} waiting {r.openSlots === 1 ? "slot" : "slots"}
+                      </span>
+                    )}
+                  </span>
                 </div>
                 <span className="text-ink-3 text-xs">In since {formatDay(r.startedOn)}</span>
               </div>

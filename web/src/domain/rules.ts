@@ -1,10 +1,11 @@
 /**
  * The challenge rules (Matt, 2026-09-26). The database enforces the same limits
- * (supabase/migrations/20260926000001_challenge.sql); keep the two in step.
+ * (supabase/migrations/..._challenge.sql and ..._waiting_slots.sql); keep the two in step.
  */
 export const RULES = {
   /** Most BTC a person can put into the challenge. */
   maxBtcIn: 1,
+  /** Picks per basket: coins plus waiting slots. At least one pick is a coin. */
   basketMin: 2,
   basketMax: 8,
   /** A coin must rank in the top N by market cap on the buy-in day. */

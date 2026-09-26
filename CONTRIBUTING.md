@@ -61,7 +61,8 @@ CI runs all three on every push and pull request.
 **Config and research**
 
 11. Every threshold lives in `config/`. A change gets a `version` bump and a line in
-    `docs/CHANGELOG-RULES.md`, then `uv run rotation web-data` to refresh the web app's copies.
+    `docs/CHANGELOG-RULES.md`, then `uv run rotation web-data` and `uv run rotation buy-timing`
+    to refresh the web app's copies.
 12. Research goes in `engine/src/rotation/backtest/` with a generated report in
     `docs/backtests/`. Say what it found in plain words, including when an idea didn't work.
 

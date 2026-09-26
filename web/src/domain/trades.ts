@@ -1,11 +1,10 @@
 import type { DraftTrade } from "./buyIn";
 import { formatQty } from "@/lib/format";
-import { BTC, USDT, type Balances, type Entry, type Trade } from "./types";
+import { USDT, type Balances, type Trade } from "./types";
 
-/** The buy-in's own trades: the BTC sale and the basket buys on the start day. */
-export function isBuyInTrade(entry: Entry, t: Trade): boolean {
-  if (t.tradedOn !== entry.startedOn) return false;
-  return t.asset === BTC ? t.side === "sell" : t.side === "buy";
+/** The buy-in's own trades: the BTC sale and the basket buys at the start. */
+export function isBuyInTrade(t: Trade): boolean {
+  return t.kind === "buy_in";
 }
 
 /**

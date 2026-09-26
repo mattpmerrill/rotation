@@ -10,7 +10,10 @@ export function CoinPicker({
   coins,
   selected,
   onToggle,
+  max = RULES.basketMax,
 }: {
+  /** Most coins that can be picked (fewer when there are waiting slots). */
+  max?: number;
   coins: EligibleCoin[];
   selected: string[];
   onToggle: (id: string) => void;
@@ -20,7 +23,7 @@ export function CoinPicker({
     const q = query.trim().toLowerCase();
     return q ? coins.filter((c) => c.symbol.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)) : coins;
   }, [coins, query]);
-  const full = selected.length >= RULES.basketMax;
+  const full = selected.length >= max;
 
   return (
     <div className="grid gap-3">

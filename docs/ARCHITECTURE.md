@@ -44,6 +44,8 @@ app: it needs valuations, and valuations are TypeScript.
    `web/public/data/basket-history.json`, and the reference dates into
    `web/src/generated/market-reference.json`. Rebuild both when `config/rules.yaml` changes.
    Coin icons are CoinGecko image URLs saved in `coins.image_url` by the daily job.
+   `rotation buy-timing` writes `web/public/data/buy-timing.json` (the Best time to buy page);
+   its results only change when a sell window passes, so rerun it after each one.
 
 ## The database
 
@@ -53,8 +55,8 @@ Migrations in `supabase/migrations/`, tests in `supabase/tests/database/` (pgTAP
 |---|---|---|
 | `profiles` | One per sign-up; `is_member` is set by Matt | trigger on sign-up; Matt |
 | `challenges` | One per cycle; at most one open | Matt (SQL) |
-| `entries` | A person's run: start date, BTC in (≤ 1), basket (2–8 coins) | the person, via `start_entry()` |
-| `entry_trades` | Every trade, against USDT | the person |
+| `entries` | A person's run: start date, BTC in (≤ 1), basket and waiting slots (2–8 picks) | the person, via `start_entry()` and `fill_slot()` |
+| `entry_trades` | Every trade, against USDT, with a kind: `buy_in`, `fill` (via functions), `sell`, `rebuy` (by the person) | the person |
 | `entry_balances` (view) | Holdings per entry, including USDT | – |
 | `coins`, `daily_prices` | Market data | engine |
 | `market_state` | BTC vs its high, MVRV, rebuy window | engine |
@@ -97,9 +99,10 @@ app ─▶ features ─▶ data ─▶ domain ─▶ lib
 | `auth` | – | sign in / up / out, the auth callback |
 | `leaderboard` | standings for everyone, market state | – |
 | `entry` | one entry: value series, coins, reference dates | – |
-| `trades` | – | log a sell or rebuy, delete a trade |
+| `trades` | – | log a sell or rebuy, fill a waiting slot, delete a sell or rebuy |
 | `picker` | eligible coins, buy-in prices | start an entry |
 | `picks` | Joi's top picks: fixed baskets (`picks.ts`) previewed with `data/history.ts` | – |
+| `timing` | Best time to buy: `data/timing.ts` (engine research) through `domain/timing.ts` | – |
 | `notifications` | everything (secret key) | Discord posts |
 
 **Patterns:**

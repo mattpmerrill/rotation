@@ -5,9 +5,9 @@ import { checkTrade, isBuyInTrade } from "./trades";
 
 describe("trades", () => {
   it("recognizes the buy-in's trades", () => {
-    expect(buyIn.every((t) => isBuyInTrade(entry, t))).toBe(true);
+    expect(buyIn.every((t) => isBuyInTrade(t))).toBe(true);
     const later = trade({ tradedOn: "2026-10-02", asset: "solana", side: "sell", qty: 1, priceUsd: 400 });
-    expect(isBuyInTrade(entry, later)).toBe(false);
+    expect(isBuyInTrade(later)).toBe(false);
   });
 
   it("explains an oversell or an overspend", () => {

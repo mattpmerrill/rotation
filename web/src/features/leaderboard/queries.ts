@@ -13,6 +13,7 @@ export interface LeaderboardRow {
   startedOn: string;
   btcIn: number;
   coins: Coin[];
+  openSlots: number;
   phase: Phase;
   multiple: number | null;
   valueBtc: number | null;
@@ -56,6 +57,7 @@ export async function getLeaderboard(viewer: Viewer): Promise<Leaderboard | null
       startedOn: s.entry.startedOn,
       btcIn: s.entry.btcIn,
       coins: s.entry.basket.map((id) => snap.coins[id] ?? { id, symbol: id.toUpperCase(), name: id, image: null }),
+      openSlots: s.entry.openSlots,
       phase: s.phase,
       multiple: s.multiple,
       valueBtc: s.now?.totalBtc ?? null,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
-import { checkBuyIn, planBuyIn, usdtAfter, type DraftTrade } from "@/domain/buyIn";
+import { btcSoldAtBuyIn, checkBuyIn, planBuyIn, usdtAfter, type DraftTrade } from "@/domain/buyIn";
 import { priceOn } from "@/domain/prices";
 import { RULES } from "@/domain/rules";
 import { BTC, type PriceBook } from "@/domain/types";
@@ -19,11 +19,14 @@ type Overrides = Record<string, { qty?: string; price?: string }>;
  */
 export function BuyInForm({
   basket,
+  slots,
   symbols,
   prices,
   window,
 }: {
   basket: string[];
+  /** Waiting slots: their share of the BTC isn't sold. */
+  slots: number;
   symbols: Record<string, string>;
   prices: PriceBook;
   window: [string, string];
@@ -47,6 +50,7 @@ export function BuyInForm({
         basket.map((id) => [id, Number(overrides[id]?.price ?? priceOn(prices, id, day))]),
       ),
       basket,
+      slots,
       feeRate,
     });
     // apply typed-in amounts; fees follow the edited amounts
@@ -55,14 +59,14 @@ export function BuyInForm({
       const qty = t.asset === BTC ? t.qty : Number(o?.qty ?? t.qty);
       return { ...t, qty, feeUsd: qty * t.priceUsd * feeRate };
     });
-  }, [btcIn, btcPrice, basket, day, feeRate, missing.length, overrides, prices]);
+  }, [btcIn, btcPrice, basket, slots, day, feeRate, missing.length, overrides, prices]);
 
-  const problems = trades.length ? checkBuyIn(Number(btcIn), basket, trades) : [];
+  const problems = trades.length ? checkBuyIn(Number(btcIn), basket, slots, trades) : [];
   const left = trades.length ? usdtAfter(trades) : 0;
   const edit = (asset: string, field: "qty" | "price", value: string) =>
     setOverrides((o) => ({ ...o, [asset]: { ...o[asset], [field]: value } }));
 
-  const payload = JSON.stringify({ startedOn: day, btcIn: Number(btcIn), basket, trades });
+  const payload = JSON.stringify({ startedOn: day, btcIn: Number(btcIn), basket, slots, trades });
 
   return (
     <form action={action} className="grid gap-5">
@@ -165,6 +169,8 @@ export function BuyInForm({
             : left > 0
               ? `${formatUsd(left, { cents: true })} stays in USDT.`
               : null}
+          {slots > 0 &&
+            ` ${formatBtc(Number(btcIn) - btcSoldAtBuyIn(Number(btcIn), basket.length, slots))} waits as BTC for your ${slots === 1 ? "slot" : `${slots} slots`}.`}
         </p>
       )}
 

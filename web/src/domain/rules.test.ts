@@ -32,6 +32,7 @@ describe("planBuyIn", () => {
     btcPriceUsd: 100_000,
     coinPricesUsd: { solana: 200, chainlink: 20 },
     basket: ["solana", "chainlink"],
+    slots: 0,
     feeRate: 0.01,
   };
 
@@ -40,20 +41,20 @@ describe("planBuyIn", () => {
     expect(t[0]).toEqual({ asset: "bitcoin", side: "sell", qty: 1, priceUsd: 100_000, feeUsd: 1000 });
     expect(t[1].qty * t[1].priceUsd + t[1].feeUsd).toBeCloseTo(49_500, 6);
     expect(usdtAfter(t)).toBeCloseTo(0, 6);
-    expect(checkBuyIn(1, input.basket, t)).toEqual([]);
+    expect(checkBuyIn(1, input.basket, 0, t)).toEqual([]);
   });
 
   it("flags a buy-in over 1 BTC, a coin outside the basket, and overspending", () => {
     const t = planBuyIn({ ...input, btcIn: 1.5 });
-    expect(checkBuyIn(1.5, input.basket, t)[0]).toMatch(/at most 1 BTC/);
+    expect(checkBuyIn(1.5, input.basket, 0, t)[0]).toMatch(/at most 1 BTC/);
     const outside = planBuyIn({
       ...input,
       basket: ["solana", "dogecoin"],
       coinPricesUsd: { solana: 200, dogecoin: 0.2 },
     });
-    expect(checkBuyIn(1, input.basket, outside).join()).toMatch(/only buys coins in your basket/);
+    expect(checkBuyIn(1, input.basket, 0, outside).join()).toMatch(/only buys coins in your basket/);
     const over = planBuyIn(input).map((x) => (x.asset === "solana" ? { ...x, qty: x.qty * 2 } : x));
-    expect(checkBuyIn(1, input.basket, over).join()).toMatch(/more than the BTC sale raised/);
+    expect(checkBuyIn(1, input.basket, 0, over).join()).toMatch(/more than the BTC sale raised/);
   });
 });
 

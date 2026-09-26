@@ -33,7 +33,12 @@ export async function runDailyJob(today: string, appUrl: string): Promise<string
     const recent = addDays(today, -ANNOUNCE_DAYS);
     for (const e of snap.entries) {
       if (e.startedOn >= recent) posts.push({ key: `entry:${e.id}`, text: buyInMessage(e, snap.coins) });
-      for (const t of snap.trades.filter((t) => t.entryId === e.id && !isBuyInTrade(e, t) && t.tradedOn >= recent)) {
+      // one post per sell, rebuy or slot fill (a fill's BTC sale is part of the fill)
+      const announced = snap.trades.filter(
+        (t) =>
+          t.entryId === e.id && !isBuyInTrade(t) && !(t.kind === "fill" && t.side === "sell") && t.tradedOn >= recent,
+      );
+      for (const t of announced) {
         posts.push({ key: `trade:${t.id}`, text: tradeMessage(e, t, snap.coins) });
       }
     }
