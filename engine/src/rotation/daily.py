@@ -14,16 +14,20 @@ this job is the only writer of market_state and daily_prices.
 
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
 from datetime import date
 
+import httpx
 import numpy as np
 import pandas as pd
 
 from rotation.config import Config
 from rotation.data.universe import is_excluded
 from rotation.rules.cycle import buy_started, rules_from_config
+
+log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -102,6 +106,33 @@ def _coins_in_entries(cur) -> set[str]:
     return {r[0] for r in cur.fetchall()} - {"bitcoin"}
 
 
+def classify_new_coins(
+    markets: pd.DataFrame, known: dict[str, bool], categories_of, universe
+) -> tuple[list[tuple], list[str]]:
+    """Coins never seen before, classified by their CoinGecko categories like the backtest.
+    Returns (rows for `coins`: id, symbol, name, categories, excluded) and the ids whose
+    categories couldn't be fetched. Those are left out for the day (no rank, so an
+    unclassified stablecoin can't take a top-100 place) and retried tomorrow."""
+    rows, failed = [], []
+    for r in markets.itertuples():
+        if r.id in known:
+            continue
+        try:
+            cats = [] if r.id == "bitcoin" else categories_of(r.id)
+        except httpx.HTTPError:
+            failed.append(r.id)
+            continue
+        excl = is_excluded(
+            r.id,
+            cats,
+            universe.exclude_categories,
+            universe.exclude_ids,
+            universe.force_include_ids,
+        )
+        rows.append((r.id, r.symbol, r.name, cats, excl))
+    return rows, failed
+
+
 def refresh_prices(cur, cfg: Config, day: date, wanted: set[str]) -> int:
     """Save today's prices for BTC, the top 250 and every `wanted` coin to daily_prices.
     Needs COINGECKO_API_KEY (the free Demo key is enough); without it, prices nothing."""
@@ -113,19 +144,18 @@ def refresh_prices(cur, cfg: Config, day: date, wanted: set[str]) -> int:
     markets = cg.markets()
     cur.execute("select id, is_excluded from public.coins")
     known = dict(cur.fetchall())
-    # a coin never seen before: classify it by its CoinGecko categories, like the backtest
     u = cfg.universe
-    for r in markets.itertuples():
-        if r.id in known:
-            continue
-        cats = [] if r.id == "bitcoin" else cg.coin_categories(r.id)
-        excl = is_excluded(r.id, cats, u.exclude_categories, u.exclude_ids, u.force_include_ids)
+    new, unclassified = classify_new_coins(markets, known, cg.coin_categories, u)
+    for cid, sym, name, cats, excl in new:
         cur.execute(
             """insert into public.coins (id, symbol, name, categories, is_excluded)
                values (%s, %s, %s, %s, %s) on conflict (id) do nothing""",
-            (r.id, r.symbol, r.name, cats, excl),
+            (cid, sym, name, cats, excl),
         )
-        known[r.id] = excl
+        known[cid] = excl
+    if unclassified:
+        log.warning("left out today, CoinGecko didn't classify them: %s", ", ".join(unclassified))
+        markets = markets[~markets["id"].isin(unclassified)]
     excluded = {i for i, x in known.items() if x} | set(u.exclude_ids)
     ranked = rank_markets(markets, excluded)
     extra = cg.simple_prices(wanted - set(ranked["id"]))

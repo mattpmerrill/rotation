@@ -1,10 +1,11 @@
 """The daily market job: market state from the cycle features, and live ranks."""
 
+import httpx
 import numpy as np
 import pandas as pd
 
 from rotation.config import load_config
-from rotation.daily import market_state, rank_markets
+from rotation.daily import classify_new_coins, market_state, rank_markets
 from rotation.rules.cycle import cycle_features
 
 CFG = load_config()
@@ -53,3 +54,24 @@ def test_rank_markets_skips_btc_and_excluded_coins():
     r = rank_markets(m, excluded={"tether"}).set_index("id")["rank"]
     assert r["ethereum"] == 1 and r["ripple"] == 2 and r["newcoin"] == 3
     assert pd.isna(r["bitcoin"]) and pd.isna(r["tether"]) and pd.isna(r["nocap"])
+
+
+def test_new_coins_that_cant_be_classified_sit_out_the_day():
+    m = pd.DataFrame(
+        {
+            "id": ["ethereum", "newusd", "broken"],
+            "symbol": ["eth", "nusd", "brk"],
+            "name": ["Ethereum", "New USD", "Broken"],
+        }
+    )
+
+    def categories_of(cid):
+        if cid == "broken":
+            raise httpx.HTTPStatusError(
+                "400", request=httpx.Request("GET", "x"), response=httpx.Response(400)
+            )
+        return ["Stablecoins"]
+
+    rows, failed = classify_new_coins(m, {"ethereum": False}, categories_of, CFG.universe)
+    assert failed == ["broken"]
+    assert [(r[0], r[4]) for r in rows] == [("newusd", True)]
