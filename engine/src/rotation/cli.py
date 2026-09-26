@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Annotated
 
 import typer
@@ -247,15 +247,8 @@ def explorer_cmd() -> None:
 
 
 @app.command("daily")
-def daily_cmd(
-    post: Annotated[
-        bool, typer.Option(help="Post the public brief to DISCORD_WEBHOOK_URL")
-    ] = False,
-    only_if_action: Annotated[
-        bool, typer.Option(help="Post only on action days or Sundays")
-    ] = False,
-) -> None:
-    """Daily job: cycle state + every person's actions to Supabase, public brief to Discord."""
+def daily_cmd() -> None:
+    """Daily market job: market_state + today's prices to Supabase (the app reads them)."""
     import os
 
     from rotation import daily
@@ -264,70 +257,32 @@ def daily_cmd(
     from rotation.data.loader import normalize_dsn
 
     cfg = get_config()
-    f = sg.live_features(cfg.rules.cycle)
-    day = f.index[-1].date()
     dsn = os.environ.get("SUPABASE_DB_URL")
     if not dsn:
         raise typer.BadParameter("SUPABASE_DB_URL is not set")
-    brief, people, priced = daily.run(cfg, f, day, normalize_dsn(dsn))
-    typer.echo(brief)
-    typer.echo(f"(cycle state + actions written for {people} people; {priced} coins priced)")
-    if post:
-        _, steps = daily.public_steps(f, cfg, day)
-        if only_if_action and not steps and day.weekday() != 6:
-            typer.echo("(no action and not Sunday: not posted)")
-            return
-        sg.post_discord(brief, os.environ["DISCORD_WEBHOOK_URL"])
-        typer.echo("(posted to Discord)")
+    f = sg.live_features(cfg.rules.cycle)
+    state, priced = daily.run(cfg, f, datetime.now(UTC).date(), normalize_dsn(dsn))
+    typer.echo(
+        f"market state {state.day}: BTC ${state.btc_price:,.0f}, "
+        f"{state.drawdown:.0%} below the high, rebuy window {'open' if state.rebuy_window_open else 'closed'}; {priced} coins priced"
+    )
+
+
+@app.command("challenge-exits")
+def challenge_exits_cmd() -> None:
+    """Research: exit rules for a challenge basket -> docs/backtests/challenge-exits.md."""
+    from rotation.backtest import challenge_exits
+
+    typer.echo(challenge_exits.write())
 
 
 @app.command("web-data")
 def web_data_cmd() -> None:
-    """Files the web app reads: cycle rules (from config), coin list, the explorer page."""
-    import json
-    import shutil
+    """Static data the web app ships with (web/public/data/): the basket picker's history."""
+    from rotation import web_data
 
-    import pandas as pd
-
-    from rotation.config import REPO_ROOT, get_config
-
-    web = REPO_ROOT / "web"
-    c = get_config().rules.cycle
-    rules = {
-        "halvings": [str(h) for h in c.halvings],
-        "halving_interval_days": 1456,
-        "alt_slice_days": c.alts.slice_days,
-        "alt_max_rank": c.alts.max_rank,
-        "sell_window": [c.sell.window_start_days, c.sell.window_end_days],
-        "sell_tranches": c.sell.clock_tranches,
-        "sell_btc_frac": c.sell.target_frac,
-        "buy": c.buy.model_dump(),
-        "fee_per_trade": c.account.fee_per_trade,
-        "config_hash": get_config().config_hash,
-    }
-    (web / "lib").mkdir(exist_ok=True)
-    (web / "lib" / "cycle-rules.json").write_text(json.dumps(rules, indent=2) + "\n")
-
-    ranks = cache.read("universe", "ranks")
-    latest = ranks["date"].max()
-    now = ranks[ranks["date"] == latest].set_index("coin_id")["rank"]
-    meta = pd.read_parquet(cache.data_dir() / "coingecko_backfill" / "_coins.parquet")
-    meta = meta[meta["id"].isin(now.index)]
-    coins = sorted(
-        (
-            {"id": i, "symbol": s.upper(), "name": n, "rank": int(now[i])}
-            for i, s, n in zip(meta["id"], meta["symbol"], meta["name"], strict=True)
-        ),
-        key=lambda x: x["rank"],
-    )
-    (web / "lib" / "coins.json").write_text(
-        json.dumps({"as_of": str(latest.date()), "coins": coins}, separators=(",", ":")) + "\n"
-    )
-    shutil.copy(
-        REPO_ROOT / "docs" / "explorer" / "btc-stack-explorer.html",
-        web / "public" / "explorer.html",
-    )
-    typer.echo(f"web data: rules {rules['config_hash']}, {len(coins)} coins as of {latest.date()}")
+    out = web_data.write()
+    typer.echo(f"web data: {out} ({out.stat().st_size / 1e3:,.0f} kB)")
 
 
 if __name__ == "__main__":
