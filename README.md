@@ -1,22 +1,16 @@
-# Rotation
+# Rotation: the 1 BTC Challenge
 
-A rules-based crypto portfolio system for growing BTC holdings by trading top-100 alts.
-Read-only in v1: it scores, alerts and reports; it never places orders.
+How many BTC can we get from one? Friends each swap up to 1 BTC into a basket of alts, sell
+near the top, and rebuy BTC in the bear. Scored in BTC.
 
-- Plan and decisions: [docs/PLAN.md](docs/PLAN.md)
-- The rules in plain English: [docs/RULES.md](docs/RULES.md)
-- Every threshold: [config/rules.yaml](config/rules.yaml)
+- The plan and decisions: [docs/PLAN.md](docs/PLAN.md)
+- How it's built: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- How to work on it: [CONTRIBUTING.md](CONTRIBUTING.md)
 
-## Engine quickstart
-
-```sh
-cp .env.example .env            # add a CoinGecko key
-cd engine
-uv sync
-uv run pytest
-uv run rotation config          # validate config, print its hash
-uv run rotation fetch btc-onchain
-uv run rotation fetch binance BTCUSDT ETHUSDT
-```
-
-Market data is cached as Parquet under `data/` (not committed).
+| Folder | What |
+|---|---|
+| `web/` | The app (Next.js on Vercel) |
+| `supabase/` | Database schema, access rules and tests |
+| `engine/` | Market data job, research and backtests (Python) |
+| `config/` | Research thresholds and the coin universe |
+| `docs/` | Plan, architecture, research reports |

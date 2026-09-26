@@ -9,53 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      actions: {
-        Row: {
-          asset: string
-          day: string
-          id: number
-          kind: string
-          plan_step: string
-          qty: number | null
-          reason: string
-          share: string
-          usd: number | null
-          user_id: string
-        }
-        Insert: {
-          asset: string
-          day: string
-          id?: never
-          kind: string
-          plan_step: string
-          qty?: number | null
-          reason: string
-          share: string
-          usd?: number | null
-          user_id: string
-        }
-        Update: {
-          asset?: string
-          day?: string
-          id?: never
-          kind?: string
-          plan_step?: string
-          qty?: number | null
-          reason?: string
-          share?: string
-          usd?: number | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "actions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       btc_onchain: {
         Row: {
           date: string
@@ -152,57 +105,6 @@ export type Database = {
           rules?: Json
           universe?: Json
           version?: number
-        }
-        Relationships: []
-      }
-      cycle_state: {
-        Row: {
-          ath: number
-          ath_date: string
-          btc_price: number
-          config_hash: string
-          created_at: string
-          day: string
-          days_since_ath: number
-          days_since_halving: number
-          drawdown: number
-          last_halving: string
-          mvrv: number | null
-          next_halving_est: string
-          phase: string
-          upcoming: Json
-        }
-        Insert: {
-          ath: number
-          ath_date: string
-          btc_price: number
-          config_hash: string
-          created_at?: string
-          day: string
-          days_since_ath: number
-          days_since_halving: number
-          drawdown: number
-          last_halving: string
-          mvrv?: number | null
-          next_halving_est: string
-          phase: string
-          upcoming?: Json
-        }
-        Update: {
-          ath?: number
-          ath_date?: string
-          btc_price?: number
-          config_hash?: string
-          created_at?: string
-          day?: string
-          days_since_ath?: number
-          days_since_halving?: number
-          drawdown?: number
-          last_halving?: string
-          mvrv?: number | null
-          next_halving_est?: string
-          phase?: string
-          upcoming?: Json
         }
         Relationships: []
       }
@@ -473,41 +375,6 @@ export type Database = {
         }
         Relationships: []
       }
-      plans: {
-        Row: {
-          alt_budget_btc: number
-          basket: string[]
-          sell_alt_frac: number
-          sell_btc_frac: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          alt_budget_btc?: number
-          basket?: string[]
-          sell_alt_frac?: number
-          sell_btc_frac?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          alt_budget_btc?: number
-          basket?: string[]
-          sell_alt_frac?: number
-          sell_btc_frac?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "plans_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           created_at: string
@@ -529,56 +396,6 @@ export type Database = {
         }
         Relationships: []
       }
-      trades: {
-        Row: {
-          asset: string
-          created_at: string
-          fee_usd: number
-          id: number
-          note: string | null
-          plan_step: string | null
-          price_usd: number | null
-          qty: number
-          side: string
-          traded_on: string
-          user_id: string
-        }
-        Insert: {
-          asset: string
-          created_at?: string
-          fee_usd?: number
-          id?: never
-          note?: string | null
-          plan_step?: string | null
-          price_usd?: number | null
-          qty: number
-          side: string
-          traded_on: string
-          user_id?: string
-        }
-        Update: {
-          asset?: string
-          created_at?: string
-          fee_usd?: number
-          id?: never
-          note?: string | null
-          plan_step?: string | null
-          price_usd?: number | null
-          qty?: number
-          side?: string
-          traded_on?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trades_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       entry_balances: {
@@ -586,14 +403,6 @@ export type Database = {
           asset: string | null
           entry_id: number | null
           qty: number | null
-        }
-        Relationships: []
-      }
-      holdings: {
-        Row: {
-          asset: string | null
-          qty: number | null
-          user_id: string | null
         }
         Relationships: []
       }

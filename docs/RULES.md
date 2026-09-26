@@ -1,4 +1,7 @@
-# Rules in plain English
+# Rules in plain English (research engine)
+
+> The original Phase 0 rule engine, kept as research and switched off. The live app is the
+> 1 BTC Challenge: see [PLAN.md](PLAN.md).
 
 The source of truth is `config/rules.yaml`; this page explains it. Items tagged
 **[default]** are definitions the program doc left open. Beck proposed them; Matt
