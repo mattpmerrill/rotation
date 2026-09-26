@@ -55,7 +55,7 @@ export async function getLeaderboard(viewer: Viewer): Promise<Leaderboard | null
       isViewer: s.entry.userId === viewer.id,
       startedOn: s.entry.startedOn,
       btcIn: s.entry.btcIn,
-      coins: s.entry.basket.map((id) => snap.coins[id] ?? { id, symbol: id.toUpperCase(), name: id }),
+      coins: s.entry.basket.map((id) => snap.coins[id] ?? { id, symbol: id.toUpperCase(), name: id, image: null }),
       phase: s.phase,
       multiple: s.multiple,
       valueBtc: s.now?.totalBtc ?? null,

@@ -1,4 +1,4 @@
-"""The daily market job: the data the 1 BTC Challenge app reads.
+"""The daily market job: the data the 1 Bitty Challenge app reads.
 
   1. BTC price + MVRV (CoinMetrics) -> cycle features -> today's `market_state` row
      (BTC vs its high, days since the halving, and whether the bear rebuy window is open)
@@ -165,6 +165,7 @@ def refresh_prices(cur, cfg: Config, day: date, wanted: set[str]) -> int:
             r.id,
             r.symbol,
             r.name,
+            None if pd.isna(r.image) else r.image,
             r.current_price,
             r.total_volume,
             r.market_cap,
@@ -172,12 +173,14 @@ def refresh_prices(cur, cfg: Config, day: date, wanted: set[str]) -> int:
         )
         for r in ranked.itertuples()
         if not pd.isna(r.current_price)
-    ] + [(cid, cid, cid, px, None, None, None) for cid, px in extra.items()]
-    for cid, sym, name, px, vol, mcap, rank in rows:
-        # new coins get a row in `coins` first (daily_prices references it)
+    ] + [(cid, cid, cid, None, px, None, None, None) for cid, px in extra.items()]
+    for cid, sym, name, image, px, vol, mcap, rank in rows:
+        # new coins get a row in `coins` first (daily_prices references it); icons stay current
         cur.execute(
-            "insert into public.coins (id, symbol, name) values (%s, %s, %s) on conflict (id) do nothing",
-            (cid, sym, name),
+            """insert into public.coins (id, symbol, name, image_url) values (%s, %s, %s, %s)
+               on conflict (id) do update
+                 set image_url = coalesce(excluded.image_url, public.coins.image_url)""",
+            (cid, sym, name, image),
         )
         cur.execute(
             """insert into public.daily_prices (coin_id, date, close, volume_usd, market_cap_usd,

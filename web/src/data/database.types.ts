@@ -58,6 +58,7 @@ export type Database = {
         Row: {
           categories: string[]
           id: string
+          image_url: string | null
           is_excluded: boolean
           is_meme: boolean
           name: string
@@ -67,6 +68,7 @@ export type Database = {
         Insert: {
           categories?: string[]
           id: string
+          image_url?: string | null
           is_excluded?: boolean
           is_meme?: boolean
           name: string
@@ -76,6 +78,7 @@ export type Database = {
         Update: {
           categories?: string[]
           id?: string
+          image_url?: string | null
           is_excluded?: boolean
           is_meme?: boolean
           name?: string

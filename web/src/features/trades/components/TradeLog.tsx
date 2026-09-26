@@ -1,6 +1,7 @@
 import { isBuyInTrade } from "@/domain/trades";
 import type { Coin, Entry, Trade } from "@/domain/types";
 import { formatDay, formatPrice, formatQty, formatUsd } from "@/lib/format";
+import { CoinIcon } from "@/ui/CoinIcon";
 import { DeleteTradeButton } from "./DeleteTradeButton";
 
 /** Every trade in an entry, newest first. The owner can delete trades after the buy-in. */
@@ -20,7 +21,10 @@ export function TradeLog({
       {[...trades].reverse().map((t) => {
         const buyIn = isBuyInTrade(entry, t);
         return (
-          <li key={t.id} className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 py-3 text-sm">
+          <li key={t.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-0.5 py-3 text-sm">
+            <span className="row-span-2">
+              <CoinIcon symbol={coins[t.asset]?.symbol ?? t.asset} image={coins[t.asset]?.image ?? null} size={28} />
+            </span>
             <span>
               <span className={t.side === "buy" ? "text-gain" : "text-loss"}>
                 {t.side === "buy" ? "Bought" : "Sold"}
@@ -35,7 +39,7 @@ export function TradeLog({
               {buyIn && ", buy-in"}
             </span>
             <span className="text-right">{canEdit && !buyIn && <DeleteTradeButton tradeId={t.id} />}</span>
-            {t.note && <span className="text-ink-2 col-span-2">“{t.note}”</span>}
+            {t.note && <span className="text-ink-2 col-span-2 col-start-2">“{t.note}”</span>}
           </li>
         );
       })}

@@ -19,7 +19,11 @@ const LAYERS = [
 export function ValueChart({ series, btcIn }: { series: ValuePoint[]; btcIn: number }) {
   const { unit } = useUnit();
   const inBtc = unit === "btc";
-  const fmt = (v: number) => (inBtc ? formatBtc(v, 3) : formatUsd(v));
+  // rounding dust (a buy-in's last fraction of a cent) shows as zero, not "-0.000"
+  const fmt = (v: number) => {
+    const x = Math.abs(v) < (inBtc ? 0.0005 : 0.5) ? 0 : v;
+    return inBtc ? formatBtc(x, 3) : formatUsd(x);
+  };
   const data = series.map((p) => ({
     day: p.day,
     alts: inBtc ? p.altsUsd / p.btcPrice : p.altsUsd,

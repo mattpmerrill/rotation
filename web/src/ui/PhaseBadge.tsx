@@ -7,9 +7,9 @@ const LABEL: Record<Phase, string> = {
 };
 
 const STYLE: Record<Phase, string> = {
-  holding_alts: "text-series-alts border-series-alts/40",
-  holding_usdt: "text-series-usdt border-series-usdt/40",
-  back_in_btc: "text-btc border-btc/40",
+  holding_alts: "text-accent-violet border-accent-violet/40 bg-accent-violet/10",
+  holding_usdt: "text-accent-aqua border-accent-aqua/40 bg-accent-aqua/10",
+  back_in_btc: "text-btc border-btc/40 bg-btc/10",
 };
 
 export function PhaseBadge({ phase }: { phase: Phase }) {

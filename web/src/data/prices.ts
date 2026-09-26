@@ -18,10 +18,12 @@ export async function getCoins(ids: string[], db?: Db): Promise<Record<string, C
   db ??= await supabaseServer();
   const { data, error } = await db
     .from("coins")
-    .select("id, symbol, name")
+    .select("id, symbol, name, image_url")
     .in("id", [...new Set(ids)]);
   if (error) throw error;
-  return Object.fromEntries(data.map((c) => [c.id, { id: c.id, symbol: c.symbol.toUpperCase(), name: c.name }]));
+  return Object.fromEntries(
+    data.map((c) => [c.id, { id: c.id, symbol: c.symbol.toUpperCase(), name: c.name, image: smallIcon(c.image_url) }]),
+  );
 }
 
 /** Today's top-100 alts from the daily job's live ranks (BTC, stablecoins and wrapped tokens
@@ -39,7 +41,7 @@ export async function getEligibleCoins(): Promise<{ coins: EligibleCoin[]; asOf:
   if (!latest) return { coins: [], asOf: null };
   const { data, error } = await db
     .from("daily_prices")
-    .select("coin_id, rank, coins(symbol, name)")
+    .select("coin_id, rank, coins(symbol, name, image_url)")
     .eq("date", latest.date)
     .lte("rank", RULES.maxRank)
     .order("rank");
@@ -51,6 +53,12 @@ export async function getEligibleCoins(): Promise<{ coins: EligibleCoin[]; asOf:
       rank: r.rank!,
       symbol: (r.coins?.symbol ?? r.coin_id).toUpperCase(),
       name: r.coins?.name ?? r.coin_id,
+      image: smallIcon(r.coins?.image_url ?? null),
     })),
   };
+}
+
+/** CoinGecko's 50px icon instead of the 250px one: the app shows icons at 20-32px. */
+function smallIcon(url: string | null): string | null {
+  return url ? url.replace("/large/", "/small/") : null;
 }

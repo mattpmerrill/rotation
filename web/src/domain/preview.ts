@@ -17,13 +17,23 @@ export interface HistoryCycle {
   coins: Record<string, (number | null)[]>;
 }
 
+/** One coin inside a cycle preview. */
+export interface CoinPreview {
+  id: string;
+  /** Set when the coin had no price yet at the entry week: its share waited as BTC and
+   *  bought in at its first weekly price, this week. */
+  boughtLate: string | null;
+  /** No price at all from the entry week on: its share stayed in BTC the whole time. */
+  neverListed: boolean;
+  /** BTC per BTC put into this coin, in the old sell window (both fees paid). */
+  atSellWindow: number | null;
+}
+
 export interface CyclePreview {
   /** e.g. "2018 → 2021" */
   label: string;
   entryWeek: string;
-  /** Coins with a price at the entry week (the rest didn't exist yet). */
-  used: string[];
-  missing: string[];
+  coins: CoinPreview[];
   /** BTC value of 1 BTC put into the basket, week by week, after the buy-in fee. */
   points: { week: string; btc: number }[];
   low: number;
@@ -39,6 +49,10 @@ export interface CyclePreview {
  * How an equal-weight basket would have done if bought at the same point in a past cycle
  * (same days since that cycle's halving). Hindsight warning: the picker offers today's
  * coins, which survived by definition.
+ *
+ * Each coin gets an equal share of the BTC. A coin that didn't exist yet at the entry week
+ * holds its share as BTC until its first weekly price, then buys in (Matt, 2026-09-26). A
+ * coin whose prices stop counts as worth nothing from then on.
  */
 export function previewBasket(
   history: BasketHistory,
@@ -48,38 +62,65 @@ export function previewBasket(
   feeRate: number,
 ): CyclePreview[] {
   return history.cycles.map((c) => {
-    const target = addDays(c.halving, daysSinceHalving);
-    const at = nearestWeek(c.weeks, target);
-    const used = basket.filter((id) => c.coins[id]?.[at] != null);
-    const missing = basket.filter((id) => !used.includes(id));
+    const at = nearestWeek(c.weeks, addDays(c.halving, daysSinceHalving));
+    const weeks = c.weeks.slice(at);
     const sellWindow: [string, string] = [
       addDays(c.next_halving, sellWindowDays[0]),
       addDays(c.next_halving, sellWindowDays[1]),
     ];
+    const inWindow = weeks.flatMap((w, k) => (w >= sellWindow[0] && w <= sellWindow[1] ? [k] : []));
+    const windowAvg = (line: number[]) =>
+      inWindow.length ? (inWindow.reduce((s, k) => s + line[k], 0) / inWindow.length) * (1 - feeRate) ** 2 : null;
 
-    const points: { week: string; btc: number }[] = [];
-    for (let i = at; i < c.weeks.length && used.length; i++) {
-      // a coin that stops trading counts as worth nothing from then on
-      const avg = used.reduce((s, id) => s + (c.coins[id][i] ?? 0) / c.coins[id][at]!, 0) / used.length;
-      points.push({ week: c.weeks[i], btc: avg * (1 - feeRate) });
-    }
-    const inWindow = points.filter((p) => p.week >= sellWindow[0] && p.week <= sellWindow[1]);
+    const lines = basket.map((id) => coinLine(c.coins[id] ?? [], at, c.weeks.length));
+    const points = weeks.map((week, k) => ({
+      week,
+      btc: basket.length ? (lines.reduce((s, l) => s + l.values[k], 0) / basket.length) * (1 - feeRate) : 0,
+    }));
     const peak = points.reduce((best, p) => (p.btc > best.btc ? p : best), points[0] ?? { week: "", btc: 0 });
+    const total = windowAvg(points.map((p) => p.btc / (1 - feeRate)));
+
     return {
       label: `${c.weeks[at].slice(0, 4)} → ${sellWindow[1].slice(0, 4)}`,
       entryWeek: c.weeks[at],
-      used,
-      missing,
+      coins: basket.map((id, j) => ({
+        id,
+        boughtLate: lines[j].buy != null && lines[j].buy! > at ? c.weeks[lines[j].buy!] : null,
+        neverListed: lines[j].buy == null,
+        atSellWindow: windowAvg(lines[j].values),
+      })),
       points,
-      low: Math.min(...points.map((p) => p.btc)),
+      low: points.length ? Math.min(...points.map((p) => p.btc)) : 0,
       peak,
-      atSellWindow: inWindow.length
-        ? (inWindow.reduce((s, p) => s + p.btc, 0) / inWindow.length) * (1 - feeRate)
-        : null,
+      atSellWindow: total,
       sellWindow,
-      sellWindowWeeks: inWindow.length ? [inWindow[0].week, inWindow.at(-1)!.week] : null,
+      sellWindowWeeks: inWindow.length ? [weeks[inWindow[0]], weeks[inWindow.at(-1)!]] : null,
     };
   });
+}
+
+/** One coin's value in BTC per BTC put in, from the entry week on (before fees). */
+function coinLine(prices: (number | null)[], at: number, length: number): { values: number[]; buy: number | null } {
+  let buy: number | null = null;
+  let last = -1;
+  for (let i = 0; i < prices.length; i++) {
+    if (prices[i] == null) continue;
+    if (buy == null && i >= at) buy = i;
+    last = i;
+  }
+  const values: number[] = [];
+  let prev = 1;
+  for (let i = at; i < length; i++) {
+    if (buy == null || i < buy)
+      values.push(1); // not listed yet: the share waits as BTC
+    else if (i > last)
+      values.push(0); // stopped trading
+    else {
+      prev = prices[i] != null ? prices[i]! / prices[buy]! : prev; // a missing week keeps its last value
+      values.push(prev);
+    }
+  }
+  return { values, buy };
 }
 
 function nearestWeek(weeks: string[], day: string): number {

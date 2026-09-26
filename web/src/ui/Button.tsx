@@ -3,7 +3,8 @@ import type { ButtonHTMLAttributes } from "react";
 type Variant = "primary" | "quiet" | "danger";
 
 const styles: Record<Variant, string> = {
-  primary: "bg-btc text-bg hover:bg-gold disabled:bg-surface-2 disabled:text-ink-3",
+  primary:
+    "bg-gradient-to-r from-btc to-gold text-bg shadow-[0_8px_24px_-10px_var(--btc)] hover:brightness-110 disabled:from-surface-2 disabled:to-surface-2 disabled:text-ink-3 disabled:shadow-none",
   quiet: "border border-line bg-surface text-ink hover:border-ink-3 disabled:text-ink-3",
   danger: "border border-loss/40 text-loss hover:bg-loss/10",
 };

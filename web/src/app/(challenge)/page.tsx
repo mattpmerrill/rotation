@@ -16,14 +16,16 @@ export default async function LeaderboardPage() {
   const players = board.rows.length;
   return (
     <>
-      <section className="grid gap-4">
-        <h1 className="text-3xl font-semibold sm:text-4xl">Leaderboard</h1>
-        <p className="text-ink-2 max-w-2xl">
-          Everyone swaps up to 1 BTC into alts, sells near the top and rebuys BTC in the bear. Ranked by BTC now against
-          BTC put in.
-          {players > 0 &&
-            ` ${players} ${players === 1 ? "player" : "players"} since ${formatDay(board.challenge.openedOn)}.`}
-        </p>
+      <section className="grid gap-5">
+        <div className="grid gap-3">
+          <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-5xl">{board.challenge.name}</h1>
+          <p className="text-ink-2 max-w-2xl text-lg">
+            Everyone swaps up to 1 BTC into alts, sells near the top and rebuys BTC in the bear. Ranked by BTC now
+            against BTC put in.
+            {players > 0 &&
+              ` ${players} ${players === 1 ? "player" : "players"} since ${formatDay(board.challenge.openedOn)}.`}
+          </p>
+        </div>
         {board.market && <MarketStrip market={board.market} />}
       </section>
 
@@ -34,8 +36,8 @@ export default async function LeaderboardPage() {
       )}
 
       {!board.viewerEntryId && !board.challenge.closedOn && (
-        <div className="border-btc/40 bg-btc/5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border px-5 py-4">
-          <p>
+        <div className="panel border-btc/40 flex flex-wrap items-center justify-between gap-4 bg-[linear-gradient(110deg,rgb(247_147_26/0.16),rgb(144_133_233/0.08))] px-5 py-5 sm:px-6">
+          <p className="text-lg">
             {players
               ? "You're not in yet. Pick your coins and choose when to buy in."
               : "Nobody's in yet. Pick your coins and be first."}

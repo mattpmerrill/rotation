@@ -4,8 +4,8 @@ import { standingOf } from "@/domain/standings";
 import { buyInMessage, digestMessage, rebuyWindowMessage, tradeMessage } from "./messages";
 
 const coins = {
-  solana: { id: "solana", symbol: "SOL", name: "Solana" },
-  chainlink: { id: "chainlink", symbol: "LINK", name: "Chainlink" },
+  solana: { id: "solana", symbol: "SOL", name: "Solana", image: null },
+  chainlink: { id: "chainlink", symbol: "LINK", name: "Chainlink", image: null },
 };
 
 describe("Discord messages", () => {
@@ -13,7 +13,7 @@ describe("Discord messages", () => {
     const msgs = [
       buyInMessage(entry, coins),
       tradeMessage(entry, { ...buyIn[1], side: "sell" }, coins),
-      digestMessage("1 BTC → ??", [standingOf(entry, buyIn, prices, "2026-10-03")], "https://app/"),
+      digestMessage("1 Bitty Challenge", [standingOf(entry, buyIn, prices, "2026-10-03")], "https://app/"),
     ];
     expect(msgs[0]).toBe("**Wrenny** is in: SOL, LINK.");
     expect(msgs[1]).toBe("**Wrenny** sold SOL.");

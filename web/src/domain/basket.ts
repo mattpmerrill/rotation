@@ -6,6 +6,7 @@ export interface EligibleCoin {
   id: string;
   symbol: string;
   name: string;
+  image: string | null;
   rank: number;
 }
 

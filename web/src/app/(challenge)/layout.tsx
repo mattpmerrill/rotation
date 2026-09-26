@@ -13,19 +13,23 @@ export default async function ChallengeLayout({ children }: { children: React.Re
 
   return (
     <>
-      <header className="border-line bg-bg/90 sticky top-0 z-10 border-b backdrop-blur">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-          <Link href="/" aria-label="Leaderboard">
-            <Wordmark className="text-xl" />
+      <header className="border-line bg-bg/75 sticky top-0 z-10 border-b backdrop-blur-xl">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
+          <Link href="/" aria-label="1 Bitty Challenge: leaderboard">
+            <Wordmark />
           </Link>
           {viewer.isMember && (
-            <nav className="flex items-center gap-1" aria-label="Main">
+            <nav
+              className="order-last -mx-1 flex w-full items-center gap-1 overflow-x-auto px-1 sm:order-none sm:w-auto"
+              aria-label="Main"
+            >
               <NavLink href="/">Leaderboard</NavLink>
               {myEntryId ? (
                 <NavLink href={`/entries/${myEntryId}`}>My basket</NavLink>
               ) : (
                 <NavLink href="/pick">Pick a basket</NavLink>
               )}
+              <NavLink href="/picks">Joi’s top picks</NavLink>
             </nav>
           )}
           <div className="ml-auto flex items-center gap-4">
@@ -34,7 +38,7 @@ export default async function ChallengeLayout({ children }: { children: React.Re
           </div>
         </div>
       </header>
-      <main className="mx-auto grid max-w-4xl gap-10 px-4 py-8 sm:py-12">
+      <main className="mx-auto grid max-w-5xl gap-10 px-4 py-8 sm:py-12">
         {viewer.isMember ? (
           children
         ) : (

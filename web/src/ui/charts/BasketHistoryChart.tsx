@@ -13,11 +13,11 @@ import {
 } from "recharts";
 import type { CyclePreview } from "@/domain/preview";
 import { formatBtc, formatDay, formatMonth } from "@/lib/format";
-import { ChartTooltip } from "@/ui/charts/ChartTooltip";
-import { AXIS, GRID, SERIES } from "@/ui/charts/theme";
+import { ChartTooltip } from "./ChartTooltip";
+import { AXIS, GRID, SERIES } from "./theme";
 
 /** One past cycle: 1 BTC in the basket, in BTC, week by week, with the old sell window shaded. */
-export function PreviewChart({ cycle }: { cycle: CyclePreview }) {
+export function BasketHistoryChart({ cycle, color = SERIES.line }: { cycle: CyclePreview; color?: string }) {
   return (
     <div className="h-48" role="img" aria-label={`The basket in BTC, ${cycle.label}`}>
       <ResponsiveContainer width="100%" height="100%">
@@ -48,12 +48,12 @@ export function PreviewChart({ cycle }: { cycle: CyclePreview }) {
               active && payload?.length ? (
                 <ChartTooltip
                   title={`Week of ${formatDay(payload[0].payload.week)}`}
-                  rows={[{ label: "Basket", value: formatBtc(payload[0].payload.btc, 2), color: SERIES.line }]}
+                  rows={[{ label: "Basket", value: formatBtc(payload[0].payload.btc, 2), color }]}
                 />
               ) : null
             }
           />
-          <Line dataKey="btc" stroke={SERIES.line} strokeWidth={2} dot={false} isAnimationActive={false} />
+          <Line dataKey="btc" stroke={color} strokeWidth={2} dot={false} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>
     </div>

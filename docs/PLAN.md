@@ -1,6 +1,6 @@
 # Rotation: plan
 
-**The 1 BTC Challenge: how many BTC can we get from one?** Each member swaps up to 1 BTC into a
+**The 1 Bitty Challenge: how many BTC can we get from one?** Each member swaps up to 1 BTC into a
 basket of 2 to 8 alts, when they choose. They hold through the bull run, sell the alts for USDT
 near the top, and rebuy BTC in the bear. Everything is scored in BTC: BTC out divided by BTC in.
 The challenge ends when everyone has rebought; then the next one can start.
@@ -46,13 +46,16 @@ From 1 BTC, 1% fee per trade, using the two cycles the alt data covers
 | 10 | Discord never shows holdings or amounts. | 2026-09-24 |
 | 11 | 10 BTC core + 1 BTC alt basket on the halving clock. *(Superseded by 13.)* | 2026-09-25 |
 | 12 | Each person picks their own coins. | 2026-09-25 |
-| 13 | **The app is only the 1 BTC Challenge.** No schedule: each person chooses when to buy in, sell and rebuy. The halving clock and old sell window are shown as references only. The BTC-core plan pages and tables are retired. | 2026-09-26 |
+| 13 | **The app is only the 1 Bitty Challenge.** No schedule: each person chooses when to buy in, sell and rebuy. The halving clock and old sell window are shown as references only. The BTC-core plan pages and tables are retired. | 2026-09-26 |
 | 14 | Baskets of 2 to 8 coins (5 suggested), each in the top 100 on the buy-in day. Up to 1 BTC per person. | 2026-09-26 |
 | 15 | Members only (`profiles.is_member`, set by Matt). Members see each other's baskets and trades; each person edits only their own. | 2026-09-26 |
 | 16 | Players log their own trades. | 2026-09-26 |
 | 17 | Amounts in BTC by default, one tap to USD. | 2026-09-26 |
 | 18 | Discord gets buy-ins, sells, rebuys, Sunday standings and the rebuy-window alert. No sell alert (research: none beat the clock). | 2026-09-26 |
 | 19 | A challenge ends when every entry is back in BTC; then the next one opens. | 2026-09-26 |
+| 20 | Name: **1 Bitty Challenge**. | 2026-09-26 |
+| 21 | Picker previews include coins that weren't trading yet: their share waits in BTC and buys in at the coin's first weekly price. | 2026-09-26 |
+| 22 | A "Joi's top picks" tab: five baskets that did best in past cycles, with why, computed by the same code as the picker. | 2026-09-26 |
 
 ## Running a challenge
 
@@ -60,7 +63,7 @@ From 1 BTC, 1% fee per trade, using the two cycles the alt data covers
   `update profiles set is_member = true where id = (select id from auth.users where email = '...');`
 - **Open the next challenge** (after everyone has rebought):
   `update challenges set closed_on = current_date where closed_on is null;`
-  `insert into challenges (name, opened_on) values ('1 BTC → ??', current_date);`
+  `insert into challenges (name, opened_on) values ('1 Bitty Challenge', current_date);`
 - **Fix a bad trade:** the player deletes it and logs it again. Buy-in trades can't be deleted in
   the app; fix those in SQL.
 

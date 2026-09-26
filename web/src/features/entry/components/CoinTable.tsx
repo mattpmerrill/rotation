@@ -4,6 +4,7 @@ import type { CoinChange } from "@/domain/coins";
 import type { Coin } from "@/domain/types";
 import { formatPrice } from "@/lib/format";
 import { Change } from "@/ui/Change";
+import { CoinIcon } from "@/ui/CoinIcon";
 import { Money, useUnit } from "@/ui/unit";
 
 const STATUS: Record<CoinChange["status"], string> = { held: "Held", partly_sold: "Partly sold", sold: "Sold" };
@@ -45,8 +46,13 @@ export function CoinTable({
         {changes.map((c) => (
           <tr key={c.asset}>
             <th scope="row" className="py-3 pr-3 text-left font-semibold">
-              {coins[c.asset]?.symbol ?? c.asset}
-              <span className="text-ink-3 block text-xs font-normal">{STATUS[c.status]}</span>
+              <span className="flex items-center gap-3">
+                <CoinIcon symbol={coins[c.asset]?.symbol ?? c.asset} image={coins[c.asset]?.image ?? null} size={30} />
+                <span>
+                  {coins[c.asset]?.symbol ?? c.asset}
+                  <span className="text-ink-3 block text-xs font-normal">{STATUS[c.status]}</span>
+                </span>
+              </span>
             </th>
             <td className="py-3 pr-3">
               <div className="flex items-center gap-3">

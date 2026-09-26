@@ -7,10 +7,10 @@ import { buyIn, entry, prices } from "./fixtures";
 import { rankStandings, standingOf } from "./standings";
 
 const eligible: EligibleCoin[] = [
-  { id: "solana", symbol: "SOL", name: "Solana", rank: 4 },
-  { id: "chainlink", symbol: "LINK", name: "Chainlink", rank: 12 },
-  { id: "dogecoin", symbol: "DOGE", name: "Dogecoin", rank: 8 },
-  { id: "far", symbol: "FAR", name: "Far", rank: 140 },
+  { id: "solana", symbol: "SOL", name: "Solana", rank: 4, image: null },
+  { id: "chainlink", symbol: "LINK", name: "Chainlink", rank: 12, image: null },
+  { id: "dogecoin", symbol: "DOGE", name: "Dogecoin", rank: 8, image: null },
+  { id: "far", symbol: "FAR", name: "Far", rank: 140, image: null },
 ];
 
 describe("checkBasket", () => {

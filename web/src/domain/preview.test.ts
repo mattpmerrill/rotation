@@ -41,10 +41,32 @@ describe("previewBasket", () => {
     expect(c.atSellWindow).toBeCloseTo(0.99 * 0.99);
   });
 
-  it("leaves out coins that didn't exist yet and reports them", () => {
+  it("buys a coin that didn't exist yet at its first price, holding its share as BTC until then", () => {
+    // ccc starts at week 20 and stays flat; entry at week 10
     const [c] = previewBasket(history, ["aaa", "ccc"], 70, [7, 14], 0);
-    expect(c.used).toEqual(["aaa"]);
-    expect(c.missing).toEqual(["ccc"]);
-    expect(previewBasket(history, ["aaa", "ccc"], 150, [7, 14], 0)[0].missing).toEqual([]);
+    const ccc = c.coins.find((x) => x.id === "ccc")!;
+    expect(ccc.boughtLate).toBe(weeks[20]);
+    expect(ccc.neverListed).toBe(false);
+    expect(ccc.atSellWindow).toBeCloseTo(1);
+    // week 10: aaa 1, ccc waiting as BTC 1 -> 1
+    expect(c.points[0].btc).toBeCloseTo(1);
+    const [later] = previewBasket(history, ["aaa", "ccc"], 150, [7, 14], 0);
+    expect(later.coins.find((x) => x.id === "ccc")!.boughtLate).toBeNull();
+  });
+
+  it("counts a coin that stops trading as worth nothing, and one never listed as BTC", () => {
+    const dead = {
+      ...history,
+      cycles: [
+        {
+          ...history.cycles[0],
+          coins: { ...history.cycles[0].coins, ddd: weeks.map((_, i) => (i < 12 ? 1000 : null)) },
+        },
+      ],
+    };
+    const [c] = previewBasket(dead, ["ddd", "zzz"], 70, [7, 14], 0);
+    expect(c.coins[0].atSellWindow).toBe(0);
+    expect(c.coins[1].neverListed).toBe(true);
+    expect(c.coins[1].atSellWindow).toBe(1);
   });
 });

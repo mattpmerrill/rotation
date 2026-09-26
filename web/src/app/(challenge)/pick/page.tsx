@@ -7,10 +7,11 @@ import { Notice } from "@/ui/Notice";
 
 export const metadata: Metadata = { title: "Pick a basket" };
 
-export default async function PickPage() {
+export default async function PickPage({ searchParams }: { searchParams: Promise<{ basket?: string }> }) {
   const viewer = await requireViewer();
   if (!viewer.isMember) return null;
   const data = await getPickerData(viewer);
+  const initialBasket = ((await searchParams).basket ?? "").split(",").filter(Boolean);
   if (data.status === "already_in") redirect(`/entries/${data.entryId}`);
   if (data.status === "no_challenge") return <Notice>No challenge is open right now.</Notice>;
 
@@ -29,6 +30,7 @@ export default async function PickPage() {
         sellWindowDays={data.sellWindowDays}
         window={data.window}
         prices={data.prices}
+        initialBasket={initialBasket}
       />
     </>
   );

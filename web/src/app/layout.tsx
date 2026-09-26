@@ -7,8 +7,8 @@ const instrument = Instrument_Sans({ subsets: ["latin"], variable: "--font-instr
 const unbounded = Unbounded({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-unbounded" });
 
 export const metadata: Metadata = {
-  title: { default: "1 BTC → ??", template: "%s · 1 BTC → ??" },
-  description: "How many BTC can we get from 1? A friendly alt-basket challenge, scored in BTC.",
+  title: { default: "1 Bitty Challenge", template: "%s | 1 Bitty Challenge" },
+  description: "How many BTC can you get from one? A friendly alt-basket challenge, scored in BTC.",
 };
 
 export const viewport: Viewport = { themeColor: "#0d0f14", colorScheme: "dark" };

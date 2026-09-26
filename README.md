@@ -1,4 +1,4 @@
-# Rotation: the 1 BTC Challenge
+# Rotation: the 1 Bitty Challenge
 
 How many BTC can we get from one? Friends each swap up to 1 BTC into a basket of alts, sell
 near the top, and rebuy BTC in the bear. Scored in BTC.

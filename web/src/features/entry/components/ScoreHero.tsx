@@ -25,19 +25,25 @@ export function ScoreHero({
   const change = now ? (unit === "btc" ? now.totalBtc / btcIn : now.totalUsd / startUsd) - 1 : null;
 
   return (
-    <div className="grid gap-3">
+    <div className="panel relative grid gap-4 overflow-hidden px-5 py-7 sm:px-8 sm:py-10">
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute -top-24 -right-16 size-80 rounded-full blur-3xl ${
+          change == null || change >= 0 ? "bg-btc/25" : "bg-loss/20"
+        }`}
+      />
       <p
-        className="font-display text-4xl leading-none tracking-tight sm:text-6xl"
+        className="font-display relative text-4xl leading-none tracking-tight sm:text-7xl"
         style={{ animation: "score-in 500ms ease-out both" }}
       >
         <span className="text-ink-3">{from}</span>
         <span className="text-btc mx-2 sm:mx-4" aria-label="to">
           →
         </span>
-        <span>{to}</span>
+        <span className={change == null || change >= 0 ? "text-gradient-btc" : "text-gradient-loss"}>{to}</span>
         {unit === "btc" && <span className="text-ink-3 ml-2 text-lg sm:ml-3 sm:text-2xl">BTC</span>}
       </p>
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="relative flex flex-wrap items-center gap-3">
         {change != null && <Change value={change} className="text-lg" />}
         <PhaseBadge phase={phase} />
       </div>

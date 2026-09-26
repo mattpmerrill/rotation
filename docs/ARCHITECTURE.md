@@ -1,6 +1,6 @@
 # Architecture
 
-How the 1 BTC Challenge is put together, and where each kind of code belongs. Read this before
+How the 1 Bitty Challenge is put together, and where each kind of code belongs. Read this before
 changing anything; `CONTRIBUTING.md` has the working rules.
 
 ## The system
@@ -43,6 +43,7 @@ app: it needs valuations, and valuations are TypeScript.
 4. **Static data** for the basket picker's history preview is built by `rotation web-data` into
    `web/public/data/basket-history.json`, and the reference dates into
    `web/src/generated/market-reference.json`. Rebuild both when `config/rules.yaml` changes.
+   Coin icons are CoinGecko image URLs saved in `coins.image_url` by the daily job.
 
 ## The database
 
@@ -98,6 +99,7 @@ app ─▶ features ─▶ data ─▶ domain ─▶ lib
 | `entry` | one entry: value series, coins, reference dates | – |
 | `trades` | – | log a sell or rebuy, delete a trade |
 | `picker` | eligible coins, buy-in prices | start an entry |
+| `picks` | Joi's top picks: fixed baskets (`picks.ts`) previewed with `data/history.ts` | – |
 | `notifications` | everything (secret key) | Discord posts |
 
 **Patterns:**

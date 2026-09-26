@@ -12,10 +12,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <main className="mx-auto grid min-h-dvh w-full max-w-sm content-center gap-8 px-4 py-12">
       <div className="grid gap-4">
-        <Wordmark className="text-5xl" />
-        <h1 className="text-2xl font-semibold">How many BTC can you get from one?</h1>
+        <Wordmark size="lg" />
+        <h1 className="text-3xl font-semibold">How many BTC can you get from one?</h1>
         <p className="text-ink-2">
-          Swap up to 1 BTC into a basket of alts, sell near the top, rebuy BTC in the bear. Most BTC at the end wins.
+          The 1 Bitty Challenge: swap up to 1 BTC into a basket of alts, sell near the top, rebuy BTC in the bear. Most
+          BTC at the end wins.
         </p>
       </div>
       <LoginForm linkError={error} />

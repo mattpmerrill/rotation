@@ -56,12 +56,12 @@ class CoinGecko:
         return pd.DataFrame(self._get("/coins/list", {"status": status}))
 
     def markets(self, per_page: int = 250) -> pd.DataFrame:
-        """Today's top coins by market cap: id, symbol, name, price, market cap, volume."""
+        """Today's top coins by market cap: id, symbol, name, icon URL, price, cap, volume."""
         body = self._get(
             "/coins/markets",
             {"vs_currency": "usd", "order": "market_cap_desc", "per_page": per_page, "page": 1},
         )
-        cols = ["id", "symbol", "name", "current_price", "market_cap", "total_volume"]
+        cols = ["id", "symbol", "name", "image", "current_price", "market_cap", "total_volume"]
         return pd.DataFrame(body or [], columns=cols)
 
     def simple_prices(self, ids: set[str]) -> dict[str, float]:

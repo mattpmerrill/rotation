@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { checkBasket, type EligibleCoin } from "@/domain/basket";
 import { RULES } from "@/domain/rules";
-import type { PriceBook } from "@/domain/types";
+import type { Coin, PriceBook } from "@/domain/types";
 import { CoinTag } from "@/ui/CoinTag";
 import { Notice } from "@/ui/Notice";
 import { Section } from "@/ui/Section";
@@ -18,16 +18,22 @@ export function PickerFlow({
   sellWindowDays,
   window,
   prices,
+  initialBasket = [],
 }: {
+  /** Coins to start with, e.g. from "Try this basket" on Joi's top picks. */
+  initialBasket?: string[];
   coins: EligibleCoin[];
   daysSinceHalving: number;
   sellWindowDays: [number, number];
   window: [string, string];
   prices: PriceBook;
 }) {
-  const [basket, setBasket] = useState<string[]>([]);
+  const [basket, setBasket] = useState<string[]>(() =>
+    initialBasket.filter((id) => coins.some((c) => c.id === id)).slice(0, RULES.basketMax),
+  );
   const toggle = (id: string) => setBasket((b) => (b.includes(id) ? b.filter((x) => x !== id) : [...b, id]));
   const symbols = Object.fromEntries(coins.map((c) => [c.id, c.symbol]));
+  const byId: Record<string, Coin> = Object.fromEntries(coins.map((c) => [c.id, c]));
   const check = checkBasket(basket, coins);
   const ready = check.errors.length === 0;
 
@@ -45,7 +51,7 @@ export function PickerFlow({
           <div className="flex flex-wrap gap-1.5" aria-label="Your basket">
             {basket.map((id) => (
               <button key={id} type="button" onClick={() => toggle(id)} aria-label={`Remove ${symbols[id]}`}>
-                <CoinTag symbol={`${symbols[id]} ✕`} />
+                <CoinTag symbol={`${symbols[id]} ✕`} image={byId[id]?.image} />
               </button>
             ))}
           </div>
@@ -56,7 +62,12 @@ export function PickerFlow({
 
       {basket.length > 0 && (
         <Section title="How it did in past cycles" panel>
-          <PreviewPanel basket={basket} daysSinceHalving={daysSinceHalving} sellWindowDays={sellWindowDays} />
+          <PreviewPanel
+            basket={basket}
+            coins={byId}
+            daysSinceHalving={daysSinceHalving}
+            sellWindowDays={sellWindowDays}
+          />
         </Section>
       )}
 

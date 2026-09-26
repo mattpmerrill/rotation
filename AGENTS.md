@@ -1,6 +1,6 @@
 # Instructions for coding agents
 
-This repo is the 1 BTC Challenge: a small web app where friends each swap up to 1 BTC into an
+This repo is the 1 Bitty Challenge: a small web app where friends each swap up to 1 BTC into an
 alt basket and compete on BTC at the end. Before changing code:
 
 1. Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (what goes where) and

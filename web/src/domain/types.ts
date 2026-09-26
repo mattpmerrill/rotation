@@ -47,6 +47,8 @@ export interface Coin {
   id: string;
   symbol: string;
   name: string;
+  /** Icon URL (CoinGecko), if known. */
+  image: string | null;
 }
 
 /** Daily closes per asset, dates ascending. */
