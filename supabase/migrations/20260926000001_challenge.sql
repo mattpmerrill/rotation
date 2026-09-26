@@ -204,6 +204,8 @@ grant select, insert on public.entries to authenticated;
 grant select, insert, delete on public.entry_trades to authenticated;
 grant all on public.challenges, public.entries, public.entry_trades, public.entry_balances,
   public.market_state, public.notifications to service_role;
+-- The web app's daily job (secret key) reads everything it needs to value entries.
+grant select on public.profiles, public.coins, public.daily_prices to service_role;
 
 alter table public.challenges enable row level security;
 alter table public.entries enable row level security;

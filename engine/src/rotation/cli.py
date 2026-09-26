@@ -278,11 +278,11 @@ def challenge_exits_cmd() -> None:
 
 @app.command("web-data")
 def web_data_cmd() -> None:
-    """Static data the web app ships with (web/public/data/): the basket picker's history."""
+    """Static data the web app ships with: the picker's history and the reference dates."""
     from rotation import web_data
 
-    out = web_data.write()
-    typer.echo(f"web data: {out} ({out.stat().st_size / 1e3:,.0f} kB)")
+    for out in web_data.write():
+        typer.echo(f"web data: {out} ({out.stat().st_size / 1e3:,.0f} kB)")
 
 
 if __name__ == "__main__":

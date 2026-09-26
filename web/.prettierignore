@@ -1,0 +1,6 @@
+.next
+node_modules
+public/data
+src/generated
+src/data/database.types.ts
+package-lock.json

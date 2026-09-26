@@ -1,0 +1,64 @@
+/**
+ * The challenge's vocabulary. Pure data: no framework, no I/O.
+ *
+ * Assets are CoinGecko ids ("bitcoin", "solana", ...). USDT is never traded directly: it is
+ * the cash leg of every buy and sell, so it appears only in balances.
+ */
+
+export const BTC = "bitcoin";
+export const USDT = "usdt";
+
+/** A calendar day in UTC, as YYYY-MM-DD. Sorts correctly as a string. */
+export type Day = string;
+
+export type Side = "buy" | "sell";
+
+export interface Trade {
+  id: number;
+  entryId: number;
+  tradedOn: Day;
+  asset: string;
+  side: Side;
+  qty: number;
+  priceUsd: number;
+  feeUsd: number;
+  note: string | null;
+}
+
+/** One person's run at the challenge: BTC in, a basket, and their trades. */
+export interface Entry {
+  id: number;
+  challengeId: number;
+  userId: string;
+  playerName: string;
+  startedOn: Day;
+  btcIn: number;
+  basket: string[];
+}
+
+export interface Challenge {
+  id: number;
+  name: string;
+  openedOn: Day;
+  closedOn: Day | null;
+}
+
+export interface Coin {
+  id: string;
+  symbol: string;
+  name: string;
+}
+
+/** Daily closes per asset, dates ascending. */
+export type PriceBook = Record<string, { dates: Day[]; closes: number[] }>;
+
+/** Holdings per asset (coin units; USDT in dollars). */
+export type Balances = Record<string, number>;
+
+/**
+ * Where an entry is in the challenge:
+ *   holding_alts  still holds some of the basket
+ *   holding_usdt  sold the alts; waiting for (or part-way through) the rebuy
+ *   back_in_btc   rebought BTC with everything: the score is final
+ */
+export type Phase = "holding_alts" | "holding_usdt" | "back_in_btc";

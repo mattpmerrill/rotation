@@ -1,0 +1,16 @@
+/**
+ * The challenge rules (Matt, 2026-09-26). The database enforces the same limits
+ * (supabase/migrations/20260926000001_challenge.sql); keep the two in step.
+ */
+export const RULES = {
+  /** Most BTC a person can put into the challenge. */
+  maxBtcIn: 1,
+  basketMin: 2,
+  basketMax: 8,
+  /** A coin must rank in the top N by market cap on the buy-in day. */
+  maxRank: 100,
+  /** Default trading fee, as a share of each trade (iTrustCapital charges 1%). */
+  defaultFeeRate: 0.01,
+  /** Below this a balance counts as empty (coin units; dollars for USDT). */
+  dust: { coin: 1e-9, usdt: 1 },
+} as const;

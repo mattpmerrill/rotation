@@ -1,4 +1,7 @@
-"""Static data the web app ships with: `rotation web-data` -> web/public/data/.
+"""Static data the web app ships with: `rotation web-data`.
+
+market-reference.json (web/src/generated/) holds the dates the app shows as references,
+straight from config/rules.yaml: the halvings, the old sell window, the bear rebuy rule.
 
 basket-history.json powers the basket picker's "how would this have done" preview. For
 each of the two cycles the alt data covers, it holds weekly (Sunday) BTC closes and each
@@ -24,8 +27,10 @@ import pandas as pd
 from rotation.config import REPO_ROOT, get_config
 from rotation.data import cache
 from rotation.rules.indicators import weekly_close
+from rotation.signal import HALVING_INTERVAL_DAYS
 
 OUT = REPO_ROOT / "web" / "public" / "data"
+GENERATED = REPO_ROOT / "web" / "src" / "generated"
 FROM_DAYS = 600  # history starts this long after a halving: covers entries from here on
 TO_DAYS = 700  # ...and runs this long past the next halving: covers the sell window
 
@@ -83,8 +88,27 @@ def basket_history(top_n: int = 150) -> dict:
     }
 
 
-def write() -> Path:
+def market_reference() -> dict:
+    cfg = get_config()
+    c = cfg.rules.cycle
+    return {
+        "config_hash": cfg.config_hash,
+        "halvings": [str(h) for h in c.halvings],
+        "halving_interval_days": HALVING_INTERVAL_DAYS,
+        "sell_window_days": [c.sell.window_start_days, c.sell.window_end_days],
+        "rebuy": {
+            "days_since_high": c.buy.start_days_since_ath,
+            "drawdown": c.buy.start_drawdown,
+            "mvrv_below": c.buy.start_mvrv_below,
+        },
+    }
+
+
+def write() -> list[Path]:
     OUT.mkdir(parents=True, exist_ok=True)
-    out = OUT / "basket-history.json"
-    out.write_text(json.dumps(basket_history(), separators=(",", ":")) + "\n")
-    return out
+    GENERATED.mkdir(parents=True, exist_ok=True)
+    history = OUT / "basket-history.json"
+    history.write_text(json.dumps(basket_history(), separators=(",", ":")) + "\n")
+    reference = GENERATED / "market-reference.json"
+    reference.write_text(json.dumps(market_reference(), indent=2) + "\n")
+    return [history, reference]

@@ -1,0 +1,19 @@
+{
+  "config_hash": "26baf29fdfd20a8f",
+  "halvings": [
+    "2012-11-28",
+    "2016-07-09",
+    "2020-05-11",
+    "2024-04-19"
+  ],
+  "halving_interval_days": 1456,
+  "sell_window_days": [
+    500,
+    580
+  ],
+  "rebuy": {
+    "days_since_high": 360,
+    "drawdown": 0.8,
+    "mvrv_below": 1.0
+  }
+}

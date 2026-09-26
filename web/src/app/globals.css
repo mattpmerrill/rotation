@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. The app is dark-only by design (Matt, 2026-09-26): deep blue-black ground,
+ * Bitcoin orange as the one bright accent, gold for highlights. Use the Tailwind names
+ * (bg-surface, text-ink-2, border-line, text-btc ...) in components, never raw hex.
+ */
+:root {
+  color-scheme: dark;
+  --bg: #0d0f14;
+  --surface: #151820;
+  --surface-2: #1c2029;
+  --line: #272c38;
+  --ink: #f2f4f7;
+  --ink-2: #a5acba;
+  --ink-3: #737a8a;
+  --btc: #f7931a;
+  --gold: #ffc247;
+  --gain: #3ddc97;
+  --loss: #ff6b6b;
+  --focus: #ffc247;
+  /* Chart series, validated for the dark surface (dataviz validator, 2026-09-26). */
+  --series-alts: #9085e9;
+  --series-usdt: #199e70;
+  --series-btc: #d9790b;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-btc: var(--btc);
+  --color-gold: var(--gold);
+  --color-gain: var(--gain);
+  --color-loss: var(--loss);
+  --color-series-alts: var(--series-alts);
+  --color-series-usdt: var(--series-usdt);
+  --color-series-btc: var(--series-btc);
+  --font-sans: var(--font-instrument), system-ui, sans-serif;
+  --font-display: var(--font-unbounded), var(--font-instrument), system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    line-height: 1.15;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  /* Numbers line up in columns everywhere. */
+  body {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}
+
+@layer components {
+  .field {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--ink);
+  }
+  .field:focus {
+    border-color: var(--gold);
+    outline: none;
+  }
+  .field[aria-invalid="true"] {
+    border-color: var(--loss);
+  }
+}
+
+/* The one moment of motion: the score counts in. */
+@keyframes score-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

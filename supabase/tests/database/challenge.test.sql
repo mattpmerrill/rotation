@@ -1,7 +1,7 @@
 -- The 1 BTC Challenge: access rules and fairness rules. Run: supabase test db
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(23);
+select plan(24);
 
 -- Deferred checks fire at commit; fire them per statement so each test sees its own error.
 set constraints all immediate;
@@ -95,6 +95,12 @@ select is((select count(*) from public.price_series(array['solana'], current_dat
 -- Signed out: nothing ----------------------------------------------------------------------------
 select set_config('role', 'anon', true);
 select throws_ok($$ select count(*) from public.entries $$, '42501', null, 'signed out: no access');
+
+-- The daily job (secret key) reads everything it values entries with.
+select set_config('role', 'service_role', true);
+select lives_ok($$ select count(*) from public.profiles join public.entries e on e.user_id = profiles.id
+    join public.entry_trades t on t.entry_id = e.id, public.daily_prices, public.coins, public.market_state $$,
+  'the job can read entries, names, trades and prices');
 
 select * from finish();
 rollback;
