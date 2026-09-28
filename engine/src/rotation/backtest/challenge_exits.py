@@ -2,7 +2,7 @@
 
 The 1 Bitty Challenge loop: 1 BTC -> an equal-weight alt basket -> sell for USDT on an exit
 rule -> rebuy BTC when the bear rebuy rule fires (config `cycle.buy`) -> BTC at the end.
-1% fee on every trade (Matt's IRA). Entry at the same point in the cycle as the challenge
+1% fee on every trade. Entry at the same point in the cycle as the challenge
 start (day ~890 after the halving), plus 90 days either side, in the two cycles the alt
 data covers.
 

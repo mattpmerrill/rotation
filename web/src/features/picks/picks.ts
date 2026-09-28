@@ -2,7 +2,7 @@
  * Joi's top picks: baskets that did best from this point in the last two cycles, with why.
  *
  * How they were found (2026-09-26): every basket of 2-6 coins from 28 established coins that
- * are in today's top 100 and on iTrustCapital (about 500,000 baskets), scored by the old
+ * are in today's top 100 and on the group's exchange (about 500,000 baskets), scored by the old
  * sell-window result in both cycles together (geometric mean), then a spread of themes
  * chosen by hand. The numbers on the page are computed live from the same history the
  * picker uses, so they always agree with it. Keep the text free of numbers for that reason.

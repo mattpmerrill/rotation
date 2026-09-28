@@ -77,12 +77,12 @@ BTC → 1.18 BTC"), with charts that tell the story at a glance. Should work wel
   cycles:
   - **Good cycle:** buy 2018-12-12, sell Sep–Nov 2021 (a big alt season)
   - **Bad cycle:** buy 2022-10-14, sell Sep–Oct 2025 (only BTC went up)
-- Equal-weight, buy with 1 BTC, **1% fee each way** (iTrustCapital IRA fee), hold, sell on the 4
+- Equal-weight, buy with 1 BTC, **1% fee each way** (the exchange's fee), hold, sell on the 4
   clock dates. Result = BTC at the end. Coins that died count as 0.
-- Scripts are copied to `docs/handoff/scripts/` (run from `engine/` with `uv run python
-  ../docs/handoff/scripts/<file>.py`): `rot_basket.py` (per-coin table), `rot_b2.py` (named
-  baskets), `rot_swap.py` (swaps), `rot_itc.py` (iTrustCapital pool search), `rot_n.py` (best
-  basket per size 2–8). They're scratch-quality, not engine code.
+- The analysis scripts (per-coin table, named baskets, swaps, pool search, best basket per size)
+  were scratch quality and were removed on 2026-09-28: they imported engine modules that were
+  archived ([ADR-004](../decisions/ADR-004-archive-cycle-harvest-engine.md)) and no longer run.
+  They are in the git tag `archive/cycle-harvest-2026-09-28`.
 
 ### Headline findings
 - At this point in the cycle, **only 2 of the top 100 alts beat BTC in the bad cycle** (OKB, SOL)
@@ -94,13 +94,13 @@ BTC → 1.18 BTC"), with charts that tell the story at a glance. Should work wel
 - **Survivorship bias:** we picked coins that are still big today, so real results would be
   worse. With only two cycles and thousands of combos searched, some of the "best" edge is luck.
 
-### Per-coin, 1 BTC → BTC at the clock sell (good / bad), iTrustCapital-available coins
+### Per-coin, 1 BTC → BTC at the clock sell (good / bad), coins available on the group's exchange
 ETH 2.69/0.54 · XRP 0.22/0.94 · BNB 6.16/0.66 · SOL –/1.15 · DOGE 7.23/0.62 · BCH 0.37/0.87 ·
 ADA 4.24/0.34 · LINK 7.65/0.50 · XLM 0.19/0.52 · ZEC 0.18/0.68 · LTC 0.48/0.35 · QNT 13.52/0.09 ·
 VET 2.06/0.15 · HBAR –/0.57 · AVAX –/0.26 · AAVE –/0.63 · INJ –/1.03 · RENDER –/1.28 ·
 FET –/0.98 · PENDLE –/13.27 (tiny then, not repeatable). "–" = coin didn't exist yet.
 
-### Best basket per size (iTrustCapital pool, top 100, bad-cycle result ≥ 0.75 BTC)
+### Best basket per size (exchange pool, top 100, bad-cycle result ≥ 0.75 BTC)
 | Coins | Basket | Good | Bad |
 |---|---|---|---|
 | 2 | LINK / SOL | 7.50 | 0.81 |
@@ -123,7 +123,7 @@ coins stopped helping.
 | ETH/BNB/SOL/HYPE/OKB/LINK | 4.49 | 0.90 |
 | BNB/XRP/SOL/DOGE/BCH (smallest loss) | 3.43 | 0.83 |
 
-(OKB and TRX are **not** on iTrustCapital, so they're out for Matt.)
+(OKB and TRX are **not** available on the exchange, so they're out.)
 
 ### Where coins sit now vs their best-ever price in BTC (2026-09-22)
 HYPE 0.97 (at the top) · OKB 0.60 · BNB 0.48 · SOL 0.33 · TRX 0.26 · ETH 0.22 · SUI 0.16 ·
@@ -137,8 +137,8 @@ DOGE 0.10 · LINK 0.09 · XRP 0.08 · AVAX 0.05 · ADA 0.04.
 - Each coin must be **top 100 by market cap on the buy date** (`daily_prices` / live ranks; the
   picker already validates against `coins` in commit `69795a7`).
 - **Exclude** BTC, stablecoins, wrapped/staked tokens, exchange-only IOUs.
-- Account availability: Matt uses **iTrustCapital**. Their list (help center "Which Digital
-  Assets are Available", ~90 coins, checked 2026-09-26) includes ETH, XRP, BNB, SOL, DOGE, BCH,
+- Exchange availability: the group trades on one exchange. Its list (help center, ~90 coins,
+  checked 2026-09-26) includes ETH, XRP, BNB, SOL, DOGE, BCH,
   ADA, HYPE, LINK, XLM, HBAR, ZEC, LTC, AVAX, SHIB, SUI, TON, CRO, DOT, UNI, AAVE, NEAR, ONDO, ICP,
   ATOM, POL, QNT, ALGO, RENDER, FIL, APT, VET, ARB, INJ, TIA, LDO and more. It does **not**
   include TRX or OKB. A per-person "my exchange" availability filter would be nice but isn't
