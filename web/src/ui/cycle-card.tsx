@@ -1,8 +1,8 @@
 import type { CyclePreview } from "@/domain/preview";
 import type { Coin } from "@/domain/types";
 import { formatBtc, formatMonth } from "@/lib/format";
-import { BasketHistoryChart } from "./charts/BasketHistoryChart";
-import { CoinIcon } from "./CoinIcon";
+import { BasketHistoryChart } from "./charts/basket-history-chart";
+import { CoinIcon } from "./coin-icon";
 
 /** One past cycle for a basket: the chart, three numbers, and how each coin did. */
 export function CycleCard({

@@ -4,8 +4,8 @@ import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip,
 import type { ValuePoint } from "@/domain/valuation";
 import { daysBetween } from "@/lib/days";
 import { formatBtc, formatDay, formatMonth, formatUsd } from "@/lib/format";
-import { ChartTooltip } from "@/ui/charts/ChartTooltip";
-import { Legend } from "@/ui/charts/Legend";
+import { ChartTooltip } from "@/ui/charts/chart-tooltip";
+import { Legend } from "@/ui/charts/legend";
 import { AXIS, GRID, SERIES } from "@/ui/charts/theme";
 import { useUnit } from "@/ui/unit";
 

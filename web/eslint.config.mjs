@@ -34,21 +34,21 @@ const noFramework = [
  */
 const LITERALS_STILL_PRESENT = [
   "src/app/(challenge)/page.tsx",
-  "src/features/leaderboard/components/LeaderboardList.tsx",
-  "src/features/picker/components/CoinPicker.tsx",
-  "src/features/picks/components/PickCard.tsx",
-  "src/features/timing/components/TimingVerdict.tsx",
-  "src/features/trades/components/TradeForm.tsx",
-  "src/ui/Button.tsx",
-  "src/ui/CoinIcon.tsx",
-  "src/ui/Medal.tsx",
-  "src/ui/Wordmark.tsx",
-  "src/ui/charts/TimingChart.tsx",
+  "src/features/leaderboard/components/leaderboard-list.tsx",
+  "src/features/picker/components/coin-picker.tsx",
+  "src/features/picks/components/pick-card.tsx",
+  "src/features/timing/components/timing-verdict.tsx",
+  "src/features/trades/components/trade-form.tsx",
+  "src/ui/button.tsx",
+  "src/ui/coin-icon.tsx",
+  "src/ui/medal.tsx",
+  "src/ui/wordmark.tsx",
+  "src/ui/charts/timing-chart.tsx",
 ];
 
 /** Permanent, with a reason: the Google sign-in button must use Google's exact brand colours,
  *  and the viewport theme colour is a meta tag value that cannot reference a CSS variable. */
-const LITERALS_ALLOWED = ["src/features/auth/components/LoginForm.tsx", "src/app/layout.tsx"];
+const LITERALS_ALLOWED = ["src/features/auth/components/login-form.tsx", "src/app/layout.tsx"];
 
 const HEX = "#[0-9a-fA-F]{3,8}\\b";
 const FN = "\\b(?:rgb|rgba|hsl|hsla|oklch)\\(";

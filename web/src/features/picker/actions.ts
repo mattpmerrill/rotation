@@ -14,7 +14,7 @@ import {
 import { getEligibleCoins } from "@/data/prices";
 import { requireMember } from "@/data/viewer";
 import { checkBasket } from "@/domain/basket";
-import { checkBuyIn, editLockedReason } from "@/domain/buyIn";
+import { checkBuyIn, editLockedReason } from "@/domain/buy-in";
 import { addDays, laterDay, todayUtc } from "@/lib/days";
 import { editableCoins, editWindow } from "./queries";
 import { BUY_IN_LOOKBACK_DAYS, buyInInput } from "./schema";

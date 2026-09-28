@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { requireViewer } from "@/data/viewer";
-import { LeaderboardList } from "@/features/leaderboard/components/LeaderboardList";
-import { MarketStrip } from "@/features/leaderboard/components/MarketStrip";
+import { LeaderboardList } from "@/features/leaderboard/components/leaderboard-list";
+import { MarketStrip } from "@/features/leaderboard/components/market-strip";
 import { getLeaderboard } from "@/features/leaderboard/queries";
 import { formatDay } from "@/lib/format";
-import { buttonClass } from "@/ui/Button";
-import { LiveRefresh } from "@/ui/LiveRefresh";
-import { Notice } from "@/ui/Notice";
+import { buttonClass } from "@/ui/button";
+import { LiveRefresh } from "@/ui/live-refresh";
+import { Notice } from "@/ui/notice";
 
 export default async function LeaderboardPage() {
   const viewer = await requireViewer();

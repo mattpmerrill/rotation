@@ -5,7 +5,7 @@ import { addTrade, deleteTrade, fillSlot, getEntry, listTrades } from "@/data/ch
 import { getCoins, getEligibleCoins } from "@/data/prices";
 import { requireMember } from "@/data/viewer";
 import { balancesOn } from "@/domain/holdings";
-import { usdtAfter } from "@/domain/buyIn";
+import { usdtAfter } from "@/domain/buy-in";
 import { slotsClosedReason, slotShare } from "@/domain/slots";
 import { checkTrade } from "@/domain/trades";
 import { BTC } from "@/domain/types";

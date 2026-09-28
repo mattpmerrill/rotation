@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defined } from "@/lib/defined";
 import { checkBasket, type EligibleCoin } from "./basket";
-import { checkBuyIn, planBuyIn, usdtAfter } from "./buyIn";
+import { checkBuyIn, planBuyIn, usdtAfter } from "./buy-in";
 import { coinChanges } from "./coins";
 import { cycleReference } from "./cycle";
 import { buyIn, entry, prices } from "./fixtures";

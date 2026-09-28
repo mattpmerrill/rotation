@@ -1,4 +1,4 @@
-import { CoinIcon } from "./CoinIcon";
+import { CoinIcon } from "./coin-icon";
 
 /** A basket at a glance: overlapping coin icons, with the tickers for screen readers. */
 export function CoinStack({

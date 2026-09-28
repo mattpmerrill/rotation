@@ -145,7 +145,7 @@
   }
 }
 
-/* Loading: a gold Bitcoin spinning on its edge (src/ui/BitcoinSpinner.tsx). The coin is two
+/* Loading: a gold Bitcoin spinning on its edge (src/ui/bitcoin-spinner.tsx). The coin is two
  * faces plus stacked edge discs in 3D; it speeds through the edge-on moment and eases through
  * the face-on one, like a coin spun on a table. A light sweep crosses the face each turn. */
 .btc-spinner {

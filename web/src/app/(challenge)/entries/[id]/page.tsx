@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireViewer } from "@/data/viewer";
-import { CoinTable } from "@/features/entry/components/CoinTable";
-import { ReferenceDates } from "@/features/entry/components/ReferenceDates";
-import { ScoreHero } from "@/features/entry/components/ScoreHero";
-import { ValueChart } from "@/features/entry/components/ValueChart";
+import { CoinTable } from "@/features/entry/components/coin-table";
+import { ReferenceDates } from "@/features/entry/components/reference-dates";
+import { ScoreHero } from "@/features/entry/components/score-hero";
+import { ValueChart } from "@/features/entry/components/value-chart";
 import { getEntryView } from "@/features/entry/queries";
-import { TradeForm } from "@/features/trades/components/TradeForm";
-import { FillSlotForm } from "@/features/trades/components/FillSlotForm";
-import { TradeLog } from "@/features/trades/components/TradeLog";
+import { TradeForm } from "@/features/trades/components/trade-form";
+import { FillSlotForm } from "@/features/trades/components/fill-slot-form";
+import { TradeLog } from "@/features/trades/components/trade-log";
 import { BTC } from "@/domain/types";
-import { editLockedReason } from "@/domain/buyIn";
-import { DeleteBasketButton } from "@/features/picker/components/DeleteBasketButton";
-import { buttonClass } from "@/ui/Button";
+import { editLockedReason } from "@/domain/buy-in";
+import { DeleteBasketButton } from "@/features/picker/components/delete-basket-button";
+import { buttonClass } from "@/ui/button";
 import Link from "next/link";
 import { formatBtc, formatDay } from "@/lib/format";
-import { LiveRefresh } from "@/ui/LiveRefresh";
-import { Section } from "@/ui/Section";
+import { LiveRefresh } from "@/ui/live-refresh";
+import { Section } from "@/ui/section";
 
 export const metadata: Metadata = { title: "Basket" };
 

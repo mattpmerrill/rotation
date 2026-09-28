@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { EligibleCoin } from "@/domain/basket";
 import { RULES } from "@/domain/rules";
-import { CoinIcon } from "@/ui/CoinIcon";
+import { CoinIcon } from "@/ui/coin-icon";
 
 /** Search today's top 100 and tap to add or remove coins (up to 8). */
 export function CoinPicker({

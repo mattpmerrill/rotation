@@ -3,8 +3,8 @@
 import type { Phase } from "@/domain/types";
 import type { ValuePoint } from "@/domain/valuation";
 import { formatUsd } from "@/lib/format";
-import { Change } from "@/ui/Change";
-import { PhaseBadge } from "@/ui/PhaseBadge";
+import { Change } from "@/ui/change";
+import { PhaseBadge } from "@/ui/phase-badge";
 import { useUnit } from "@/ui/unit";
 
 /** The headline: what went in, what it's worth now. "1.00 → 1.18 BTC". */

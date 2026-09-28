@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { Coin } from "@/domain/types";
-import { buttonClass } from "@/ui/Button";
-import { CoinStack } from "@/ui/CoinStack";
-import { CycleCard } from "@/ui/CycleCard";
+import { buttonClass } from "@/ui/button";
+import { CoinStack } from "@/ui/coin-stack";
+import { CycleCard } from "@/ui/cycle-card";
 import type { PickView } from "../queries";
 
 const ACCENT: Record<PickView["accent"], { color: string; wash: string; ring: string }> = {

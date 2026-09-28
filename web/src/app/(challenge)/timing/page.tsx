@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { requireViewer } from "@/data/viewer";
-import { CoinChooser } from "@/features/timing/components/CoinChooser";
-import { StretchTable } from "@/features/timing/components/StretchTable";
-import { TimingVerdict } from "@/features/timing/components/TimingVerdict";
+import { CoinChooser } from "@/features/timing/components/coin-chooser";
+import { StretchTable } from "@/features/timing/components/stretch-table";
+import { TimingVerdict } from "@/features/timing/components/timing-verdict";
 import { getTiming } from "@/features/timing/queries";
 import { nextGoodStretch } from "@/domain/timing";
 import { addDays } from "@/lib/days";
 import { formatMonth } from "@/lib/format";
-import { TimingChart } from "@/ui/charts/TimingChart";
-import { Notice } from "@/ui/Notice";
-import { Section } from "@/ui/Section";
+import { TimingChart } from "@/ui/charts/timing-chart";
+import { Notice } from "@/ui/notice";
+import { Section } from "@/ui/section";
 
 export const metadata: Metadata = { title: "Best time to buy" };
 

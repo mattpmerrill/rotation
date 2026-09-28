@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { Coin } from "@/domain/types";
-import { CoinIcon } from "@/ui/CoinIcon";
+import { CoinIcon } from "@/ui/coin-icon";
 
 /** Pick a coin to see its own timing; the choice lives in the URL (?coin=). */
 export function CoinChooser({ coins, selected }: { coins: Coin[]; selected: Coin | null }) {

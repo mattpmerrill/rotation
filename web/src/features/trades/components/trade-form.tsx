@@ -1,15 +1,15 @@
 "use client";
 
-import { BitcoinSpinner } from "@/ui/BitcoinSpinner";
+import { BitcoinSpinner } from "@/ui/bitcoin-spinner";
 import { useActionState, useState } from "react";
 import { priceOn } from "@/domain/prices";
 import { RULES } from "@/domain/rules";
 import { BTC, type Coin, type PriceBook } from "@/domain/types";
 import { todayUtc } from "@/lib/days";
 import { formatQty, formatUsd } from "@/lib/format";
-import { Button } from "@/ui/Button";
-import { Field } from "@/ui/Field";
-import { Notice } from "@/ui/Notice";
+import { Button } from "@/ui/button";
+import { Field } from "@/ui/field";
+import { Notice } from "@/ui/notice";
 import { logTrade, type TradeFormState } from "../actions";
 
 type Kind = "sell_alt" | "buy_btc";

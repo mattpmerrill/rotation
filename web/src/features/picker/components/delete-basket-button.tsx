@@ -1,8 +1,8 @@
 "use client";
 
-import { BitcoinSpinner } from "@/ui/BitcoinSpinner";
+import { BitcoinSpinner } from "@/ui/bitcoin-spinner";
 import { useState, useTransition } from "react";
-import { buttonClass } from "@/ui/Button";
+import { buttonClass } from "@/ui/button";
 import { removeBasket } from "../actions";
 
 /** Two taps to delete a basket: the first asks, the second deletes it and every trade in it. */

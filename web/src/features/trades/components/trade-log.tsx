@@ -1,8 +1,8 @@
 import { isBuyInTrade } from "@/domain/trades";
 import type { Coin, Trade } from "@/domain/types";
 import { formatDay, formatPrice, formatQty, formatUsd } from "@/lib/format";
-import { CoinIcon } from "@/ui/CoinIcon";
-import { DeleteTradeButton } from "./DeleteTradeButton";
+import { CoinIcon } from "@/ui/coin-icon";
+import { DeleteTradeButton } from "./delete-trade-button";
 
 /** Every trade in an entry, newest first. The owner can delete their sells and rebuys. */
 export function TradeLog({

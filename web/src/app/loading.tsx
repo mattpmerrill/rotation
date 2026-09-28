@@ -1,4 +1,4 @@
-import { LoadingScreen } from "@/ui/BitcoinSpinner";
+import { LoadingScreen } from "@/ui/bitcoin-spinner";
 
 export default function Loading() {
   return (

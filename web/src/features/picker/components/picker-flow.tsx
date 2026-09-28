@@ -4,13 +4,13 @@ import { useState } from "react";
 import { checkBasket, type EligibleCoin } from "@/domain/basket";
 import { RULES } from "@/domain/rules";
 import type { Coin, PriceBook } from "@/domain/types";
-import { buttonClass } from "@/ui/Button";
-import { CoinTag } from "@/ui/CoinTag";
-import { Notice } from "@/ui/Notice";
-import { Section } from "@/ui/Section";
-import { BuyInForm, type BuyInEdit } from "./BuyInForm";
-import { CoinPicker } from "./CoinPicker";
-import { PreviewPanel } from "./PreviewPanel";
+import { buttonClass } from "@/ui/button";
+import { CoinTag } from "@/ui/coin-tag";
+import { Notice } from "@/ui/notice";
+import { Section } from "@/ui/section";
+import { BuyInForm, type BuyInEdit } from "./buy-in-form";
+import { CoinPicker } from "./coin-picker";
+import { PreviewPanel } from "./preview-panel";
 
 /** Pick the coins, see how they’d have done, then buy in. */
 export function PickerFlow({

@@ -13,8 +13,8 @@ import {
 } from "recharts";
 import type { Stretch, TimingPoint } from "@/domain/timing";
 import { formatBtc, formatDay } from "@/lib/format";
-import { ChartTooltip } from "./ChartTooltip";
-import { Legend } from "./Legend";
+import { ChartTooltip } from "./chart-tooltip";
+import { Legend } from "./legend";
 import { AXIS, GRID } from "./theme";
 
 /** One color per cycle, the same on every chart (dataviz validator, all pairs, dark surface). */

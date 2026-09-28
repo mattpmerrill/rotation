@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { requireViewer } from "@/data/viewer";
-import { SignOutButton } from "@/features/auth/components/SignOutButton";
+import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { getMyEntryId } from "@/features/entry/queries";
-import { NavLink } from "@/ui/NavLink";
+import { NavLink } from "@/ui/nav-link";
 import { UnitToggle } from "@/ui/unit";
-import { Wordmark } from "@/ui/Wordmark";
+import { Wordmark } from "@/ui/wordmark";
 
 /** The signed-in app: header, then the page. Non-members see how to get in instead. */
 export default async function ChallengeLayout({ children }: { children: React.ReactNode }) {

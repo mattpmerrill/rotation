@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { previewBasket, type BasketHistory } from "@/domain/preview";
 import { RULES } from "@/domain/rules";
 import type { Coin } from "@/domain/types";
-import { BitcoinSpinner } from "@/ui/BitcoinSpinner";
-import { CycleCard } from "@/ui/CycleCard";
-import { Notice } from "@/ui/Notice";
+import { BitcoinSpinner } from "@/ui/bitcoin-spinner";
+import { CycleCard } from "@/ui/cycle-card";
+import { Notice } from "@/ui/notice";
 
 let historyRequest: Promise<BasketHistory> | null = null;
 const loadHistory = () => (historyRequest ??= fetch("/data/basket-history.json").then((r) => r.json()));

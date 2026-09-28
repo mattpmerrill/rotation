@@ -1,6 +1,6 @@
 import "server-only";
 import { findEntryFor, getCurrentChallenge, getEntry, listTrades } from "@/data/challenge";
-import { editLockedReason } from "@/domain/buyIn";
+import { editLockedReason } from "@/domain/buy-in";
 import { getCoins, getEligibleCoins, getPriceBook } from "@/data/prices";
 import { marketReference } from "@/data/reference";
 import type { Viewer } from "@/data/viewer";

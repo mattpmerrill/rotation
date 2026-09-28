@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import type { CyclePreview } from "@/domain/preview";
 import { formatBtc, formatDay, formatMonth } from "@/lib/format";
-import { ChartTooltip } from "./ChartTooltip";
+import { ChartTooltip } from "./chart-tooltip";
 import { AXIS, GRID, SERIES } from "./theme";
 
 /** One past cycle: 1 BTC in the basket, in BTC, week by week, with the old sell window shaded. */

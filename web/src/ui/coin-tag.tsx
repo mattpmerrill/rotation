@@ -1,4 +1,4 @@
-import { CoinIcon } from "./CoinIcon";
+import { CoinIcon } from "./coin-icon";
 
 /** A coin as a small pill: icon and ticker. */
 export function CoinTag({

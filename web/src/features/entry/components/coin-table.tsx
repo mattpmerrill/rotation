@@ -3,8 +3,8 @@
 import type { CoinChange } from "@/domain/coins";
 import type { Coin } from "@/domain/types";
 import { formatPrice } from "@/lib/format";
-import { Change } from "@/ui/Change";
-import { CoinIcon } from "@/ui/CoinIcon";
+import { Change } from "@/ui/change";
+import { CoinIcon } from "@/ui/coin-icon";
 import { Money, useUnit } from "@/ui/unit";
 
 const STATUS: Record<CoinChange["status"], string> = { held: "Held", partly_sold: "Partly sold", sold: "Sold" };

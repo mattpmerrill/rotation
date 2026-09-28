@@ -1,15 +1,15 @@
 "use client";
 
-import { BitcoinSpinner } from "@/ui/BitcoinSpinner";
+import { BitcoinSpinner } from "@/ui/bitcoin-spinner";
 import { useActionState, useMemo, useState } from "react";
-import { btcSoldAtBuyIn, checkBuyIn, planBuyIn, usdtAfter, type DraftTrade } from "@/domain/buyIn";
+import { btcSoldAtBuyIn, checkBuyIn, planBuyIn, usdtAfter, type DraftTrade } from "@/domain/buy-in";
 import { priceOn } from "@/domain/prices";
 import { RULES } from "@/domain/rules";
 import { BTC, type PriceBook } from "@/domain/types";
 import { formatBtc, formatUsd } from "@/lib/format";
-import { Button } from "@/ui/Button";
-import { Field } from "@/ui/Field";
-import { Notice } from "@/ui/Notice";
+import { Button } from "@/ui/button";
+import { Field } from "@/ui/field";
+import { Notice } from "@/ui/notice";
 import { editBasket, startChallenge, type BuyInState } from "../actions";
 
 type Overrides = Record<string, { qty?: string; price?: string }>;

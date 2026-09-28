@@ -1,4 +1,4 @@
-import type { DraftTrade } from "./buyIn";
+import type { DraftTrade } from "./buy-in";
 import { formatQty } from "@/lib/format";
 import { USDT, type Balances, type Trade } from "./types";
 

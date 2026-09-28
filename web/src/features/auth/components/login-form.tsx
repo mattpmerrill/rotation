@@ -2,10 +2,10 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { BitcoinSpinner } from "@/ui/BitcoinSpinner";
-import { Button } from "@/ui/Button";
-import { Field } from "@/ui/Field";
-import { Notice } from "@/ui/Notice";
+import { BitcoinSpinner } from "@/ui/bitcoin-spinner";
+import { Button } from "@/ui/button";
+import { Field } from "@/ui/field";
+import { Notice } from "@/ui/notice";
 import { signIn, signInWithGoogle, signUp, type AuthFormState } from "../actions";
 
 export function LoginForm({ linkError }: { linkError?: string | undefined }) {

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { requireViewer } from "@/data/viewer";
-import { PickCard } from "@/features/picks/components/PickCard";
+import { PickCard } from "@/features/picks/components/pick-card";
 import { getPicks } from "@/features/picks/queries";
-import { Notice } from "@/ui/Notice";
+import { Notice } from "@/ui/notice";
 
 export const metadata: Metadata = { title: "Joi’s top picks" };
 

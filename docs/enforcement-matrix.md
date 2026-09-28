@@ -60,7 +60,7 @@ and re-derive the whole table when you touch this file.
 | Post-deployment smoke test | `post-deploy` workflow: waits for `/api/health` to report the pushed commit, then drives the suites against production | CI on every push to `main` | Automated (first run on 2026-09-28 waited for production to report `2c0bb30`, then passed) |
 | Full check before push | `.githooks/pre-push` runs `scripts/check.mjs` | every push | Automated once per clone (`git config core.hooksPath .githooks`); refusal proven against a throwaway remote |
 | Commit subject `<area>: <what>`, no em-dash or en-dash, Exception trailer format | `.githooks/commit-msg` (`commit-message.mjs`) | every commit | Automated once per clone (unit tested; every commit made on 2026-09-28 passes) |
-| Files and folders kebab-case | `scripts/guards/filenames.mjs`, ratchet of 42 names | local check, CI | Automated (partial: 42 legacy names, exception 6) |
+| Files and folders kebab-case | `scripts/guards/filenames.mjs`; its exemption list is empty | local check, CI | Automated (the 42 legacy names were renamed on 2026-09-28) |
 | One runtime version per language, pinned and matched by CI | `.nvmrc`, `engines`, `engine-strict`, `requires-python`; CI reads `.nvmrc` | install, CI | Automated |
 | Python type checking | mypy (annotated functions, checked bodies) | local check, CI | Automated (two research modules suppress three pandas-stub error codes, in `pyproject.toml`) |
 | Structured logs with a correlation ID | - | - | Unenforced (exception 3) |
@@ -112,7 +112,7 @@ Worth recording: a check earns its keep by what it finds on its first run.
 Roughly cheapest and most valuable first.
 
 1. **Confirm the second CI run is green.** The first run passed everything but the engine tests (fixed).
-2. **The kebab-case rename.** One mechanical commit; the guard's list goes to zero.
+2. ~~The kebab-case rename.~~ Done 2026-09-28: 42 files, 101 imports, the guard's list is empty.
 3. **The service layer, and the typed result with stable error codes.** By feature: `picker`, then
    `trades`, then `auth`. Each move retires exceptions 1 and 2 for that feature.
 4. **Structured logs, a correlation ID and a failure alert.** Retires exception 3.

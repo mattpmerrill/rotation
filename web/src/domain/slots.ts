@@ -1,5 +1,5 @@
 import { balancesOn } from "./holdings";
-import type { DraftTrade } from "./buyIn";
+import type { DraftTrade } from "./buy-in";
 import { BTC, type Entry, type Trade } from "./types";
 
 /**

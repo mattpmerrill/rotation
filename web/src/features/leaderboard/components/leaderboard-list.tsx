@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { formatDay, formatMultiple } from "@/lib/format";
-import { Change } from "@/ui/Change";
-import { CoinStack } from "@/ui/CoinStack";
-import { Medal } from "@/ui/Medal";
-import { PhaseBadge } from "@/ui/PhaseBadge";
-import { Sparkline } from "@/ui/charts/Sparkline";
+import { Change } from "@/ui/change";
+import { CoinStack } from "@/ui/coin-stack";
+import { Medal } from "@/ui/medal";
+import { PhaseBadge } from "@/ui/phase-badge";
+import { Sparkline } from "@/ui/charts/sparkline";
 import { Money } from "@/ui/unit";
 import type { LeaderboardRow } from "../queries";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { BitcoinSpinner } from "@/ui/BitcoinSpinner";
+import { BitcoinSpinner } from "@/ui/bitcoin-spinner";
 import { useActionState, useState } from "react";
 import type { EligibleCoin } from "@/domain/basket";
 import { priceOn } from "@/domain/prices";
@@ -9,10 +9,10 @@ import { planFill } from "@/domain/slots";
 import { BTC, type PriceBook } from "@/domain/types";
 import { todayUtc } from "@/lib/days";
 import { formatBtc, formatUsd } from "@/lib/format";
-import { Button } from "@/ui/Button";
-import { CoinIcon } from "@/ui/CoinIcon";
-import { Field } from "@/ui/Field";
-import { Notice } from "@/ui/Notice";
+import { Button } from "@/ui/button";
+import { CoinIcon } from "@/ui/coin-icon";
+import { Field } from "@/ui/field";
+import { Notice } from "@/ui/notice";
 import { fillWaitingSlot, type TradeFormState } from "../actions";
 
 /**

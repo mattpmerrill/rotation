@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { requireViewer } from "@/data/viewer";
-import { PickerFlow } from "@/features/picker/components/PickerFlow";
+import { PickerFlow } from "@/features/picker/components/picker-flow";
 import { getPickerData } from "@/features/picker/queries";
 import { getTiming } from "@/features/timing/queries";
 import Link from "next/link";
-import { Notice } from "@/ui/Notice";
+import { Notice } from "@/ui/notice";
 
 export const metadata: Metadata = { title: "Pick a basket" };
 

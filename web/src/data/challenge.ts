@@ -1,5 +1,5 @@
 import "server-only";
-import type { DraftTrade } from "@/domain/buyIn";
+import type { DraftTrade } from "@/domain/buy-in";
 import type { Challenge, Entry, Side, Trade, TradeKind } from "@/domain/types";
 import type { Database } from "./database.types";
 import { supabaseServer, type Db } from "./supabase/server";

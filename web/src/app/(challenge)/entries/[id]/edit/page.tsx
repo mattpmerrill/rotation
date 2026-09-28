@@ -3,10 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireViewer } from "@/data/viewer";
 import { BTC } from "@/domain/types";
-import { DeleteBasketButton } from "@/features/picker/components/DeleteBasketButton";
-import { PickerFlow } from "@/features/picker/components/PickerFlow";
+import { DeleteBasketButton } from "@/features/picker/components/delete-basket-button";
+import { PickerFlow } from "@/features/picker/components/picker-flow";
 import { getEditData } from "@/features/picker/queries";
-import { Notice } from "@/ui/Notice";
+import { Notice } from "@/ui/notice";
 
 export const metadata: Metadata = { title: "Edit basket" };
 

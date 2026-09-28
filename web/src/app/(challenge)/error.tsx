@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/ui/Button";
+import { Button } from "@/ui/button";
 
 export default function ChallengeError({ reset }: { error: Error; reset: () => void }) {
   return (
