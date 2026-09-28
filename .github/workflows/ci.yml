@@ -71,6 +71,12 @@ jobs:
       - run: supabase test db
       - name: Generated database types are current
         run: |
-          supabase gen types typescript --local --schema public > "$RUNNER_TEMP/database.types.ts"
+          # Generating pulls a Docker image from a rate-limited public registry (it failed once with
+          # "toomanyrequests"), so retry the generation, and only the generation, a few times.
+          for attempt in 1 2 3; do
+            supabase gen types typescript --local --schema public > "$RUNNER_TEMP/database.types.ts" && break
+            [ "$attempt" = 3 ] && { echo "::error::could not generate the types after 3 attempts"; exit 1; }
+            echo "type generation failed (attempt $attempt), retrying in 20s"; sleep 20
+          done
           diff -u web/src/data/database.types.ts "$RUNNER_TEMP/database.types.ts" \
             || { echo "::error::web/src/data/database.types.ts is stale. Run 'npm run db:types' in web/ and commit it."; exit 1; }
