@@ -297,6 +297,105 @@
   }
 }
 
+/* Login: a floating gold "1" coin in two orbit rings, and the page rising in. */
+.login-coin-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  margin: 14px; /* room for the outer orbit */
+}
+/* inputs on the sign-in card read as fields, not holes */
+.login-card .field {
+  min-height: 46px;
+  background: rgb(255 255 255 / 0.035);
+  border-color: #353b4a;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.login-card .field:hover {
+  border-color: #4a5163;
+}
+.login-card .field:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgb(255 194 71 / 0.15);
+}
+.login-coin {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 9999px;
+  font-size: 34px;
+  font-weight: 600;
+  color: var(--bg);
+  background:
+    radial-gradient(circle at 32% 26%, rgb(255 255 255 / 0.55), transparent 40%),
+    linear-gradient(135deg, var(--gold), var(--btc) 55%, #c96a06);
+  box-shadow:
+    inset 0 0 0 3px rgb(255 207 110 / 0.9),
+    inset 0 -6px 12px rgb(140 70 0 / 0.4),
+    0 0 48px -8px var(--btc),
+    0 18px 30px -14px rgb(0 0 0 / 0.8);
+  animation: login-float 5s ease-in-out infinite;
+}
+.login-orbit {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1px solid rgb(255 194 71 / 0.25);
+  border-top-color: rgb(255 194 71 / 0.8);
+  animation: login-orbit 9s linear infinite;
+}
+.login-orbit-2 {
+  inset: -14px;
+  border-color: rgb(144 133 233 / 0.14);
+  border-bottom-color: rgb(144 133 233 / 0.55);
+  animation-duration: 14s;
+  animation-direction: reverse;
+}
+/* a thin gold light along the top of the sign-in card */
+.login-card-edge {
+  position: absolute;
+  inset: -1px 12% auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.8;
+}
+.login-rise {
+  animation: login-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.login-rise-2 {
+  animation-delay: 0.12s;
+}
+@keyframes login-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes login-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* The one moment of motion: the score counts in. */
 @keyframes score-in {
   from {
