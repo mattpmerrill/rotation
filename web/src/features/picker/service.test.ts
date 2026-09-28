@@ -27,7 +27,7 @@ vi.mock("@/data/prices", () => ({ getEligibleCoins: vi.fn() }));
 vi.mock("@/data/trades", () => ({ listTrades: vi.fn() }));
 vi.mock("./editable-coins", () => ({ editableCoins: vi.fn() }));
 
-const viewer: Viewer = { id: "u1", email: "alice@example.com", name: "Alice", isMember: true };
+const viewer: Viewer = { id: "u1", email: "alice@example.com", name: "Alice", isMember: true, isAdmin: false };
 const challenge: Challenge = { id: 1, name: "1 Bitty Challenge", openedOn: "2026-10-01", closedOn: null };
 const coins: EligibleCoin[] = [
   { id: "solana", symbol: "SOL", name: "Solana", rank: 4, image: null },

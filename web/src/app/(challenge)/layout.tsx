@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requireViewer } from "@/data/viewer";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
+import { countWaiting } from "@/features/admin/queries";
+import { WaitingForApproval } from "@/features/auth/components/waiting-for-approval";
 import { getMyEntryId } from "@/features/entry/queries";
 import { NavLink } from "@/ui/nav-link";
 import { UnitToggle } from "@/ui/unit";
@@ -10,6 +12,7 @@ import { Wordmark } from "@/ui/wordmark";
 export default async function ChallengeLayout({ children }: { children: React.ReactNode }) {
   const viewer = await requireViewer();
   const myEntryId = viewer.isMember ? await getMyEntryId(viewer) : null;
+  const waiting = viewer.isAdmin ? await countWaiting() : 0;
 
   return (
     <>
@@ -31,6 +34,19 @@ export default async function ChallengeLayout({ children }: { children: React.Re
               )}
               <NavLink href="/picks">Joi’s top picks</NavLink>
               <NavLink href="/timing">Best time to buy</NavLink>
+              {viewer.isAdmin && (
+                <NavLink href="/admin">
+                  People
+                  {waiting > 0 && (
+                    <span
+                      className="bg-btc text-bg ml-1.5 rounded-full px-1.5 text-xs font-bold"
+                      aria-label={`${waiting} waiting`}
+                    >
+                      {waiting}
+                    </span>
+                  )}
+                </NavLink>
+              )}
             </nav>
           )}
           <div className="ml-auto flex items-center gap-4">
@@ -40,17 +56,7 @@ export default async function ChallengeLayout({ children }: { children: React.Re
         </div>
       </header>
       <main className="mx-auto grid max-w-5xl gap-10 px-4 py-8 sm:py-12">
-        {viewer.isMember ? (
-          children
-        ) : (
-          <section className="grid max-w-xl gap-3">
-            <h1 className="text-3xl font-semibold">You’re signed in, but not in the challenge yet</h1>
-            <p className="text-ink-2">
-              The challenge is invite-only. Ask Matt to add{" "}
-              <span className="text-ink font-semibold">{viewer.email}</span>, then reload this page.
-            </p>
-          </section>
-        )}
+        {viewer.isMember ? children : <WaitingForApproval name={viewer.name} />}
       </main>
     </>
   );

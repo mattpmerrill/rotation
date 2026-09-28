@@ -8,6 +8,8 @@ export interface Viewer {
   email: string;
   name: string;
   isMember: boolean;
+  /** May approve people and see the admin page. */
+  isAdmin: boolean;
 }
 
 /** The signed-in person (verified from the JWT), or null. Cached for the request. */
@@ -18,7 +20,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   if (!claims) return null;
   const { data: profile } = await db
     .from("profiles")
-    .select("display_name, is_member")
+    .select("display_name, is_member, is_admin")
     .eq("id", claims.sub)
     .maybeSingle();
   const email = (claims.email as string | undefined) ?? "";
@@ -27,6 +29,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
     email,
     name: profile?.display_name ?? email.split("@")[0] ?? email,
     isMember: profile?.is_member ?? false,
+    isAdmin: profile?.is_admin ?? false,
   };
 });
 
@@ -42,5 +45,13 @@ export async function requireViewer(): Promise<Viewer> {
 export async function requireMember(): Promise<Viewer> {
   const viewer = await requireViewer();
   if (!viewer.isMember) throw new Error("Only challenge members can do that.");
+  return viewer;
+}
+
+/** An admin, or an error. Server Actions for admin work start with this: they are reachable by
+ *  direct POST, and the database functions check again. */
+export async function requireAdmin(): Promise<Viewer> {
+  const viewer = await requireViewer();
+  if (!viewer.isAdmin) throw new Error("Only an admin can do that.");
   return viewer;
 }

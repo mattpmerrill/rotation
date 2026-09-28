@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getViewer } from "@/data/viewer";
 import { LoginForm } from "@/features/auth/components/login-form";
+import { loginErrorMessage } from "@/features/auth/login-errors";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -14,6 +15,7 @@ const STEPS = [
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   if (await getViewer()) redirect("/");
   const { error } = await searchParams;
+  const linkError = loginErrorMessage(error);
   return (
     <main className="mx-auto grid min-h-dvh w-full max-w-5xl items-center gap-10 px-5 py-12 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
       {/* The pitch */}
@@ -46,7 +48,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <h2 className="text-2xl font-semibold">Sign in</h2>
           <p className="text-ink-3 text-sm">See the leaderboard and your basket.</p>
         </div>
-        <LoginForm linkError={error} />
+        <LoginForm linkError={linkError} />
         <p className="text-ink-3 border-line border-t pt-4 text-xs">
           New players need an invite from Matt. Not financial advice, just a friendly scoreboard.
         </p>

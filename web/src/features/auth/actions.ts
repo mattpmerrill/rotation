@@ -2,50 +2,81 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import * as auth from "@/data/auth";
+import { requireViewer } from "@/data/viewer";
 import { firstIssue } from "@/lib/first-issue";
-import { requestOrigin } from "./origin";
+import { requestOrigin } from "@/data/origin";
+import {
+  changePassword,
+  createAccount,
+  signIn as signInUseCase,
+  signOut as signOutUseCase,
+  startGoogleSignIn,
+} from "./service";
 
+/**
+ * Transport for the sign-in use cases (architecture.md): validate the form, call one service, turn
+ * its result into what the form shows, and redirect on success. These are the entry points a
+ * signed-out visitor can reach, so all input is treated as untrusted and Auth's own text is never
+ * shown (the repository translates it).
+ */
 export interface AuthFormState {
   error?: string;
   sent?: boolean;
 }
 
-const credentials = z.object({
-  email: z.email("Enter a valid email."),
-  password: z.string().min(10, "Use a password of at least 10 characters."),
+const email = z.email("Enter a valid email.");
+const password = z.string().min(10, "Use a password of at least 10 characters.");
+const credentials = z.object({ email, password });
+const signUpInput = z.object({
+  name: z.string().trim().min(1, "Enter your name.").max(60, "Use a shorter name."),
+  email,
+  password,
 });
+const newPassword = z
+  .object({ password, confirm: z.string() })
+  .refine((v) => v.password === v.confirm, { message: "The two passwords don't match.", path: ["confirm"] });
 
-function parse(form: FormData) {
-  return credentials.safeParse({ email: form.get("email"), password: form.get("password") });
-}
+const adminUrl = async () => `${await requestOrigin()}/admin`;
 
 export async function signIn(_: AuthFormState, form: FormData): Promise<AuthFormState> {
-  const input = parse(form);
+  const input = credentials.safeParse({ email: form.get("email"), password: form.get("password") });
   if (!input.success) return { error: firstIssue(input.error) };
-  const error = await auth.signInWithPassword(input.data.email, input.data.password);
-  if (error)
-    return {
-      error:
-        error === "Email not confirmed" ? "Confirm your email first: check your inbox." : "Wrong email or password.",
-    };
+  const result = await signInUseCase(input.data.email, input.data.password, await adminUrl());
+  if (!result.ok) return { error: result.error.message };
   redirect("/");
 }
 
 export async function signUp(_: AuthFormState, form: FormData): Promise<AuthFormState> {
-  const input = parse(form);
+  const input = signUpInput.safeParse({
+    name: form.get("name"),
+    email: form.get("email"),
+    password: form.get("password"),
+  });
   if (!input.success) return { error: firstIssue(input.error) };
-  const error = await auth.signUp(input.data.email, input.data.password, `${await requestOrigin()}/auth/callback`);
-  return error ? { error } : { sent: true };
+  const origin = await requestOrigin();
+  const result = await createAccount(input.data, `${origin}/auth/callback`, `${origin}/admin`);
+  if (!result.ok) return { error: result.error.message };
+  if (result.data.signedIn) redirect("/");
+  return { sent: true };
 }
 
 export async function signInWithGoogle(): Promise<void> {
-  const url = await auth.googleSignInUrl(`${await requestOrigin()}/auth/callback`);
-  if (!url) redirect(`/login?error=${encodeURIComponent("Google sign-in isn't available. Use email.")}`);
-  redirect(url);
+  const result = await startGoogleSignIn(`${await requestOrigin()}/auth/callback`);
+  if (!result.ok) redirect("/login?error=failed");
+  redirect(result.data.url);
+}
+
+/** Choose a new password after following a sign-in help link. */
+export async function setNewPassword(_: AuthFormState, form: FormData): Promise<AuthFormState> {
+  await requireViewer();
+  const input = newPassword.safeParse({ password: form.get("password"), confirm: form.get("confirm") });
+  if (!input.success) return { error: firstIssue(input.error) };
+  const result = await changePassword(input.data.password);
+  if (!result.ok) return { error: result.error.message };
+  redirect("/");
 }
 
 export async function signOut(): Promise<void> {
-  await auth.signOut();
+  await signOutUseCase();
   redirect("/login");
 }

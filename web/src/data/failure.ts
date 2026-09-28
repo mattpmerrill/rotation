@@ -37,3 +37,56 @@ export function dbFailure(event: string, error: DbError): ApplicationResult<neve
       return fail("unexpected", "Something went wrong on our side. Try again in a moment.");
   }
 }
+
+/** What Supabase Auth reports when sign-in, sign-up or a link fails. `code` is Auth's own stable
+ *  error code (for example "invalid_credentials"); `status` is the HTTP status. */
+export interface AuthError {
+  code?: string | undefined;
+  status?: number | undefined;
+  message: string;
+}
+
+/**
+ * Translate a Supabase Auth failure into the app's own result. Auth's messages are written for
+ * developers and some reveal whether an email has an account, so none of them reach a user: each
+ * known code maps to a fixed message, and anything unknown is logged and shown as a generic one.
+ * A duplicate account is returned as "conflict" so the caller can decide what to say about it.
+ */
+export function authFailure(event: string, error: AuthError): ApplicationResult<never> {
+  const code = error.code ?? null;
+  const expected = (failure: string, result: ApplicationResult<never>) => {
+    logEvent("warn", event, { failure, authCode: code, status: error.status ?? null });
+    return result;
+  };
+  switch (code) {
+    case "invalid_credentials":
+      return expected("forbidden", fail("forbidden", "Wrong email or password."));
+    case "email_not_confirmed":
+      return expected("forbidden", fail("forbidden", "Confirm your email first: check your inbox."));
+    case "user_already_exists":
+    case "email_exists":
+      return expected("conflict", fail("conflict", "That email already has an account."));
+    case "weak_password":
+      return expected("invalid_input", fail("invalid_input", "Use a password of at least 10 characters."));
+    case "same_password":
+      return expected("rule_violation", fail("rule_violation", "Choose a different password from your current one."));
+    case "signup_disabled":
+      return expected("forbidden", fail("forbidden", "Sign-ups are closed right now."));
+    case "over_request_rate_limit":
+    case "over_email_send_rate_limit":
+      return expected("unavailable", fail("unavailable", "Too many attempts. Wait a few minutes and try again."));
+    case "otp_expired":
+    case "flow_state_expired":
+    case "flow_state_not_found":
+    case "bad_code_verifier":
+      return expected("not_found", fail("not_found", "That link has expired or was already used."));
+    default:
+      logEvent("error", event, {
+        failure: "unexpected",
+        authCode: code,
+        status: error.status ?? null,
+        detail: error.message,
+      });
+      return fail("unexpected", "Something went wrong on our side. Try again in a moment.");
+  }
+}

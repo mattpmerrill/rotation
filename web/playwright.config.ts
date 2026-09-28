@@ -10,33 +10,40 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const external = process.env.E2E_BASE_URL;
 const port = 3187;
+const signedIn = process.env.E2E_SIGNED_IN === "1";
 
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: true,
+  fullyParallel: !signedIn,
+  ...(signedIn ? { workers: 1 } : {}),
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["list"]] : "list",
   use: {
-    baseURL: external ?? `http://127.0.0.1:${port}`,
+    baseURL: external ?? `http://localhost:${port}`,
     trace: "retain-on-failure",
   },
-  projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
-    { name: "phone", use: { ...devices["Pixel 7"] } },
-  ],
+  // The signed-in journey needs a real Supabase, so it is its own project, on only when
+  // E2E_SIGNED_IN=1 (see e2e/signed-in/support.ts). Everything else is what a visitor sees.
+  projects: signedIn
+    ? [{ name: "signed-in", testMatch: /signed-in\/.*\.spec\.ts/, use: { ...devices["Desktop Chrome"] } }]
+    : [
+        { name: "desktop", testIgnore: /signed-in/, use: { ...devices["Desktop Chrome"] } },
+        { name: "phone", testIgnore: /signed-in/, use: { ...devices["Pixel 7"] } },
+      ],
   ...(external
     ? {}
     : {
         webServer: {
           command: `npm run start -- --port ${port}`,
-          url: `http://127.0.0.1:${port}/api/health`,
+          url: `http://localhost:${port}/api/health`,
           reuseExistingServer: !process.env.CI,
           timeout: 60_000,
           // The build needs the public settings to exist, not to be real: nothing here signs in.
           env: {
             NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
             NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "ci",
+            ...(process.env.SUPABASE_SECRET_KEY ? { SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY } : {}),
           },
         },
       }),

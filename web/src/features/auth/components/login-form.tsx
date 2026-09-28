@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { BitcoinSpinner } from "@/ui/bitcoin-spinner";
 import { Button } from "@/ui/button";
@@ -9,15 +9,18 @@ import { Notice } from "@/ui/notice";
 import { signIn, signInWithGoogle, signUp, type AuthFormState } from "../actions";
 
 export function LoginForm({ linkError }: { linkError?: string | undefined }) {
+  const [creating, setCreating] = useState(false);
   const [signInState, signInAction, signingIn] = useActionState(signIn, {} as AuthFormState);
   const [signUpState, signUpAction, signingUp] = useActionState(signUp, {} as AuthFormState);
-  const error = signInState.error ?? signUpState.error ?? linkError;
+  const error = (creating ? signUpState.error : signInState.error) ?? linkError;
   const busy = signingIn || signingUp;
 
   return (
     <div className="grid gap-5">
       {error && <Notice tone="error">{error}</Notice>}
-      {signUpState.sent && <Notice tone="success">Check your email for a confirmation link, then sign in.</Notice>}
+      {signUpState.sent && creating && (
+        <Notice tone="success">Check your email for a confirmation link, then come back and sign in.</Notice>
+      )}
 
       <form action={signInWithGoogle}>
         <GoogleButton />
@@ -29,29 +32,66 @@ export function LoginForm({ linkError }: { linkError?: string | undefined }) {
         <span className="bg-line h-px flex-1" />
       </div>
 
-      <form className="grid gap-4">
-        <Field id="email" name="email" type="email" label="Email" required autoComplete="email" />
-        <Field
-          id="password"
-          name="password"
-          type="password"
-          label="Password"
-          required
-          minLength={10}
-          autoComplete="current-password"
-          hint="New here? Choose 10 or more characters and create an account."
-        />
-        <div className="grid gap-2 sm:grid-cols-[1.4fr_1fr]">
-          <Button formAction={signInAction} disabled={busy}>
-            {signingIn && <BitcoinSpinner size="sm" label="Signing in" />}
-            {signingIn ? "Signing in…" : "Sign in"}
-          </Button>
-          <Button formAction={signUpAction} variant="quiet" disabled={busy}>
+      {creating ? (
+        <form action={signUpAction} className="grid gap-4">
+          <Field
+            id="name"
+            name="name"
+            label="Your name"
+            required
+            maxLength={60}
+            autoComplete="name"
+            hint="This is how you'll show up on the leaderboard."
+          />
+          <Field id="email" name="email" type="email" label="Email" required autoComplete="email" />
+          <Field
+            id="password"
+            name="password"
+            type="password"
+            label="Password"
+            required
+            minLength={10}
+            autoComplete="new-password"
+            hint="At least 10 characters."
+          />
+          <Button disabled={busy}>
             {signingUp && <BitcoinSpinner size="sm" label="Creating account" />}
             {signingUp ? "Creating…" : "Create account"}
           </Button>
-        </div>
-      </form>
+          <p className="text-ink-3 text-sm">
+            Matt approves each new player. After you sign up you’ll see a waiting screen until he does, and it updates
+            by itself.
+          </p>
+        </form>
+      ) : (
+        <form action={signInAction} className="grid gap-4">
+          <Field id="email" name="email" type="email" label="Email" required autoComplete="email" />
+          <Field
+            id="password"
+            name="password"
+            type="password"
+            label="Password"
+            required
+            minLength={10}
+            autoComplete="current-password"
+          />
+          <Button disabled={busy}>
+            {signingIn && <BitcoinSpinner size="sm" label="Signing in" />}
+            {signingIn ? "Signing in…" : "Sign in"}
+          </Button>
+        </form>
+      )}
+
+      <p className="text-ink-2 text-sm">
+        {creating ? "Already have an account? " : "New here? "}
+        <button
+          type="button"
+          onClick={() => setCreating(!creating)}
+          className="text-gold font-semibold underline underline-offset-4"
+        >
+          {creating ? "Sign in" : "Create an account"}
+        </button>
+      </p>
     </div>
   );
 }

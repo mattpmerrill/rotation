@@ -10,7 +10,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/data/viewer", () => ({ requireMember: vi.fn() }));
 vi.mock("./service", () => ({ recordTrade: vi.fn(), retractTrade: vi.fn(), fillSlotWithCoin: vi.fn() }));
 
-const viewer: Viewer = { id: "u1", email: "a@example.com", name: "A", isMember: true };
+const viewer: Viewer = { id: "u1", email: "a@example.com", name: "A", isMember: true, isAdmin: false };
 const data = (fields: Record<string, string>): FormData => {
   const f = new FormData();
   for (const [k, v] of Object.entries(fields)) f.append(k, v);

@@ -17,7 +17,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/data/viewer", () => ({ requireMember: vi.fn() }));
 vi.mock("./service", () => ({ enterChallenge: vi.fn(), redoBuyIn: vi.fn(), deleteBasket: vi.fn() }));
 
-const viewer: Viewer = { id: "u1", email: "a@example.com", name: "A", isMember: true };
+const viewer: Viewer = { id: "u1", email: "a@example.com", name: "A", isMember: true, isAdmin: false };
 const payload = {
   startedOn: "2026-10-03",
   btcIn: 1,

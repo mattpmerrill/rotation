@@ -14,7 +14,7 @@ vi.mock("@/data/entries", () => ({ getEntry: vi.fn() }));
 vi.mock("@/data/prices", () => ({ getCoins: vi.fn(), getEligibleCoins: vi.fn() }));
 vi.mock("@/data/trades", () => ({ addTrade: vi.fn(), deleteTrade: vi.fn(), fillSlot: vi.fn(), listTrades: vi.fn() }));
 
-const viewer: Viewer = { id: "u1", email: "alice@example.com", name: "Alice", isMember: true };
+const viewer: Viewer = { id: "u1", email: "alice@example.com", name: "Alice", isMember: true, isAdmin: false };
 const coinsById = { solana: { id: "solana", symbol: "SOL", name: "Solana", image: null } };
 
 beforeEach(() => {
