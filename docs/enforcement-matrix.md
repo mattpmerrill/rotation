@@ -14,8 +14,7 @@ and re-derive the whole table when you touch this file.
 - **Local only**: a tool checks it, but nothing runs it automatically.
 - **Review**: checked by a person or an agent reading the diff. Real, not repeatable.
 - **Unenforced**: stated as a MUST with nothing behind it. Each has an entry in [exceptions.md](exceptions.md).
-- **Pending**: the check exists and was added in this pass, but has not run in CI yet. It becomes
-  Automated (or gets fixed) after its first run.
+- **Pending**: the check exists but has not run in CI yet. No row is Pending as of this run.
 
 "Local check" means `node scripts/check.mjs`, which the pre-push hook runs.
 
@@ -30,7 +29,7 @@ and re-derive the whole table when you touch this file.
 | Formatting | `prettier --check` (web), `ruff format --check` (engine) | local check, CI | Automated (partial: root `scripts/` and workflows are not formatted by anything) |
 | Unit tests | Vitest (67), pytest (47) | local check, CI | Automated |
 | Component tests | - | - | Unenforced (exception 8) |
-| Generated DB types match schema | `supabase gen types` diff, CLI pinned | CI `database` job | Pending (needs Docker, so not in the local check) |
+| Generated DB types match schema | `supabase gen types` diff, CLI pinned | CI `database` job | Automated (passed in CI on 2026-09-28; needs Docker, so not in the local check) |
 | Layer and import boundaries | ESLint `no-restricted-imports` per layer; dependency-cruiser rules | local check, CI | Automated |
 | No circular imports, no orphaned modules (web) | dependency-cruiser | local check, CI | Automated (web only; the engine has no dead-code check) |
 | Domain and lib import no framework, database or Node built-ins | dependency-cruiser | local check, CI | Automated |
@@ -44,21 +43,21 @@ and re-derive the whole table when you touch this file.
 | Runtime validation at trust boundaries | zod in actions and env; nothing checks new boundaries | Review | Review (known gap: `data/live.ts`, exception 4) |
 | Typed result, stable error codes, no raw DB text to users | - | - | Unenforced (exception 2) |
 | Auth rechecked at every boundary | `requireMember()` convention; e2e proves every private route sends a signed-out visitor to sign in | CI | Review (partial: the signed-out gates are Automated) |
-| RLS present on exposed tables | pgTAP `rls-is-on.test.sql`, against the catalogue | CI `database` job | Pending (query verified against production: 12 of 12 tables, no violations) |
+| RLS present on exposed tables | pgTAP `rls-is-on.test.sql`, against the catalogue | CI `database` job | Automated (passed in CI on 2026-09-28; the query was also checked against production: 12 of 12 tables) |
 | RLS allowed and denied tests | pgTAP `challenge.test.sql` (allowed and denied paths for every write function) | CI `database` job | Automated (ran green in CI on 2026-09-28) |
 | Clean DB reset from migrations | `supabase db start` replays every migration | CI `database` job | Automated |
 | Migration history matches production | `supabase db push --dry-run` | manual | Local only (verified 2026-09-28: "Remote database is up to date") |
 | Integration behaviour against a real DB | - | - | Unenforced |
 | Production build | `next build` | local check, CI, Vercel | Automated |
-| Critical E2E journeys | Playwright, desktop and phone | CI `e2e` job; local with `--e2e` | Pending in CI (28 passed locally); partial: signed-out only (exception 9) |
-| Accessibility checks | axe at WCAG 2.2 AA, gated at serious and critical, plus a self-test | CI `e2e` job | Pending in CI (passed locally); partial: signed-out pages (exception 9) |
+| Critical E2E journeys | Playwright, desktop and phone | CI `e2e` job; local with `--e2e` | Automated (28 tests passed in CI on 2026-09-28); partial: signed-out only (exception 9) |
+| Accessibility checks | axe at WCAG 2.2 AA, gated at serious and critical, plus a self-test | CI `e2e` job | Automated (passed in CI on 2026-09-28); partial: signed-out pages (exception 9) |
 | No literal colours, radii, shadows, z-indexes | ESLint ratchet, 11 files listed | local check, CI | Automated (partial: spacing unchecked; the list only shrinks) |
 | UI built from the `/design` kit | - | - | Unenforced (no `/design` page yet, exception 8) |
 | Behavioural components from one headless library | - | - | Unenforced (exception 8) |
-| Secret scanning | gitleaks 8.30.1, full history | CI `security` workflow, weekly | Pending (clean locally on 2026-09-28: 57 commits, no leaks) |
-| Dependency scanning | `npm audit` at high; `pip-audit` | CI `security` workflow, weekly | Pending (clean locally on 2026-09-28) |
+| Secret scanning | gitleaks 8.30.1, full history | CI `security` workflow, weekly | Automated (passed in CI on 2026-09-28; also clean locally: 57 commits, no leaks) |
+| Dependency scanning | `npm audit` at high; `pip-audit` | CI `security` workflow, weekly | Automated (passed in CI on 2026-09-28) |
 | Preview-environment smoke test | Substituted by the post-deployment check | - | Recorded exception (14) |
-| Post-deployment smoke test | `post-deploy` workflow: waits for `/api/health` to report the pushed commit, then drives the suites against production | CI on every push to `main` | Pending |
+| Post-deployment smoke test | `post-deploy` workflow: waits for `/api/health` to report the pushed commit, then drives the suites against production | CI on every push to `main` | Automated (first run on 2026-09-28 waited for production to report `2c0bb30`, then passed) |
 | Full check before push | `.githooks/pre-push` runs `scripts/check.mjs` | every push | Automated once per clone (`git config core.hooksPath .githooks`); refusal proven against a throwaway remote |
 | Commit subject `<area>: <what>`, no em-dash or en-dash, Exception trailer format | `.githooks/commit-msg` (`commit-message.mjs`) | every commit | Automated once per clone (unit tested; every commit made on 2026-09-28 passes) |
 | Files and folders kebab-case | `scripts/guards/filenames.mjs`, ratchet of 42 names | local check, CI | Automated (partial: 42 legacy names, exception 6) |
@@ -75,14 +74,13 @@ and re-derive the whole table when you touch this file.
 
 ## What this says
 
-Of the eleven [CI quality gates](https://github.com/get-latest/company/blob/main/engineering/standards/engineering-standards.md#ci-quality-gates),
-seven are Automated today: formatting, linting, type checking, unit tests (there are no component
-tests), a clean database reset, the pgTAP tests (green in CI on 2026-09-28) and the production build.
-Three exist and were verified locally but are **Pending** their first CI run: the browser tests,
-accessibility checks, and secret and dependency scanning. The eleventh, the preview smoke test, is a
-recorded substitution by the post-deploy check, also Pending. Beyond the eleven, the generated-types
-check and the RLS catalogue test are Pending, and the local gate (pre-push and commit-msg hooks) is
-Automated once per clone.
+Ten of the eleven [CI quality gates](https://github.com/get-latest/company/blob/main/engineering/standards/engineering-standards.md#ci-quality-gates)
+run today: formatting, linting, type checking, unit tests (there are no component tests), a clean
+database reset, the pgTAP tests, the production build, the browser tests, accessibility checks, and
+secret and dependency scanning. The eleventh, the preview smoke test, is a recorded substitution by the
+post-deploy check, which ran green against production on its first run. The generated-types check and the
+RLS catalogue test also passed in CI. The local gate (pre-push and commit-msg hooks) is Automated once
+per clone. The first CI run on 2026-09-28 passed every job except one, described below.
 
 The two biggest remaining gaps are structural, and both are in [exceptions.md](exceptions.md): there
 is no service layer between the Server Actions and the data layer (exception 1), and errors are free
@@ -99,6 +97,10 @@ Worth recording: a check earns its keep by what it finds on its first run.
   presentation components imported from `data/`. It moved to `domain/types.ts`.
 - Typing the engine found that `cache.read` returned `None` for a missing file, and 16 call sites
   indexed the result without checking. It now raises an error that says where the file should be.
+- The first CI run found a regression this pass introduced: a test used `cache.read(...) is None` to skip
+  when the research cache is absent, and `cache.read` now raises. It passed on Matt's laptop, which has
+  the cache, and failed on a clean checkout. `scripts/check.mjs` now runs the engine tests against an empty
+  cache, so a local run cannot hide that again.
 - Comparing migration history found that production and the repo named the same eight migrations
   differently, so `supabase db push` would have tried to re-apply them.
 - The import graph showed the "old strategy" engine could not be deleted as planned: the daily job
@@ -109,7 +111,7 @@ Worth recording: a check earns its keep by what it finds on its first run.
 
 Roughly cheapest and most valuable first.
 
-1. **Read the first CI run and fix what it finds.** Six checks are Pending.
+1. **Confirm the second CI run is green.** The first run passed everything but the engine tests (fixed).
 2. **The kebab-case rename.** One mechanical commit; the guard's list goes to zero.
 3. **The service layer, and the typed result with stable error codes.** By feature: `picker`, then
    `trades`, then `auth`. Each move retires exceptions 1 and 2 for that feature.

@@ -21,7 +21,9 @@ def _schema_columns(table: str) -> set[str]:
     return cols
 
 
-@pytest.mark.skipif(cache.read("universe", "ranks") is None, reason="needs the local data cache")
+@pytest.mark.skipif(
+    cache.read_if_exists("universe", "ranks") is None, reason="needs the local data cache"
+)
 def test_prepared_tables_match_migration_columns_and_keys():
     tables = prepare(get_config(), since="2026-06-01")
     for name, df in tables.items():

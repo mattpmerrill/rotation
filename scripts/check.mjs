@@ -6,6 +6,8 @@
 //   node scripts/check.mjs --require-db  fail instead of skipping when the database can't run
 //   node scripts/check.mjs --e2e         also run the browser tests (needs Playwright's browser)
 import { spawnSync } from "node:child_process";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -28,6 +30,10 @@ function run(cmd, cmdArgs, { cwd = ".", env = {}, quiet = false } = {}) {
   });
 }
 
+/** The engine's tests run against an empty data cache, as CI does. The research cache exists only
+ *  on Matt's laptop; a test that quietly depends on it passes here and fails on a clean checkout. */
+const emptyCache = () => ({ ROTATION_DATA_DIR: mkdtempSync(join(tmpdir(), "rotation-empty-cache-")) });
+
 const dockerRuns = () => run("docker", ["info"], { quiet: true }).status === 0;
 
 const steps = [
@@ -37,7 +43,7 @@ const steps = [
   { name: "engine: format", cwd: "engine", cmd: "uv", args: ["run", "ruff", "format", "--check", "src", "tests"] },
   { name: "engine: types", cwd: "engine", cmd: "uv", args: ["run", "mypy"] },
   { name: "engine: config", cwd: "engine", cmd: "uv", args: ["run", "rotation", "config"] },
-  { name: "engine: tests", cwd: "engine", cmd: "uv", args: ["run", "pytest", "-q"] },
+  { name: "engine: tests (empty data cache, as CI)", cwd: "engine", cmd: "uv", args: ["run", "pytest", "-q"], env: emptyCache() },
   { name: "database: pgTAP access and fairness tests", cmd: "supabase", args: ["test", "db"], needsDocker: true },
   ...(args.has("--e2e")
     ? [{ name: "web: browser tests", cwd: "web", cmd: "npm", args: ["run", "e2e"], env: buildEnv }]
