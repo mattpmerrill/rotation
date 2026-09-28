@@ -14,6 +14,8 @@ const schema = z.object({
   CRON_SECRET: z.string().min(16).optional(),
   /** The group's Discord channel. Without it, notifications are skipped. */
   DISCORD_WEBHOOK_URL: z.url().optional(),
+  /** CoinGecko Demo key for live prices. Optional: the keyless API works, with lower limits. */
+  COINGECKO_API_KEY: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -26,6 +28,7 @@ export function env(): Env {
     SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY || undefined,
     CRON_SECRET: process.env.CRON_SECRET || undefined,
     DISCORD_WEBHOOK_URL: process.env.DISCORD_WEBHOOK_URL || undefined,
+    COINGECKO_API_KEY: process.env.COINGECKO_API_KEY || undefined,
   });
   return cached;
 }

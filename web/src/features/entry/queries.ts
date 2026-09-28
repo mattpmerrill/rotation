@@ -38,11 +38,13 @@ export interface EntryView {
     fill: { coins: EligibleCoin[]; prices: PriceBook; from: string } | null;
   };
   rebuyRule: typeof marketReference.rebuy;
+  /** When the live prices behind `standing.now` were quoted, or null for daily closes. */
+  liveAt: number | null;
 }
 
 /** One entry in the current challenge, valued as of today. Null if it isn't in it. */
 export async function getEntryView(entryId: number, viewer: Viewer): Promise<EntryView | null> {
-  const [snap, market] = await Promise.all([loadCurrentChallenge(), getMarketState()]);
+  const [snap, market] = await Promise.all([loadCurrentChallenge(undefined, { live: true }), getMarketState()]);
   const entry = snap?.entries.find((e) => e.id === entryId);
   if (!snap || !entry) return null;
   const today = todayUtc();
@@ -68,6 +70,7 @@ export async function getEntryView(entryId: number, viewer: Viewer): Promise<Ent
     ),
     market,
     rebuyRule: marketReference.rebuy,
+    liveAt: snap.liveAt,
     slots: {
       open: entry.openSlots,
       waitingBtc: waitingBtc(entry, trades),

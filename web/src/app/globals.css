@@ -396,6 +396,28 @@
   }
 }
 
+/* Live badge: a green dot that breathes; it spins up while the page refreshes. */
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--gain);
+  box-shadow: 0 0 0 0 rgb(61 220 151 / 0.6);
+  animation: live-pulse 2s ease-out infinite;
+}
+.live-dot-busy {
+  background: var(--gold);
+  animation-duration: 0.7s;
+}
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(61 220 151 / 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 7px rgb(61 220 151 / 0);
+  }
+}
+
 /* The one moment of motion: the score counts in. */
 @keyframes score-in {
   from {

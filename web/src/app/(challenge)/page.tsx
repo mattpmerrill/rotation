@@ -5,6 +5,7 @@ import { MarketStrip } from "@/features/leaderboard/components/MarketStrip";
 import { getLeaderboard } from "@/features/leaderboard/queries";
 import { formatDay } from "@/lib/format";
 import { buttonClass } from "@/ui/Button";
+import { LiveRefresh } from "@/ui/LiveRefresh";
 import { Notice } from "@/ui/Notice";
 
 export default async function LeaderboardPage() {
@@ -27,6 +28,7 @@ export default async function LeaderboardPage() {
           </p>
         </div>
         {board.market && <MarketStrip market={board.market} />}
+        {!board.complete && <LiveRefresh liveAt={board.liveAt} />}
       </section>
 
       {board.complete && (

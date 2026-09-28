@@ -29,10 +29,11 @@ export interface Leaderboard {
   complete: boolean;
   viewerEntryId: number | null;
   market: MarketState | null;
+  liveAt: number | null;
 }
 
 export async function getLeaderboard(viewer: Viewer): Promise<Leaderboard | null> {
-  const [snap, market] = await Promise.all([loadCurrentChallenge(), getMarketState()]);
+  const [snap, market] = await Promise.all([loadCurrentChallenge(undefined, { live: true }), getMarketState()]);
   if (!snap) return null;
   const today = todayUtc();
   const standings = rankStandings(
@@ -50,6 +51,7 @@ export async function getLeaderboard(viewer: Viewer): Promise<Leaderboard | null
     complete: isChallengeComplete(standings),
     viewerEntryId: snap.entries.find((e) => e.userId === viewer.id)?.id ?? null,
     market,
+    liveAt: snap.liveAt,
     rows: standings.map((s) => ({
       entryId: s.entry.id,
       playerName: s.entry.playerName,

@@ -15,6 +15,7 @@ import { DeleteBasketButton } from "@/features/picker/components/DeleteBasketBut
 import { buttonClass } from "@/ui/Button";
 import Link from "next/link";
 import { formatBtc, formatDay } from "@/lib/format";
+import { LiveRefresh } from "@/ui/LiveRefresh";
 import { Section } from "@/ui/Section";
 
 export const metadata: Metadata = { title: "Basket" };
@@ -49,10 +50,13 @@ export default async function EntryPage({ params }: { params: Promise<{ id: stri
               </div>
             )}
           </div>
-          <p className="text-ink-3 text-sm">
-            In since {formatDay(entry.startedOn)}.
-            {standing.best != null && ` Best ${standing.best.toFixed(2)}×, lowest ${standing.worst!.toFixed(2)}×.`}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <p className="text-ink-3 text-sm">
+              In since {formatDay(entry.startedOn)}.
+              {standing.best != null && ` Best ${standing.best.toFixed(2)}×, lowest ${standing.worst!.toFixed(2)}×.`}
+            </p>
+            {!finished && <LiveRefresh liveAt={view.liveAt} />}
+          </div>
         </div>
         <ScoreHero btcIn={entry.btcIn} startUsd={startUsd} now={standing.now} phase={standing.phase} />
       </section>

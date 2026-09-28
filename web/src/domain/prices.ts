@@ -16,6 +16,26 @@ export function priceOn(book: PriceBook, asset: string, day: Day): number | null
   return s.closes[lo];
 }
 
+/** `book` with `live` prices as the close for `today`: replaces today's close if the daily job
+ *  already wrote one, appends it otherwise. Days after `today` are never touched. Pure. */
+export function withLivePrices(book: PriceBook, live: Record<string, number>, today: Day): PriceBook {
+  const out: PriceBook = { ...book };
+  for (const [asset, price] of Object.entries(live)) {
+    const s = book[asset];
+    if (!s || s.dates.length === 0) {
+      out[asset] = { dates: [today], closes: [price] };
+      continue;
+    }
+    const last = s.dates.at(-1)!;
+    if (last > today) continue;
+    out[asset] =
+      last === today
+        ? { dates: s.dates, closes: [...s.closes.slice(0, -1), price] }
+        : { dates: [...s.dates, today], closes: [...s.closes, price] };
+  }
+  return out;
+}
+
 /** The latest day any of `assets` has a price for. Null if none do. */
 export function latestPriceDay(book: PriceBook, assets: string[]): Day | null {
   let latest: Day | null = null;
