@@ -1,7 +1,7 @@
 # Contributing
 
 The rules for changing this repo, for people and coding agents alike. The structure is
-explained in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); decisions are logged in
+explained in [docs/architecture.md](docs/architecture.md); decisions are logged in
 [docs/PLAN.md](docs/PLAN.md).
 
 ## Set up

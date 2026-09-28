@@ -3,7 +3,7 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
 /**
- * Layer rules (see ARCHITECTURE.md). Each layer may import only from the layers below it:
+ * Layer rules (see docs/architecture.md). Each layer may import only from the layers below it:
  *
  *   app  ->  features  ->  data  ->  domain  ->  lib
  *                  \-> ui --------------/

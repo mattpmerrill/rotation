@@ -4,7 +4,7 @@ How many BTC can we get from one? Friends each swap up to 1 BTC into a basket of
 near the top, and rebuy BTC in the bear. Scored in BTC.
 
 - The plan and decisions: [docs/PLAN.md](docs/PLAN.md)
-- How it's built: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- How it's built: [docs/architecture.md](docs/architecture.md)
 - How to work on it: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 | Folder | What |
