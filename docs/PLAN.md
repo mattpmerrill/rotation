@@ -5,7 +5,7 @@ basket of 2 to 8 alts, when they choose. They hold through the bull run, sell th
 near the top, and rebuy BTC in the bear. Everything is scored in BTC: BTC out divided by BTC in.
 The challenge ends when everyone has rebought; then the next one can start.
 
-Players: Matt and the Boyz (Wrenny, Braav, Jumes). The app tells no one when to trade: it shows
+Players: Matt and three friends. The app tells no one when to trade: it shows
 where everyone stands, the history, and reference dates. People place their own trades on their
 own exchange and log them.
 
@@ -42,7 +42,7 @@ From 1 BTC, 1% fee per trade, using the two cycles the alt data covers
 | 6 | pandas only; backtests read Parquet, Postgres holds what the app reads. | 2026-09-23 |
 | 7 | BTC core + alt sleeve instead of USD-weighted buckets. *(Superseded by 13.)* | 2026-09-24 |
 | 8 | BTC cycle harvest as the primary strategy; Supabase project `rotation` (ref `xtccrljmxtjmxbosczrd`, free 21 Stacks org). *(Strategy superseded by 13; the project stays.)* | 2026-09-24 |
-| 9 | Matt's BTC is in an IRA: no tax, 1% fee per trade (`config/rules.yaml` `cycle.account`). | 2026-09-24 |
+| 9 | Research assumes 0% tax and a 1% fee per trade (`config/rules.yaml` `cycle.account`). | 2026-09-24 |
 | 10 | Discord never shows holdings or amounts. | 2026-09-24 |
 | 11 | 10 BTC core + 1 BTC alt basket on the halving clock. *(Superseded by 13.)* | 2026-09-25 |
 | 12 | Each person picks their own coins. | 2026-09-25 |
@@ -71,7 +71,7 @@ From 1 BTC, 1% fee per trade, using the two cycles the alt data covers
 
 ## Next
 
-- Invite Wrenny, Braav and Jumes; set them as members.
+- Invite the three friends; set them as members.
 - Supabase Auth URL settings and the Google sign-in client, if Google sign-in is wanted.
 - Later, if wanted: an admin page for members and challenges (today it's SQL), and an
   "available on my exchange" filter in the picker.

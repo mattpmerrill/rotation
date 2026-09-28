@@ -44,7 +44,7 @@ to the 2024 cycle (still in progress: its USDT is valued at today's price).
 every complete cycle. The worst complete cycle across all combinations ranged from
 1.00x to 1.34x.
 
-## With today's settings (chosen on 2012-2020), from 11 BTC
+## With today's settings (chosen on 2012-2020), from the starting stack
 
 Settings: window_start_days = 500, window_end_days = 580, clock_share = 1, start_days_since_ath = 360, start_drawdown = 0.8.
 

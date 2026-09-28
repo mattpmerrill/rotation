@@ -20,8 +20,7 @@ you write code.** Matt reviews the plan before any build starts, so bring him th
 - **Wait for the next bear market**, then turn the USDT into as many BTC as possible.
 - Score everything in **BTC**: did you end up with more than the 1 BTC you started with?
 
-This is the **"1 BTC Challenge"** for Matt and the Boyz (a small friends group: Matt, Wrenny,
-Braav, Jumes). Each person has their own account and basket, with a shared leaderboard.
+This is the **"1 BTC Challenge"** for Matt and three friends (a small group). Each person has their own account and basket, with a shared leaderboard.
 
 ---
 
@@ -29,7 +28,7 @@ Braav, Jumes). Each person has their own account and basket, with a shared leade
 
 A simplified, well-organized, easy-to-use app:
 
-1. **Separate logins** for Matt and each of the Boyz. Supabase Auth already exists (email/password
+1. **Separate logins** for Matt and each friend. Supabase Auth already exists (email/password
    + Google).
 2. **Leaderboard** showing everyone's alt picks.
 3. **Everyone's performance** from the day they bought in to today, in BTC terms (plus USD as a
@@ -143,7 +142,7 @@ DOGE 0.10 · LINK 0.09 · XRP 0.08 · AVAX 0.05 · ADA 0.04.
   ADA, HYPE, LINK, XLM, HBAR, ZEC, LTC, AVAX, SHIB, SUI, TON, CRO, DOT, UNI, AAVE, NEAR, ONDO, ICP,
   ATOM, POL, QNT, ALGO, RENDER, FIL, APT, VET, ARB, INJ, TIA, LDO and more. It does **not**
   include TRX or OKB. A per-person "my exchange" availability filter would be nice but isn't
-  required; the Boyz may use other exchanges.
+  required; the friends may use other exchanges.
 - Show a warning (not a block) for coins with no bear-market history or at their all-time high
   vs BTC.
 - Preview: run the section 4 method on the pick and show good/bad cycle results, the lowest point
@@ -175,7 +174,7 @@ DOGE 0.10 · LINK 0.09 · XRP 0.08 · AVAX 0.05 · ADA 0.04.
 
 ## 8. Open questions for Matt (ask, don't assume)
 
-1. Do the Boyz log their own trades, or does Matt enter them?
+1. Do the friends log their own trades, or does Matt enter them?
 2. Leaderboard: show USD values, or BTC multiples only?
 3. Should the "alt top" alert go to Discord too, or stay in the app only?
 4. After the USDT → BTC rebuy, is the challenge "done", or does it roll into the next cycle?

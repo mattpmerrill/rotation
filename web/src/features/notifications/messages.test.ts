@@ -16,12 +16,12 @@ describe("Discord messages", () => {
       tradeMessage(entry, { ...defined(buyIn[1]), side: "sell", kind: "sell" }, coins),
       digestMessage("1 Bitty Challenge", [standingOf(entry, buyIn, prices, "2026-10-03")], "https://app/"),
     ];
-    expect(msgs[0]).toBe("**Wrenny** is in: SOL, LINK.");
-    expect(msgs[1]).toBe("**Wrenny** sold SOL.");
+    expect(msgs[0]).toBe("**Alice** is in: SOL, LINK.");
+    expect(msgs[1]).toBe("**Alice** sold SOL.");
     expect(tradeMessage(entry, { ...defined(buyIn[1]), kind: "fill" }, coins)).toBe(
-      "**Wrenny** filled a waiting slot with SOL.",
+      "**Alice** filled a waiting slot with SOL.",
     );
-    expect(msgs[2]).toContain("1. Wrenny: 1.20× (+20%)");
+    expect(msgs[2]).toContain("1. Alice: 1.20× (+20%)");
     for (const m of msgs) expect(m).not.toMatch(/\$|BTC\b(?! →)/);
   });
 

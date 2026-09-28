@@ -166,8 +166,8 @@ portfolio:                            # Matt, 2026-09-24: BTC core + alt sleeve
                                       #   held as BTC; bucket weights apply inside the sleeve.
                                       # usd_buckets: the program doc's table as USD weights of the whole
                                       #   portfolio (see the Phase 0 report for why that loses BTC).
-  initial_btc: 11
-  sleeve_frac: 0.10                   # 1.1 of 11 BTC. Losses are never topped up from the core.
+  initial_btc: 1                      # example; this section belongs to the archived engine (ADR-004)
+  sleeve_frac: 0.10                   # a tenth of the stack. Losses are never topped up from the core.
 
 rebalance:                            # DEFAULT: how bucket targets are enforced
   weekday: 6                          # weekly, on the Sunday close
@@ -199,14 +199,14 @@ backtest:
   walk_forward: { train_days: 730, test_days: 180 }
 
 cycle:                                # BTC cycle harvest (Matt, 2026-09-24): the primary strategy
-  account:                            # Matt: BTC held in an IRA -> sales are tax-free, 1% fee per trade
+  account:                            # research assumption: 0% tax, 1% fee per trade
     fee_per_trade: 0.01
     tax_rate: 0.0
   halvings: [2012-11-28, 2016-07-09, 2020-05-11, 2024-04-19]   # add the next one when it happens
   sell:
     target_frac: 0.5                  # Matt, 2026-09-25: half the BTC into USDT near the top
     window_start_days: 500            # chosen on 2012-2020 (see docs/backtests/cycle-harvest.md)
-    window_end_days: 580              # leave-one-cycle-out pick with IRA terms (0% tax, 1% fee)
+    window_end_days: 580              # leave-one-cycle-out pick under the account terms above
     clock_share: 1.0                  # share of the target sold on the clock (rest: trend break)
     clock_tranches: 4
     trend_weekly_sma: 20

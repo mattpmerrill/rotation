@@ -82,8 +82,8 @@ describe("standings", () => {
     const s = standingOf(entry, buyIn, prices, "2026-10-03");
     expect(s.multiple).toBe(1.2);
     expect([s.best, s.worst]).toEqual([1.5, 1]);
-    const other = { ...s, multiple: 1.3, entry: { ...entry, playerName: "Braav" } };
-    expect(rankStandings([s, other]).map((x) => x.entry.playerName)).toEqual(["Braav", "Wrenny"]);
+    const other = { ...s, multiple: 1.3, entry: { ...entry, playerName: "Bob" } };
+    expect(rankStandings([s, other]).map((x) => x.entry.playerName)).toEqual(["Bob", "Alice"]);
   });
 });
 

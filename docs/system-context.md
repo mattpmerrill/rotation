@@ -6,7 +6,7 @@ require. If one of these changes, the architecture may need to.
 
 ## Users and critical workflows
 
-Primary users: Matt and three friends (Wrenny, Braav, Jumes), each a member of one challenge.
+Primary users: Matt and three friends, each a member of one challenge.
 Nobody else has access. There is no public sign-up path that grants anything: a person can create
 an account, but sees nothing until Matt sets `profiles.is_member`.
 

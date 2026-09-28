@@ -5,7 +5,7 @@ export const entry: Entry = {
   id: 1,
   challengeId: 1,
   userId: "u1",
-  playerName: "Wrenny",
+  playerName: "Alice",
   startedOn: "2026-10-01",
   btcIn: 1,
   basket: ["solana", "chainlink"],

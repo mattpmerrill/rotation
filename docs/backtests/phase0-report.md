@@ -4,13 +4,13 @@ Generated 2026-09-24 22:46 UTC · config hash `d1421cdb56a77aaf` (rules
 v1) · regenerate with `uv run rotation report`.
 
 **Everything is measured in BTC**, net of the tax reserve (treated as owed). The plan
-tested is Matt's (2026-09-24): **11 BTC, 90% kept as a
+tested (2026-09-24): **90% kept as a
 BTC core that is never sold to rebalance, 10% as an alt sleeve that
 runs every rule.** Idle sleeve money is held as BTC. Sleeve losses are never topped up.
 
 ## Headline: 2019-01-01 to 2026-09-22
 
-| variant                                      | 11 BTC became   | vs start   | USD multiple   | Sleeve at end   | Sleeve worst drop   | Worst drop (BTC)   | Worst drop (USD)   |   Alt buys |   Fees (BTC) |
+| variant                                      | Stack became    | vs start   | USD multiple   | Sleeve at end   | Sleeve worst drop   | Worst drop (BTC)   | Worst drop (USD)   |   Alt buys |   Fees (BTC) |
 |:---------------------------------------------|:----------------|:-----------|:---------------|:----------------|:--------------------|:-------------------|:-------------------|-----------:|-------------:|
 | Your plan: BTC core + 10% alt sleeve         | 12.69 BTC       | +15%       | 26.8x          | 0.05 BTC        | 96%                 | 25%                | 65%                |        690 |         0.12 |
 | Core only, with the cycle-top exit (no alts) | 13.59 BTC       | +24%       | 28.6x          | 0.00 BTC        |                     | 26%                | 65%                |          0 |         0.04 |
@@ -37,7 +37,7 @@ Against the same core with no alts, the alt sleeve changed the result by
 
 ![Core and sleeve](img/plan-parts.png)
 
-**The same designs in the two alt runs** (11 BTC at the start; alt baskets are
+**The same designs in the two alt runs** (the same starting stack; alt baskets are
 equal-weight and point-in-time, shown as a BTC multiple)
 
 | Run | Your plan | Core only | Hold BTC | Program doc (USD) | Top-20 alts | Top-100 alts |
@@ -57,21 +57,21 @@ in every other stretch tested.
 
 **2020-21 run**
 
-| variant                 | 11 BTC became   | vs start   | USD multiple   | Sleeve at end   | Sleeve worst drop   | Worst drop (BTC)   | Worst drop (USD)   |   Alt buys |   Fees (BTC) |
+| variant                 | Stack became    | vs start   | USD multiple   | Sleeve at end   | Sleeve worst drop   | Worst drop (BTC)   | Worst drop (USD)   |   Alt buys |   Fees (BTC) |
 |:------------------------|:----------------|:-----------|:---------------|:----------------|:--------------------|:-------------------|:-------------------|-----------:|-------------:|
 | Ladder (rules)          | 9.49 BTC        | -14%       | 10.9x          | 0.41 BTC        | 64%                 | 25%                | 40%                |         96 |         0.05 |
 | Hold (no profit-taking) | 9.52 BTC        | -13%       | 11.0x          | 0.44 BTC        | 61%                 | 25%                | 39%                |         78 |         0.05 |
 
 **2023-25 run**
 
-| variant                 | 11 BTC became   | vs start   | USD multiple   | Sleeve at end   | Sleeve worst drop   | Worst drop (BTC)   | Worst drop (USD)   |   Alt buys |   Fees (BTC) |
+| variant                 | Stack became    | vs start   | USD multiple   | Sleeve at end   | Sleeve worst drop   | Worst drop (BTC)   | Worst drop (USD)   |   Alt buys |   Fees (BTC) |
 |:------------------------|:----------------|:-----------|:---------------|:----------------|:--------------------|:-------------------|:-------------------|-----------:|-------------:|
 | Ladder (rules)          | 10.34 BTC       | -6%        | 7.1x           | 0.23 BTC        | 80%                 | 7%                 | 28%                |        354 |         0.08 |
 | Hold (no profit-taking) | 10.42 BTC       | -5%        | 7.1x           | 0.28 BTC        | 77%                 | 6%                 | 28%                |        322 |         0.07 |
 
 ## Q2. Does the ALT/BTC 50D gate help?
 
-| variant                   | 11 BTC became   | vs start   | USD multiple   | Sleeve at end   | Sleeve worst drop   | Worst drop (BTC)   | Worst drop (USD)   |   Alt buys |   Fees (BTC) |
+| variant                   | Stack became    | vs start   | USD multiple   | Sleeve at end   | Sleeve worst drop   | Worst drop (BTC)   | Worst drop (USD)   |   Alt buys |   Fees (BTC) |
 |:--------------------------|:----------------|:-----------|:---------------|:----------------|:--------------------|:-------------------|:-------------------|-----------:|-------------:|
 | With ALT/BTC gate (rules) | 12.69 BTC       | +15%       | 26.8x          | 0.05 BTC        | 96%                 | 25%                | 65%                |        690 |         0.12 |
 | Without ALT/BTC gate      | 12.72 BTC       | +16%       | 26.9x          | 0.06 BTC        | 95%                 | 25%                | 65%                |        788 |         0.13 |
@@ -83,7 +83,7 @@ sleeve's.
 
 ![Q3](img/q3-drawdown.png)
 
-| variant               | 11 BTC became   | vs start   | USD multiple   | Sleeve at end   | Sleeve worst drop   | Worst drop (BTC)   | Worst drop (USD)   |   Alt buys |   Fees (BTC) |
+| variant               | Stack became    | vs start   | USD multiple   | Sleeve at end   | Sleeve worst drop   | Worst drop (BTC)   | Worst drop (USD)   |   Alt buys |   Fees (BTC) |
 |:----------------------|:----------------|:-----------|:---------------|:----------------|:--------------------|:-------------------|:-------------------|-----------:|-------------:|
 | Regime switch (rules) | 12.69 BTC       | +15%       | 26.8x          | 0.05 BTC        | 96%                 | 25%                | 65%                |        690 |         0.12 |
 | Always Expand         | 12.78 BTC       | +16%       | 27.0x          | 0.02 BTC        | 98%                 | 25%                | 65%                |        921 |         0.13 |
@@ -106,7 +106,7 @@ tier 3 = 6 flags or the 20-week backstop (exit alts + another 20% of the core).
 
 ## Q5. Score threshold: enter at 3+ vs 4+ only
 
-| variant             | 11 BTC became   | vs start   | USD multiple   | Sleeve at end   | Sleeve worst drop   | Worst drop (BTC)   | Worst drop (USD)   |   Alt buys |   Fees (BTC) |
+| variant             | Stack became    | vs start   | USD multiple   | Sleeve at end   | Sleeve worst drop   | Worst drop (BTC)   | Worst drop (USD)   |   Alt buys |   Fees (BTC) |
 |:--------------------|:----------------|:-----------|:---------------|:----------------|:--------------------|:-------------------|:-------------------|-----------:|-------------:|
 | Enter at 3+ (rules) | 12.69 BTC       | +15%       | 26.8x          | 0.05 BTC        | 96%                 | 25%                | 65%                |        690 |         0.12 |
 | Enter at 4+ only    | 12.81 BTC       | +16%       | 27.1x          | 0.11 BTC        | 91%                 | 25%                | 65%                |        394 |         0.13 |
