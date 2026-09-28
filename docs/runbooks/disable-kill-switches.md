@@ -6,6 +6,7 @@ understood. Each switch is reversible.
 | Switch | Stops | How | Turn back on |
 |---|---|---|---|
 | Daily job | Market-data refresh and the notification call | `gh workflow disable daily` | `gh workflow enable daily` |
+| New sign-ups | Anyone creating an account | [adding-players.md](adding-players.md#stopping-new-sign-ups) | Same page, set it back |
 | Discord posts | All Discord messages | Remove `DISCORD_WEBHOOK_URL` from Vercel: `vercel env rm DISCORD_WEBHOOK_URL production`, redeploy. Without it the job skips posting and records nothing, so it posts once the webhook is back. | `vercel env add DISCORD_WEBHOOK_URL production`, redeploy |
 | Notification endpoint | Anything calling `/api/jobs/daily` | Rotate `CRON_SECRET` to a value only you know ([rotate-credentials.md](rotate-credentials.md)) | Set it back on both sides |
 | A member's access | That person's reads and writes | In the Supabase SQL editor: `update profiles set is_member = false where id = (select id from auth.users where email = '...');` | Set it back to true |

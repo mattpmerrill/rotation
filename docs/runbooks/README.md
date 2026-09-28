@@ -13,6 +13,7 @@ tracked in [../exceptions.md](../exceptions.md).
 | [rollback-deployment.md](rollback-deployment.md) | The live app is broken right after a deploy |
 | [restore-database.md](restore-database.md) | Data is lost or wrong, or the Supabase project is gone |
 | [rotate-credentials.md](rotate-credentials.md) | A secret leaked, someone left, or a rotation is due |
+| [adding-players.md](adding-players.md) | A friend is joining, forgot their password, or sign-ups need to stop |
 | [disable-kill-switches.md](disable-kill-switches.md) | Something is misbehaving and needs to stop now |
 
 ## First moves in any incident

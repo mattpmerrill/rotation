@@ -53,7 +53,8 @@ Migrations in `supabase/migrations/`, tests in `supabase/tests/database/` (pgTAP
 
 | Table / view | What | Who writes |
 |---|---|---|
-| `profiles` | One per sign-up; `is_member` is set by Matt | trigger on sign-up; Matt |
+| `profiles` | One per sign-up; `is_member` and `is_admin` are set by the admin functions and SQL, never by the person | trigger on sign-up; the admin functions |
+| `admin_actions` | Audit trail of admin actions (ids only) | the admin functions |
 | `challenges` | One per cycle; at most one open | Matt (SQL) |
 | `entries` | A person's run: start date, BTC in (≤ 1), basket and waiting slots (2–8 picks) | the person, via `start_entry()` and `fill_slot()` |
 | `entry_trades` | Every trade, against USDT, with a kind: `buy_in`, `fill` (via functions), `sell`, `rebuy` (by the person) | the person |
@@ -135,20 +136,32 @@ Only `web/src/data/env.ts` reads `process.env` in the app; it validates everythi
 
 ## The auth model
 
-- **Who can sign in:** anyone can create an account (email and password, or Google). Nothing is
-  visible until `profiles.is_member` is set, by Matt, in SQL. Non-members see one screen saying so.
+- **Joining:** anyone can create an account, with Google or an email and a password (name, email, password
+  of at least 10 characters). Nothing is visible until an admin approves them on the People page
+  (`/admin`). Until then they see a "waiting for approval" screen that refreshes itself, so approval shows
+  up without a reload ([ADR-006](decisions/ADR-006-signup-and-approval.md)). Email confirmation is off for
+  now, because the project has no email service ([exception 17](exceptions.md)).
+- **Who is who:** `profiles.is_member` (approved) and `profiles.is_admin`. Neither can be changed through
+  the API, not even with the secret key: an admin is made with SQL, and members are made by the admin
+  functions below.
 - **How identity is known:** Supabase Auth issues a session cookie. `proxy.ts` only refreshes it
   (`data/session.ts`); it is not the authorization boundary. Pages and actions verify identity with
   `getClaims()` (`data/viewer.ts`), never the unverified session user.
-- **Who may do what:** `requireViewer()` at the top of every private page; `requireMember()` at the
-  top of every Server Action, because actions are reachable by direct POST. Members read everyone's
-  entries and trades and write only their own.
-- **What actually enforces it:** row-level security and the `SECURITY DEFINER` functions, which check
-  the caller themselves ([ADR-005](decisions/ADR-005-security-definer-functions.md)). The app checks
-  first to give friendly messages; the database is the authority.
-- **The one machine caller:** `/api/jobs/daily` accepts `Authorization: Bearer <CRON_SECRET>`,
-  compared in constant time. The secret (service) key lives only in `data/supabase/admin.ts`, used
-  by that job.
+- **Who may do what:** `requireViewer()` at the top of every private page; `requireMember()` at the top of
+  every Server Action for members, `requireAdmin()` for the admin's; actions are reachable by direct POST.
+  Members read everyone's entries and trades and write only their own.
+- **What actually enforces it:** row-level security and the `SECURITY DEFINER` functions, which check the
+  caller themselves ([ADR-005](decisions/ADR-005-security-definer-functions.md), extended by ADR-006 with
+  `is_admin`, `admin_list_people`, `admin_set_member`, `admin_reject_signup`, `admin_record_help_link`).
+  Every admin action writes an `admin_actions` row by ids only. The app checks first to give friendly
+  messages; the database is the authority.
+- **A forgotten password:** the admin makes a one-time sign-in help link (the secret key generates the
+  token; the action is audited first). `/auth/confirm` verifies it and starts a session, and `/auth/reset`
+  lets the person choose a new password. The link works once and expires within an hour.
+- **What the sign-in page will show:** only fixed messages for a short code in the URL (`?error=expired`),
+  never text taken from the URL, and never Auth's own error text (`authFailure` translates it).
+- **The one machine caller:** `/api/jobs/daily` accepts `Authorization: Bearer <CRON_SECRET>`, compared in
+  constant time. The secret (service) key lives only in `data/supabase/admin.ts` and `data/auth-admin.ts`.
 
 ## Environments
 

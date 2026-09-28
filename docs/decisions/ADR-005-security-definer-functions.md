@@ -1,6 +1,6 @@
 # ADR-005: Fairness rules run as SECURITY DEFINER functions the signed-in role can call
 
-- **Status**: Accepted
+- **Status**: Accepted (extended by [ADR-006](ADR-006-signup-and-approval.md), which adds five admin functions under the same rules)
 - **Date**: 2026-09-28
 - **Owner**: Matt Merrill
 

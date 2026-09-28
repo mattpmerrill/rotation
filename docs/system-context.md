@@ -7,8 +7,8 @@ require. If one of these changes, the architecture may need to.
 ## Users and critical workflows
 
 Primary users: Matt and three friends, each a member of one challenge.
-Nobody else has access. There is no public sign-up path that grants anything: a person can create
-an account, but sees nothing until Matt sets `profiles.is_member`.
+Nobody else has access. Friends sign up on their own (with Google or an email and password) and wait
+on a screen that refreshes itself until an admin approves them ([ADR-006](decisions/ADR-006-signup-and-approval.md)).
 
 Critical workflows, in order of importance:
 
@@ -21,10 +21,12 @@ Critical workflows, in order of importance:
 
 | Surface | Class | Notes |
 |---|---|---|
-| `/login`, `/auth/callback` | Public | Email and password, Google sign-in |
+| `/login`, `/auth/callback`, `/auth/confirm` | Public | Email and password, Google sign-in, and the one-time help link an admin makes |
+| `/auth/reset` | Authenticated | Choose a new password after a help link |
+| `/admin` | Administrative | The People page: approve, reject, remove, help links. Admins only (`profiles.is_admin`); anyone else gets the ordinary not-found page |
 | `/`, `/entries/*`, `/pick`, `/picks`, `/timing` | Authenticated, members only | Non-members see a "not a member yet" screen |
 | `/api/jobs/daily` | Internal | Bearer `CRON_SECRET`, called by GitHub Actions |
-| Supabase Studio, SQL | Administrative | Matt only: adding members, opening challenges |
+| Supabase Studio, SQL | Administrative | Matt only: making someone an admin, opening challenges |
 | Discord channel | Internal | Outbound posts only |
 
 ## Tenancy

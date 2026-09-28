@@ -58,11 +58,13 @@ From 1 BTC, 1% fee per trade, using the two cycles the alt data covers
 | 22 | A "Joi's top picks" tab: five baskets that did best in past cycles, with why, computed by the same code as the picker. | 2026-09-26 |
 | 23 | **Waiting slots**: some of a basket's 2-8 picks can wait as BTC and be filled later with any top-100 coin, until rebuying starts. A fill sells exactly one slot's share. Trades now have kinds (buy_in, fill, sell, rebuy); people log only sells and rebuys, so alts can't be bought outside the buy-in and fills. | 2026-09-26 |
 | 24 | A "Best time to buy" tab: how buying alts went by point in the cycle (top 10 at the time, and per coin), with an indicator for today (`docs/backtests/buy-timing.md`). | 2026-09-26 |
+| 25 | **Sign-up and approval.** Anyone can create an account (Google, or name, email and password); nobody sees anything until an admin approves them on the People page, which pings Discord and shows a badge. Email confirmation is off until there is an email service; a forgotten password is fixed by the admin with a one-time help link ([ADR-006](decisions/ADR-006-signup-and-approval.md)). | 2026-09-28 |
 
 ## Running a challenge
 
-- **Add a player:** they sign up in the app, then in Supabase:
-  `update profiles set is_member = true where id = (select id from auth.users where email = '...');`
+- **Add a player:** send them the link to the app. They sign up (Google, or name, email and password) and
+  see a waiting screen. Open **People** (admins only) and tap **Approve**; their screen switches to the
+  challenge by itself. See [runbooks/adding-players.md](runbooks/adding-players.md).
 - **Open the next challenge** (after everyone has rebought):
   `update challenges set closed_on = current_date where closed_on is null;`
   `insert into challenges (name, opened_on) values ('1 Bitty Challenge', current_date);`
@@ -71,8 +73,8 @@ From 1 BTC, 1% fee per trade, using the two cycles the alt data covers
 
 ## Next
 
-- Invite the three friends; set them as members.
-- Supabase Auth URL settings and the Google sign-in client, if Google sign-in is wanted.
+- Invite the three friends: send them the link, then approve them on the People page.
+- Set `DISCORD_WEBHOOK_URL` in Vercel so new sign-ups and trades are announced.
 - Later, if wanted: an admin page for members and challenges (today it's SQL), and an
   "available on my exchange" filter in the picker.
 
