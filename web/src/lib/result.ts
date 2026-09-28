@@ -21,6 +21,16 @@ export interface ApplicationError {
 
 export type ApplicationResult<T> = { ok: true; data: T } | { ok: false; error: ApplicationError };
 
+/** The `fieldErrors` key for messages that belong to the whole form, not one field. */
+export const FORM = "form";
+
+/** Every message a failure should show under a form: its form-level list if it has one (a rule
+ *  check can find several problems at once), otherwise the single message. */
+export function formMessages(error: ApplicationError): string[] {
+  const listed = error.fieldErrors?.[FORM];
+  return listed && listed.length > 0 ? listed : [error.message];
+}
+
 export function ok<T>(data: T): ApplicationResult<T> {
   return { ok: true, data };
 }

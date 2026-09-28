@@ -1,10 +1,17 @@
 import "server-only";
 import type { DraftTrade } from "@/domain/buy-in";
-import type { Challenge, Entry } from "@/domain/types";
+import type { Entry } from "@/domain/types";
+import { ok, type ApplicationResult } from "@/lib/result";
 import type { Database } from "./database.types";
-import { toRpcTrades } from "./trades";
+import { dbFailure } from "./failure";
 import { supabaseServer, type Db } from "./supabase/server";
+import { toRpcTrades } from "./trades";
 
+/**
+ * The repository for `entries` and the functions that write them with their buy-in trades
+ * (`start_entry`, `edit_entry`, `delete_entry`). The only place those are called. Reads throw on
+ * failure; writes return an ApplicationResult with database failures translated by dbFailure.
+ */
 type EntryRow = Database["public"]["Tables"]["entries"]["Row"] & { profiles: { display_name: string | null } | null };
 
 const ENTRY_COLUMNS =
@@ -21,32 +28,18 @@ const toEntry = (r: EntryRow): Entry => ({
   openSlots: r.open_slots,
 });
 
-/** The challenge that's running (at most one is open), or the most recent one. */
-export async function getCurrentChallenge(db?: Db): Promise<Challenge | null> {
-  db ??= await supabaseServer();
-  const { data, error } = await db
-    .from("challenges")
-    .select("id, name, opened_on, closed_on")
-    .order("closed_on", { ascending: false, nullsFirst: true })
-    .order("opened_on", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return data && { id: data.id, name: data.name, openedOn: data.opened_on, closedOn: data.closed_on };
-}
-
 export async function listEntries(challengeId: number, db?: Db): Promise<Entry[]> {
   db ??= await supabaseServer();
   const { data, error } = await db.from("entries").select(ENTRY_COLUMNS).eq("challenge_id", challengeId);
   if (error) throw error;
-  return (data as unknown as EntryRow[]).map(toEntry);
+  return data.map(toEntry);
 }
 
 export async function getEntry(id: number): Promise<Entry | null> {
   const db = await supabaseServer();
   const { data, error } = await db.from("entries").select(ENTRY_COLUMNS).eq("id", id).maybeSingle();
   if (error) throw error;
-  return data ? toEntry(data as unknown as EntryRow) : null;
+  return data ? toEntry(data) : null;
 }
 
 export async function findEntryFor(userId: string, challengeId: number): Promise<Entry | null> {
@@ -58,7 +51,7 @@ export async function findEntryFor(userId: string, challengeId: number): Promise
     .eq("challenge_id", challengeId)
     .maybeSingle();
   if (error) throw error;
-  return data ? toEntry(data as unknown as EntryRow) : null;
+  return data ? toEntry(data) : null;
 }
 
 /** Start the viewer's entry: the entry and its buy-in trades in one transaction. */
@@ -68,7 +61,7 @@ export async function startEntry(
   basket: string[],
   slots: number,
   trades: DraftTrade[],
-) {
+): Promise<ApplicationResult<{ entryId: number }>> {
   const db = await supabaseServer();
   const { data, error } = await db.rpc("start_entry", {
     p_started_on: startedOn,
@@ -77,7 +70,9 @@ export async function startEntry(
     p_slots: slots,
     p_trades: toRpcTrades(trades),
   });
-  return { entryId: data ?? null, error: error?.message ?? null };
+  if (error) return dbFailure("entry.start", error);
+  if (data === null) return dbFailure("entry.start", { message: "start_entry returned no entry id" });
+  return ok({ entryId: data });
 }
 
 /** Redo the viewer's buy-in: allowed only while the buy-in is all the entry has. */
@@ -88,7 +83,7 @@ export async function editEntry(
   basket: string[],
   slots: number,
   trades: DraftTrade[],
-) {
+): Promise<ApplicationResult<null>> {
   const db = await supabaseServer();
   const { error } = await db.rpc("edit_entry", {
     p_entry_id: entryId,
@@ -98,12 +93,12 @@ export async function editEntry(
     p_slots: slots,
     p_trades: toRpcTrades(trades),
   });
-  return error?.message ?? null;
+  return error ? dbFailure("entry.edit", error) : ok(null);
 }
 
-/** Delete the viewer's entry and all its trades. Returns an error, or null. */
-export async function deleteEntry(entryId: number): Promise<string | null> {
+/** Delete the viewer's entry and all its trades. */
+export async function deleteEntry(entryId: number): Promise<ApplicationResult<null>> {
   const db = await supabaseServer();
   const { error } = await db.rpc("delete_entry", { p_entry_id: entryId });
-  return error?.message ?? null;
+  return error ? dbFailure("entry.delete", error) : ok(null);
 }

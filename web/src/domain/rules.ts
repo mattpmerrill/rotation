@@ -10,6 +10,9 @@ export const RULES = {
   basketMax: 8,
   /** A coin must rank in the top N by market cap on the buy-in day. */
   maxRank: 100,
+  /** A buy-in can be logged up to this many days after it happened. An app rule: the database only
+   *  requires that it isn't before the challenge opened. */
+  buyInLookbackDays: 30,
   /** Default trading fee, as a share of each trade (the group's exchange charges 1%). */
   defaultFeeRate: 0.01,
   /** Below this a balance counts as empty (coin units; dollars for USDT). */

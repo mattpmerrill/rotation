@@ -1,6 +1,7 @@
 import "server-only";
 import { BTC, type Challenge, type Coin, type Entry, type PriceBook, type Trade } from "@/domain/types";
-import { getCurrentChallenge, listEntries } from "./challenge";
+import { getCurrentChallenge } from "./challenges";
+import { listEntries } from "./entries";
 import { listTrades } from "./trades";
 import { withLivePrices } from "@/domain/prices";
 import { todayUtc } from "@/lib/days";

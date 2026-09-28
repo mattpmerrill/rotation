@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fail, ok, type ApplicationResult } from "./result";
+import { fail, FORM, formMessages, ok, type ApplicationResult } from "./result";
 
 describe("ApplicationResult", () => {
   it("ok carries the data", () => {
@@ -20,5 +20,21 @@ describe("ApplicationResult", () => {
     const result: ApplicationResult<number> = fail("not_found", "Gone.");
     if (result.ok) throw new Error("expected a failure");
     expect(result.error.code).toBe("not_found");
+  });
+});
+
+describe("formMessages", () => {
+  it("returns the whole form-level list when a failure has one", () => {
+    const result = fail("rule_violation", "First. Second.", { [FORM]: ["First.", "Second."] });
+    expect(!result.ok && formMessages(result.error)).toEqual(["First.", "Second."]);
+  });
+
+  it("falls back to the single message, including when the list is empty or on another field", () => {
+    const plain = fail("forbidden", "No.");
+    expect(!plain.ok && formMessages(plain.error)).toEqual(["No."]);
+    const empty = fail("forbidden", "No.", { [FORM]: [] });
+    expect(!empty.ok && formMessages(empty.error)).toEqual(["No."]);
+    const other = fail("forbidden", "No.", { qty: ["Bad."] });
+    expect(!other.ok && formMessages(other.error)).toEqual(["No."]);
   });
 });

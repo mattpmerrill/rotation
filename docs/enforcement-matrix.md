@@ -27,7 +27,7 @@ and re-derive the whole table when you touch this file.
 | Unsafe type assertions carry a reason | - | - | Unenforced (exception 5) |
 | Lint | ESLint (Next config) | local check, CI | Automated |
 | Formatting | `prettier --check` (web), `ruff format --check` (engine) | local check, CI | Automated (partial: root `scripts/` and workflows are not formatted by anything) |
-| Unit tests | Vitest (104), pytest (47) | local check, CI | Automated |
+| Unit tests | Vitest (137), pytest (47) | local check, CI | Automated |
 | Component tests | - | - | Unenforced (exception 8) |
 | Generated DB types match schema | `supabase gen types` diff, CLI pinned | CI `database` job | Automated (passed in CI on 2026-09-28; needs Docker, so not in the local check) |
 | Layer and import boundaries | ESLint `no-restricted-imports` per layer; dependency-cruiser rules | local check, CI | Automated |
@@ -35,13 +35,13 @@ and re-derive the whole table when you touch this file.
 | Domain and lib import no framework, database or Node built-ins | dependency-cruiser | local check, CI | Automated |
 | Components never import `data/` | dependency-cruiser | local check, CI | Automated |
 | Queries only inside `data/` | ESLint (pages) and dependency-cruiser (components); "every Supabase call is in `data/`" was verified by grep on 2026-09-28 | local check, CI | Automated (partial: no guard for a feature calling Supabase itself) |
-| Handler, service, repository chain | - | - | Unenforced (exception 1); done for `trades`, see "Migrating to the chain" below |
+| Handler, service, repository chain | - | - | Unenforced (exception 1); done for `trades` and `picker`, `auth` remains: see "Migrating to the chain" below |
 | One definition per domain concept | - | Review | Unenforced (no canonical-definitions guard) |
 | Server-only modules out of client code | `server-only` import (Next build); dependency-cruiser | Vercel build, CI | Automated (partial) |
 | Env parsed once, centrally | ESLint refuses `process.env` outside `data/env.ts` | local check, CI | Automated |
 | `.env.example` lists every variable | `scripts/guards/env-example.mjs` | local check, CI | Automated |
 | Runtime validation at trust boundaries | zod in actions and env; nothing checks new boundaries | Review | Review (known gap: `data/live.ts`, exception 4) |
-| Typed result, stable error codes, no raw DB text to users | - | - | Unenforced (exception 2); done for `trades` (`dbFailure` translates and logs), 6 raw passthroughs remain |
+| Typed result, stable error codes, no raw DB text to users | - | - | Unenforced (exception 2); done for `trades` and `picker` (`dbFailure` translates and logs), 3 raw passthroughs remain, in `data/auth.ts` |
 | Auth rechecked at every boundary | `requireMember()` convention; e2e proves every private route sends a signed-out visitor to sign in | CI | Review (partial: the signed-out gates are Automated) |
 | RLS present on exposed tables | pgTAP `rls-is-on.test.sql`, against the catalogue | CI `database` job | Automated (passed in CI on 2026-09-28; the query was also checked against production: 12 of 12 tables) |
 | RLS allowed and denied tests | pgTAP `challenge.test.sql` (allowed and denied paths for every write function) | CI `database` job | Automated (ran green in CI on 2026-09-28) |
@@ -105,6 +105,12 @@ Worth recording: a check earns its keep by what it finds on its first run.
   `getCurrentChallenge` discarded the database error and returned `null`, so an outage read as "you
   don't own this basket" or "no challenge is open"; and `removeTrade(tradeId)` took an unvalidated
   number straight from a client component. Reads now throw, and the id is parsed with a schema.
+- Moving the picker found the buy-in date window computed in three places (the action, `editWindow`
+  and `getPickerData`), with its 30-day constant living in an input-schema file. It is now
+  `RULES.buyInLookbackDays` with two pure, tested functions (`buyInWindow`, `editWindow`) in the domain.
+  It also found two types both named `BuyInInput` (the planner's inputs and the submitted payload), and
+  that an action argument was validated with a schema that quietly accepts the string `"7"`. Supabase's
+  types turned out to handle the join the three `as unknown as` casts were working around.
 - Comparing migration history found that production and the repo named the same eight migrations
   differently, so `supabase db push` would have tried to re-apply them.
 - The import graph showed the "old strategy" engine could not be deleted as planned: the daily job
@@ -118,8 +124,8 @@ The standards migrate by table, so each pass retires the risk for a whole table.
 | Table | Repository | Service | State |
 |---|---|---|---|
 | `entry_trades` | `data/trades.ts` (the only place it is queried) | `features/trades/service.ts` | Done: 3 use cases, 24 tests for the service and actions (37 with the shared result, logging and failure-mapping tests) |
-| `entries` | `data/challenge.ts` (shared with challenges) | none: the picker action holds the use case | Next, with the picker |
-| `challenges` | `data/challenge.ts` | none | With the picker |
+| `entries` | `data/entries.ts` (with `start_entry`, `edit_entry`, `delete_entry`) | `features/picker/service.ts` | Done: 3 use cases, 28 tests for the service and actions |
+| `challenges` | `data/challenges.ts` | read by the picker service and `features/*/queries.ts` | Done |
 | `profiles` | `data/viewer.ts` (reads), the sign-up trigger (writes) | `features/auth` | With auth |
 | `coins`, `daily_prices`, `market_state` | `data/prices.ts`, `data/market.ts` | read-only, via `features/*/queries.ts` | Reads only; no rule to centralise |
 | `notifications` | `data/notifications.ts` | `features/notifications/job.ts` | Already has one owner |
@@ -130,8 +136,8 @@ Roughly cheapest and most valuable first.
 
 1. **Confirm the second CI run is green.** The first run passed everything but the engine tests (fixed).
 2. ~~The kebab-case rename.~~ Done 2026-09-28: 42 files, 101 imports, the guard's list is empty.
-3. **The service layer, and the typed result with stable error codes.** `trades` is done. Next `picker`,
-   then `auth`. Each move retires exceptions 1 and 2 for that feature.
+3. **The service layer, and the typed result with stable error codes.** `trades` and `picker` are done.
+   Next `auth`, which retires exceptions 1 and 2.
 4. **Structured logs, a correlation ID and a failure alert.** Retires exception 3.
 5. **BTC quantities as integer sats in `domain/`** ([ADR-003](decisions/ADR-003-btc-quantities-as-integer-sats.md)).
 6. **The UI kit, `/design` page and a census test** ([ADR-002](decisions/ADR-002-design-kit.md)). Retires

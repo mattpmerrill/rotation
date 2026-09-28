@@ -1,5 +1,6 @@
 import "server-only";
-import { findEntryFor, getCurrentChallenge } from "@/data/challenge";
+import { getCurrentChallenge } from "@/data/challenges";
+import { findEntryFor } from "@/data/entries";
 import { getEligibleCoins, getPriceBook } from "@/data/prices";
 import { getMarketState } from "@/data/market";
 import { marketReference } from "@/data/reference";

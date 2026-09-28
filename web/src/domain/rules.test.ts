@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defined } from "@/lib/defined";
 import { checkBasket, type EligibleCoin } from "./basket";
-import { checkBuyIn, planBuyIn, usdtAfter } from "./buy-in";
+import { buyInWindow, checkBuyIn, editWindow, planBuyIn, usdtAfter } from "./buy-in";
 import { coinChanges } from "./coins";
 import { cycleReference } from "./cycle";
 import { buyIn, entry, prices } from "./fixtures";
@@ -93,5 +93,22 @@ describe("cycleReference", () => {
     expect(r.daysSinceHalving).toBe(890);
     expect(r.nextHalvingEst.slice(0, 7)).toBe("2028-04");
     expect(r.sellWindow[0] > "2029-08").toBe(true);
+  });
+});
+
+describe("the buy-in date window", () => {
+  const today = "2026-10-20";
+
+  it("starts at the challenge's opening when that is within the lookback", () => {
+    expect(buyInWindow("2026-10-05", today)).toEqual(["2026-10-05", "2026-10-20"]);
+  });
+
+  it("starts at the lookback limit when the challenge opened longer ago", () => {
+    expect(buyInWindow("2026-08-01", today)).toEqual(["2026-09-20", "2026-10-20"]);
+  });
+
+  it("an edit keeps its current date reachable, even when that is outside the usual window", () => {
+    expect(editWindow("2026-08-01", "2026-09-01", today)).toEqual(["2026-09-01", "2026-10-20"]);
+    expect(editWindow("2026-08-01", "2026-10-01", today)).toEqual(["2026-09-20", "2026-10-20"]);
   });
 });

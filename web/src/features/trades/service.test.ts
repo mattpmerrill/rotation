@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getEntry } from "@/data/challenge";
+import { getEntry } from "@/data/entries";
 import { getCoins, getEligibleCoins } from "@/data/prices";
 import { addTrade, deleteTrade, fillSlot, listTrades } from "@/data/trades";
 import type { Viewer } from "@/data/viewer";
@@ -10,7 +10,7 @@ import { fillSlotWithCoin, recordTrade, retractTrade } from "./service";
 import type { FillInput, TradeInput } from "./schema";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/data/challenge", () => ({ getEntry: vi.fn() }));
+vi.mock("@/data/entries", () => ({ getEntry: vi.fn() }));
 vi.mock("@/data/prices", () => ({ getCoins: vi.fn(), getEligibleCoins: vi.fn() }));
 vi.mock("@/data/trades", () => ({ addTrade: vi.fn(), deleteTrade: vi.fn(), fillSlot: vi.fn(), listTrades: vi.fn() }));
 

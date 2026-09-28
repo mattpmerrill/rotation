@@ -112,7 +112,7 @@ app ─▶ features ─▶ data ─▶ domain ─▶ lib
   `ApplicationResult` (`lib/result.ts`: `ok` or `fail` with a stable code) into what the form shows.
   The service checks the domain rules and asks the repository in `data/` to write; database failures
   are translated by `data/failure.ts`, which logs the unexpected ones and returns a generic message.
-  Only `trades` follows this so far; the picker and auth still call `data/` from the action
+  `trades` and `picker` follow this; auth still calls `data/` from the action
   ([exception 1](exceptions.md)).
 - Valuation is `domain/valuation.ts`: balances from trades, priced at each day's close, in
   USD and BTC. Everything else (standings, charts, Discord) builds on it.

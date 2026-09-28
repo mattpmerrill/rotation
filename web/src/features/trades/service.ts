@@ -1,5 +1,5 @@
 import "server-only";
-import { getEntry } from "@/data/challenge";
+import { getEntry } from "@/data/entries";
 import { getCoins, getEligibleCoins } from "@/data/prices";
 import { addTrade, deleteTrade, fillSlot, listTrades } from "@/data/trades";
 import type { Viewer } from "@/data/viewer";

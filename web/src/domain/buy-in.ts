@@ -1,5 +1,6 @@
+import { addDays, earlierDay, laterDay } from "@/lib/days";
 import { RULES } from "./rules";
-import { BTC, type Side } from "./types";
+import { BTC, type Day, type Side } from "./types";
 
 /** A trade before it's saved: the buy-in's BTC sale and its alt buys. */
 export interface DraftTrade {
@@ -19,6 +20,19 @@ export interface BuyInInput {
   /** Waiting slots: each keeps an equal share of the BTC as BTC. */
   slots: number;
   feeRate: number;
+}
+
+/** The days a new buy-in can be dated: back to the challenge's opening or `buyInLookbackDays`
+ *  ago, whichever is later, up to today. Returns [earliest, latest]. */
+export function buyInWindow(openedOn: Day, today: Day): [Day, Day] {
+  return [laterDay(openedOn, addDays(today, -RULES.buyInLookbackDays)), today];
+}
+
+/** The days an edited buy-in can be dated: the usual window, stretched back to the current
+ *  buy-in date so an entry that is already outside it can still be saved as it was. */
+export function editWindow(openedOn: Day, startedOn: Day, today: Day): [Day, Day] {
+  const [usual, latest] = buyInWindow(openedOn, today);
+  return [earlierDay(usual, startedOn), latest];
 }
 
 /** BTC the buy-in sells: the coins' share. The waiting slots' share stays BTC. */
