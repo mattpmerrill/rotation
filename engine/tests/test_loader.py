@@ -8,7 +8,7 @@ from rotation.config import REPO_ROOT, get_config
 from rotation.data import cache
 from rotation.data.loader import KEYS, _pg_array, prepare
 
-MIGRATION = (REPO_ROOT / "supabase" / "migrations" / "20260923000001_market_data.sql").read_text()
+MIGRATION = (REPO_ROOT / "supabase" / "migrations" / "20260924234140_market_data.sql").read_text()
 
 
 def _schema_columns(table: str) -> set[str]:
