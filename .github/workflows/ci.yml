@@ -61,6 +61,48 @@ jobs:
             web/playwright-report/
           retention-days: 7
 
+  # The signed-in journey needs a real Supabase to sign in to: sign up with email, wait, get approved,
+  # use a sign-in help link, get rejected. Runs the app against the local stack.
+  signed-in:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: 2.115.0 }
+      - name: Start the local Supabase (auth, API and database only)
+        run: |
+          # The images come from a rate-limited public registry (see the database job): retry.
+          for attempt in 1 2 3; do
+            supabase start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor && break
+            [ "$attempt" = 3 ] && { echo "::error::supabase start failed 3 times"; exit 1; }
+            echo "start failed (attempt $attempt), retrying in 30s"; supabase stop --no-backup || true; sleep 30
+          done
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm, cache-dependency-path: web/package-lock.json }
+      - name: Point the app at the local Supabase
+        run: |
+          eval "$(supabase status -o env | grep -E '^(API_URL|PUBLISHABLE_KEY|SECRET_KEY)=')"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
+            echo "E2E_SIGNED_IN=1"
+          } >> "$GITHUB_ENV"
+      - run: npm ci
+        working-directory: web
+      - run: npm run build
+        working-directory: web
+      - run: npx playwright install --with-deps chromium
+        working-directory: web
+      - run: npm run e2e
+        working-directory: web
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-signed-in
+          path: web/test-results/
+          retention-days: 7
+
   database:
     runs-on: ubuntu-latest
     steps:
