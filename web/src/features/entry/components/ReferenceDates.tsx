@@ -1,4 +1,4 @@
-import type { MarketState } from "@/data/market";
+import type { MarketState } from "@/domain/types";
 import type { CycleReference } from "@/domain/cycle";
 import { formatDay, formatMonth } from "@/lib/format";
 

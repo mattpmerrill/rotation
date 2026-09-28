@@ -1,16 +1,6 @@
 import "server-only";
+import type { MarketState } from "@/domain/types";
 import { supabaseServer, type Db } from "./supabase/server";
-
-export interface MarketState {
-  day: string;
-  btcPrice: number;
-  ath: number;
-  athDate: string;
-  drawdown: number;
-  daysSinceAth: number;
-  mvrv: number | null;
-  rebuyWindowOpen: boolean;
-}
 
 /** The latest market state the daily job wrote, or null before its first run. */
 export async function getMarketState(db?: Db): Promise<MarketState | null> {

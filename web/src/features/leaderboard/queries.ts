@@ -1,9 +1,9 @@
 import "server-only";
-import { getMarketState, type MarketState } from "@/data/market";
+import { getMarketState } from "@/data/market";
 import { loadCurrentChallenge } from "@/data/snapshot";
 import type { Viewer } from "@/data/viewer";
 import { isChallengeComplete, rankStandings, standingOf } from "@/domain/standings";
-import type { Challenge, Coin, Phase } from "@/domain/types";
+import type { Challenge, Coin, MarketState, Phase } from "@/domain/types";
 import { todayUtc } from "@/lib/days";
 
 export interface LeaderboardRow {

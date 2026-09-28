@@ -11,8 +11,10 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "check": "npm run lint && npm run format:check && npm run typecheck && npm test",
-    "db:types": "supabase gen types typescript --local --schema public > src/data/database.types.ts"
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm run deps && npm run guards && npm test",
+    "db:types": "supabase gen types typescript --local --schema public > src/data/database.types.ts",
+    "deps": "depcruise src --config .dependency-cruiser.cjs",
+    "guards": "node scripts/guards/filenames.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -29,6 +31,7 @@
     "@types/node": "^22.20.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dependency-cruiser": "^18.4.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "prettier": "^3.9.9",

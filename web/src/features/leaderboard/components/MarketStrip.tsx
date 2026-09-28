@@ -1,4 +1,4 @@
-import type { MarketState } from "@/data/market";
+import type { MarketState } from "@/domain/types";
 import { formatDay, formatUsd } from "@/lib/format";
 
 /** Where BTC stands today, and whether the bear rebuy window is open. */

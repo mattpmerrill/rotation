@@ -1,7 +1,7 @@
 import "server-only";
 import { findEntryFor, getCurrentChallenge } from "@/data/challenge";
 import { getEligibleCoins, getPriceBook } from "@/data/prices";
-import { getMarketState, type MarketState } from "@/data/market";
+import { getMarketState } from "@/data/market";
 import { marketReference } from "@/data/reference";
 import { loadCurrentChallenge } from "@/data/snapshot";
 import type { Viewer } from "@/data/viewer";
@@ -10,7 +10,7 @@ import { cycleReference, type CycleReference } from "@/domain/cycle";
 import { altHoldings, balancesOn } from "@/domain/holdings";
 import { slotShare, slotsClosedReason, waitingBtc } from "@/domain/slots";
 import { standingOf, type Standing } from "@/domain/standings";
-import { BTC, USDT, type Coin, type Entry, type PriceBook, type Trade } from "@/domain/types";
+import { BTC, USDT, type Coin, type Entry, type MarketState, type PriceBook, type Trade } from "@/domain/types";
 import type { EligibleCoin } from "@/domain/basket";
 import { addDays, laterDay, todayUtc } from "@/lib/days";
 

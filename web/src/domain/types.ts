@@ -76,3 +76,17 @@ export type Balances = { [BTC]: number; [USDT]: number } & Record<string, number
  *   back_in_btc   rebought BTC with everything: the score is final
  */
 export type Phase = "holding_alts" | "holding_usdt" | "back_in_btc";
+
+/** BTC against its all-time high, as the daily job records it. The rebuy window is open when
+ *  BTC has fallen far enough from its high, for long enough (config/rules.yaml). */
+export interface MarketState {
+  day: Day;
+  btcPrice: number;
+  ath: number;
+  athDate: Day;
+  /** How far below the high, as a fraction (0.62 = 62% below). */
+  drawdown: number;
+  daysSinceAth: number;
+  mvrv: number | null;
+  rebuyWindowOpen: boolean;
+}
