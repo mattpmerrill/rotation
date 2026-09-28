@@ -7,8 +7,10 @@ it, what to do next and why, and how to get set up. It is a snapshot: the source
 [enforcement-matrix.md](enforcement-matrix.md) (what a tool checks). If this file and one of those
 disagree, they win; fix this file.
 
-**Snapshot: 2026-09-28, `main` at `176976c`.** Production serves that commit (`/api/health`). CI, the
-security scan and the post-deploy smoke test were all green on it.
+**Snapshot: 2026-09-28.** The last change to the app is `176976c` (sign-up and approval, verified on
+production); later commits only touch documentation and `scripts/check.mjs`. Production serves whatever
+`/api/health` reports, and CI, the security scan and the post-deploy smoke test were green on the latest
+commit when this was written. Run `git log --oneline -8` to see anything newer.
 
 ## What this project is
 
