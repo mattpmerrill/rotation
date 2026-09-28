@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_actions: {
+        Row: {
+          action: string
+          actor: string
+          at: string
+          id: number
+          target: string
+        }
+        Insert: {
+          action: string
+          actor: string
+          at?: string
+          id?: never
+          target: string
+        }
+        Update: {
+          action?: string
+          actor?: string
+          at?: string
+          id?: never
+          target?: string
+        }
+        Relationships: []
+      }
       btc_onchain: {
         Row: {
           date: string
@@ -389,18 +413,21 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_admin: boolean
           is_member: boolean
         }
         Insert: {
           created_at?: string
           display_name?: string | null
           id: string
+          is_admin?: boolean
           is_member?: boolean
         }
         Update: {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_admin?: boolean
           is_member?: boolean
         }
         Relationships: []
@@ -417,6 +444,24 @@ export type Database = {
       }
     }
     Functions: {
+      admin_list_people: {
+        Args: never
+        Returns: {
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          is_admin: boolean
+          is_member: boolean
+          provider: string
+        }[]
+      }
+      admin_record_help_link: { Args: { p_target: string }; Returns: undefined }
+      admin_reject_signup: { Args: { p_user_id: string }; Returns: undefined }
+      admin_set_member: {
+        Args: { p_is_member: boolean; p_user_id: string }
+        Returns: undefined
+      }
       delete_entry: { Args: { p_entry_id: number }; Returns: undefined }
       edit_entry: {
         Args: {
@@ -438,6 +483,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_admin: { Args: never; Returns: boolean }
       is_member: { Args: never; Returns: boolean }
       price_series: {
         Args: { p_coins: string[]; p_from: string }
