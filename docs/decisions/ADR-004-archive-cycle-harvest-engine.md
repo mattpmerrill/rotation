@@ -28,7 +28,11 @@ and study (`cycle_sim`, `cycle_study`), the position, score and market rules, th
 and derivatives fetchers, the alt-harvest, basket-lab, benchmark, experiment, explorer and report
 modules, the `signal` module and its Discord command, the portfolio package, the Strategy Explorer
 page, `scratch_top5.py`, eight test files and the commands that ran them. Preserved in git under the
-tag `archive/cycle-harvest-2026-09-28`, and in the written studies under `docs/backtests/`.
+tag `archive/cycle-harvest-2026-09-28`. The written studies, charts and CSVs of that engine
+(`cycle-harvest.md`, `phase0-report.md`, their images and data files) were removed from `main` on
+2026-09-28 too, because their titles and tables encode the owner's starting stack; they are in the
+tag as well. `docs/backtests/` keeps the two studies behind the challenge (`buy-timing`,
+`challenge-exits`).
 
 **Kept, because live code needs them**:
 
@@ -85,8 +89,8 @@ deviation from [python.md](https://github.com/get-latest/company/blob/main/engin
 Easier: a smaller engine (32 Python files, down from 55), a type checker that runs clean,
 and no code that implies a strategy the app no longer offers.
 
-Harder: reviving the old research means checking out the tag. The written studies remain, but their
-code is not runnable from `main`.
+Harder: reviving or reading the old research means checking out the tag; neither its code nor its
+studies are on `main`.
 
 ## Migration or rollback implications
 

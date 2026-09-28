@@ -216,8 +216,9 @@ FINDINGS = """## What it says (Beck, 2026-09-26)
    the bad one.** The 5-10x results only come from baskets picked with hindsight.
 
 So the app ships no "sell now" alert. It shows reference dates (the old sell window, ~500-580
-days after the halving) and alerts when the bear rebuy window opens, which the cycle-harvest
-backtest supports (`docs/backtests/cycle-harvest.md`). Each person still decides when to sell.
+days after the halving) and alerts when the bear rebuy window opens, which the archived
+cycle-harvest backtest supports (git tag `archive/cycle-harvest-2026-09-28`, ADR-004). Each person
+still decides when to sell.
 """
 
 

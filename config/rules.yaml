@@ -205,7 +205,7 @@ cycle:                                # BTC cycle harvest (Matt, 2026-09-24): th
   halvings: [2012-11-28, 2016-07-09, 2020-05-11, 2024-04-19]   # add the next one when it happens
   sell:
     target_frac: 0.5                  # Matt, 2026-09-25: half the BTC into USDT near the top
-    window_start_days: 500            # chosen on 2012-2020 (see docs/backtests/cycle-harvest.md)
+    window_start_days: 500            # chosen on 2012-2020 (archived study, see ADR-004)
     window_end_days: 580              # leave-one-cycle-out pick under the account terms above
     clock_share: 1.0                  # share of the target sold on the clock (rest: trend break)
     clock_tranches: 4
