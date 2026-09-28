@@ -2,6 +2,9 @@
   "name": "web",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -14,7 +17,7 @@
     "check": "npm run lint && npm run format:check && npm run typecheck && npm run deps && npm run guards && npm test",
     "db:types": "supabase gen types typescript --local --schema public > src/data/database.types.ts",
     "deps": "depcruise src --config .dependency-cruiser.cjs",
-    "guards": "node scripts/guards/filenames.mjs"
+    "guards": "node scripts/guards/filenames.mjs && node scripts/guards/env-example.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

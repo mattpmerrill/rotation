@@ -112,6 +112,17 @@ const eslintConfig = defineConfig([
     ignores: [...LITERALS_STILL_PRESENT, ...LITERALS_ALLOWED, "**/*.test.ts", "src/data/database.types.ts"],
     rules: { "no-restricted-syntax": ["error", ...noLiterals] },
   },
+  {
+    // configuration.md: environment variables are parsed and validated once, in one module.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/data/env.ts"],
+    rules: {
+      "no-restricted-properties": [
+        "error",
+        { object: "process", property: "env", message: "Read configuration through env() in @/data/env." },
+      ],
+    },
+  },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "src/data/database.types.ts"]),
 ]);
 
