@@ -19,6 +19,9 @@ export const tradeInput = z.object({
 
 export type TradeInput = z.infer<typeof tradeInput>;
 
+/** The id a client passes to delete a trade. Server Action arguments are untrusted input. */
+export const tradeIdInput = z.number("Something went wrong. Reload and try again.").int().positive();
+
 /** Filling a waiting slot. The BTC sold is always one slot's share, worked out on the server. */
 export const fillInput = z.object({
   entryId: z.coerce.number().int().positive(),
@@ -29,3 +32,5 @@ export const fillInput = z.object({
   coinQty: z.coerce.number().positive("Enter how much you bought."),
   feeRate: z.coerce.number().min(0).max(0.1),
 });
+
+export type FillInput = z.infer<typeof fillInput>;

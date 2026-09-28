@@ -2,16 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import {
-  deleteEntry,
-  editEntry,
-  findEntryFor,
-  getCurrentChallenge,
-  getEntry,
-  listTrades,
-  startEntry,
-} from "@/data/challenge";
+import { deleteEntry, editEntry, findEntryFor, getCurrentChallenge, getEntry, startEntry } from "@/data/challenge";
 import { getEligibleCoins } from "@/data/prices";
+import { listTrades } from "@/data/trades";
 import { requireMember } from "@/data/viewer";
 import { checkBasket } from "@/domain/basket";
 import { checkBuyIn, editLockedReason } from "@/domain/buy-in";

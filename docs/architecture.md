@@ -107,8 +107,13 @@ app ─▶ features ─▶ data ─▶ domain ─▶ lib
 
 **Patterns:**
 
-- Every Server Action starts with `requireMember()` (actions are reachable by direct POST),
-  parses its input with zod, checks the domain rules, then calls `data/`.
+- Every Server Action starts with `requireMember()` (actions are reachable by direct POST), parses
+  its input with zod, calls one service in `features/<name>/service.ts`, and turns the
+  `ApplicationResult` (`lib/result.ts`: `ok` or `fail` with a stable code) into what the form shows.
+  The service checks the domain rules and asks the repository in `data/` to write; database failures
+  are translated by `data/failure.ts`, which logs the unexpected ones and returns a generic message.
+  Only `trades` follows this so far; the picker and auth still call `data/` from the action
+  ([exception 1](exceptions.md)).
 - Valuation is `domain/valuation.ts`: balances from trades, priced at each day's close, in
   USD and BTC. Everything else (standings, charts, Discord) builds on it.
 - Amounts are passed to the client in both units; `ui/unit.tsx` switches BTC/USD instantly.

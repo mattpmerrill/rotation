@@ -1,5 +1,6 @@
 import "server-only";
-import { findEntryFor, getCurrentChallenge, getEntry, listTrades } from "@/data/challenge";
+import { findEntryFor, getCurrentChallenge, getEntry } from "@/data/challenge";
+import { listTrades } from "@/data/trades";
 import { editLockedReason } from "@/domain/buy-in";
 import { getCoins, getEligibleCoins, getPriceBook } from "@/data/prices";
 import { marketReference } from "@/data/reference";
