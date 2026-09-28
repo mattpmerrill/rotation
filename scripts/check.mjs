@@ -51,6 +51,15 @@ function localSupabaseEnv() {
 
 const dockerRuns = () => run("docker", ["info"], { quiet: true }).status === 0;
 
+/** Why the database step cannot run here, or null when it can. Docker being up is not enough: the
+ *  local Supabase stack has to be started too (`supabase status` fails when it is not). */
+function databaseUnavailableReason() {
+  if (!dockerRuns()) return "Docker is not running, so this step could not run.";
+  if (run("supabase", ["status", "-o", "env"], { quiet: true }).status !== 0)
+    return "Docker is running but the local Supabase is not: run `supabase start` first.";
+  return null;
+}
+
 const steps = [
   { name: "web: lint, format, types, import graph, guards, unit tests", cwd: "web", cmd: "npm", args: ["run", "check"] },
   { name: "web: production build", cwd: "web", cmd: "npm", args: ["run", "build"], env: buildEnv },
@@ -80,13 +89,14 @@ const steps = [
 const results = [];
 for (const step of steps) {
   process.stdout.write(`\n=== ${step.name}\n`);
-  if (step.needsDocker && !dockerRuns()) {
-    const msg = "Docker is not running, so this step could not run.";
+  const unavailable = step.needsDocker ? databaseUnavailableReason() : null;
+  if (unavailable) {
+    const msg = unavailable;
     if (args.has("--require-db")) {
       console.error(`FAILED: ${msg}`);
       results.push({ name: step.name, status: "FAILED" });
     } else {
-      console.warn(`SKIPPED: ${msg} CI runs it on every push. Start Docker and re-run to check it here.`);
+      console.warn(`SKIPPED: ${msg} CI runs it on every push; start the stack and re-run to check it here.`);
       results.push({ name: step.name, status: "SKIPPED" });
     }
     continue;

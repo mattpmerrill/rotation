@@ -130,6 +130,9 @@ node scripts/check.mjs                    # the one command that runs every chec
 - In Playwright use **`localhost`, not `127.0.0.1`**: the auth cookie is host-specific and Next redirects to
   `localhost`. Next also has its own empty `role="alert"` element (use the `notice()` helper).
 - **Port 3100 is Tailscale**; the browser tests use 3187.
+- **The database step of the check** runs only when Docker is up *and* `supabase start` has been run; if the
+  stack is down it says so and skips (CI runs it anyway). Use `--require-db` to make that a failure. It once
+  failed a push because the script only tested for Docker, which is now fixed.
 - Supabase's **local** database keeps its own migration history. It went stale when the migrations were
   renamed to match production; `supabase db reset` fixes it.
 - The **CI database job pulls images from a rate-limited registry** and can fail with `toomanyrequests`; the
