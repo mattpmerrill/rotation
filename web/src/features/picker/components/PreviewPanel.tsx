@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { previewBasket, type BasketHistory } from "@/domain/preview";
 import { RULES } from "@/domain/rules";
 import type { Coin } from "@/domain/types";
+import { BitcoinSpinner } from "@/ui/BitcoinSpinner";
 import { CycleCard } from "@/ui/CycleCard";
 import { Notice } from "@/ui/Notice";
 
@@ -34,7 +35,13 @@ export function PreviewPanel({
   );
 
   if (failed) return <Notice tone="error">The history didn’t load. Reload the page to try again.</Notice>;
-  if (!history) return <p className="text-ink-3 text-sm">Loading past cycles…</p>;
+  if (!history)
+    return (
+      <div className="grid justify-items-center gap-3 py-8">
+        <BitcoinSpinner label="Loading past cycles" />
+        <p className="text-ink-3 btc-spinner-caption text-sm">Replaying past cycles…</p>
+      </div>
+    );
 
   return (
     <div className="grid gap-6">

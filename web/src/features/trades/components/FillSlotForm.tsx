@@ -1,5 +1,6 @@
 "use client";
 
+import { BitcoinSpinner } from "@/ui/BitcoinSpinner";
 import { useActionState, useState } from "react";
 import type { EligibleCoin } from "@/domain/basket";
 import { priceOn } from "@/domain/prices";
@@ -126,7 +127,10 @@ export function FillSlotForm({
       {state.error && <Notice tone="error">{state.error}</Notice>}
       {state.saved && !pending && <Notice tone="success">Slot filled.</Notice>}
       <div>
-        <Button disabled={pending || !coin}>{pending ? "Filling…" : "Fill the slot"}</Button>
+        <Button disabled={pending || !coin}>
+          {pending && <BitcoinSpinner size="sm" label="Filling" />}
+          {pending ? "Filling…" : "Fill the slot"}
+        </Button>
       </div>
     </form>
   );

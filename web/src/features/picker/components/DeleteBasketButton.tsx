@@ -1,5 +1,6 @@
 "use client";
 
+import { BitcoinSpinner } from "@/ui/BitcoinSpinner";
 import { useState, useTransition } from "react";
 import { buttonClass } from "@/ui/Button";
 import { removeBasket } from "../actions";
@@ -26,6 +27,7 @@ export function DeleteBasketButton({ entryId }: { entryId: number }) {
         onBlur={() => setConfirming(false)}
         className={buttonClass(confirming ? "danger" : "quiet", confirming ? "bg-loss/10" : "")}
       >
+        {pending && <BitcoinSpinner size="sm" label="Deleting" />}
         {pending ? "Deleting…" : confirming ? "Tap again to delete for good" : "Delete basket"}
       </button>
       {error && <span className="text-loss text-sm">{error}</span>}

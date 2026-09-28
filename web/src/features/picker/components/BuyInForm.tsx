@@ -1,5 +1,6 @@
 "use client";
 
+import { BitcoinSpinner } from "@/ui/BitcoinSpinner";
 import { useActionState, useMemo, useState } from "react";
 import { btcSoldAtBuyIn, checkBuyIn, planBuyIn, usdtAfter, type DraftTrade } from "@/domain/buyIn";
 import { priceOn } from "@/domain/prices";
@@ -196,6 +197,7 @@ export function BuyInForm({
 
       <div>
         <Button disabled={pending || !trades.length || problems.length > 0}>
+          {pending && <BitcoinSpinner size="sm" label={editing ? "Saving" : "Starting"} />}
           {editing ? (pending ? "Saving…" : "Save changes") : pending ? "Starting…" : "Start my challenge"}
         </Button>
       </div>

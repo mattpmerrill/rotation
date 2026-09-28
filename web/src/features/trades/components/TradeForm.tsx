@@ -1,5 +1,6 @@
 "use client";
 
+import { BitcoinSpinner } from "@/ui/BitcoinSpinner";
 import { useActionState, useState } from "react";
 import { priceOn } from "@/domain/prices";
 import { RULES } from "@/domain/rules";
@@ -188,6 +189,7 @@ function TradeFields({
 
       <div>
         <Button disabled={pending || (!canSell && !canRebuy)}>
+          {pending && <BitcoinSpinner size="sm" label="Saving" />}
           {pending ? "Saving…" : kind === "sell_alt" ? "Save the sell" : "Save the rebuy"}
         </Button>
       </div>
