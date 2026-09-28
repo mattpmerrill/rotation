@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { defined } from "@/lib/defined";
 import { checkBasket, type EligibleCoin } from "./basket";
 import { checkBuyIn, planBuyIn, usdtAfter } from "./buyIn";
 import { coinChanges } from "./coins";
@@ -38,10 +39,15 @@ describe("planBuyIn", () => {
 
   it("sells the BTC and spends the proceeds equally, fees included, leaving nothing", () => {
     const t = planBuyIn(input);
+    const buy = defined(t[1]);
     expect(t[0]).toEqual({ asset: "bitcoin", side: "sell", qty: 1, priceUsd: 100_000, feeUsd: 1000 });
-    expect(t[1].qty * t[1].priceUsd + t[1].feeUsd).toBeCloseTo(49_500, 6);
+    expect(buy.qty * buy.priceUsd + buy.feeUsd).toBeCloseTo(49_500, 6);
     expect(usdtAfter(t)).toBeCloseTo(0, 6);
     expect(checkBuyIn(1, input.basket, 0, t)).toEqual([]);
+  });
+
+  it("refuses to plan a coin it has no price for", () => {
+    expect(() => planBuyIn({ ...input, coinPricesUsd: { solana: 200 } })).toThrow(/no price for chainlink/);
   });
 
   it("flags a buy-in over 1 BTC, a coin outside the basket, and overspending", () => {
@@ -60,7 +66,9 @@ describe("planBuyIn", () => {
 
 describe("coinChanges", () => {
   it("measures each coin against its buy-in price, in USD and against BTC", () => {
-    const [sol, link] = coinChanges(entry, buyIn, prices, "2026-10-03");
+    const changes = coinChanges(entry, buyIn, prices, "2026-10-03");
+    const sol = defined(changes[0]);
+    const link = defined(changes[1]);
     expect(sol.asset).toBe("solana");
     expect(sol.changeUsd).toBe(1); // $200 -> $400
     expect(sol.changeBtc).toBeCloseTo(0.6); // x2 in USD while BTC x1.25

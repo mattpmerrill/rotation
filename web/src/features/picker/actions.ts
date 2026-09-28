@@ -15,7 +15,7 @@ import { getEligibleCoins } from "@/data/prices";
 import { requireMember } from "@/data/viewer";
 import { checkBasket } from "@/domain/basket";
 import { checkBuyIn, editLockedReason } from "@/domain/buyIn";
-import { addDays, todayUtc } from "@/lib/days";
+import { addDays, laterDay, todayUtc } from "@/lib/days";
 import { editableCoins, editWindow } from "./queries";
 import { BUY_IN_LOOKBACK_DAYS, buyInInput } from "./schema";
 
@@ -41,7 +41,7 @@ export async function startChallenge(_: BuyInState, form: FormData): Promise<Buy
   if (await findEntryFor(viewer.id, challenge.id)) return { errors: ["You're already in this challenge."] };
 
   const today = todayUtc();
-  const earliest = [challenge.openedOn, addDays(today, -BUY_IN_LOOKBACK_DAYS)].sort().at(-1)!;
+  const earliest = laterDay(challenge.openedOn, addDays(today, -BUY_IN_LOOKBACK_DAYS));
   if (input.startedOn < earliest || input.startedOn > today)
     return { errors: [`The buy-in date must be between ${earliest} and today.`] };
 

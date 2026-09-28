@@ -58,6 +58,12 @@ const eslintConfig = defineConfig([
       },
     ],
   ),
+  {
+    // typescript.md: non-null assertions are prohibited outside generated code. Handle the
+    // missing case, or use defined() from @/lib/defined where its absence would be a bug.
+    files: ["src/**/*.{ts,tsx}"],
+    rules: { "@typescript-eslint/no-non-null-assertion": "error" },
+  },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "src/data/database.types.ts"]),
 ]);
 

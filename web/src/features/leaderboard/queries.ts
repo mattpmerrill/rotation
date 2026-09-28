@@ -15,9 +15,8 @@ export interface LeaderboardRow {
   coins: Coin[];
   openSlots: number;
   phase: Phase;
-  multiple: number | null;
-  valueBtc: number | null;
-  valueUsd: number | null;
+  /** Where the entry stands today; null while a held coin has no price yet. */
+  now: { multiple: number; valueBtc: number; valueUsd: number } | null;
   best: number | null;
   worst: number | null;
   spark: number[];
@@ -61,9 +60,10 @@ export async function getLeaderboard(viewer: Viewer): Promise<Leaderboard | null
       coins: s.entry.basket.map((id) => snap.coins[id] ?? { id, symbol: id.toUpperCase(), name: id, image: null }),
       openSlots: s.entry.openSlots,
       phase: s.phase,
-      multiple: s.multiple,
-      valueBtc: s.now?.totalBtc ?? null,
-      valueUsd: s.now?.totalUsd ?? null,
+      now:
+        s.now && s.multiple !== null
+          ? { multiple: s.multiple, valueBtc: s.now.totalBtc, valueUsd: s.now.totalUsd }
+          : null,
       best: s.best,
       worst: s.worst,
       spark: s.history.map((h) => h.multiple),

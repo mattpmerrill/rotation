@@ -1,3 +1,4 @@
+import { defined } from "@/lib/defined";
 import { describe, expect, it } from "vitest";
 import { buyIn, entry, prices, trade } from "./fixtures";
 import { balancesOn, phaseOf } from "./holdings";
@@ -52,21 +53,21 @@ describe("balances and phase", () => {
 
 describe("valuation", () => {
   it("is 1 BTC at the buy-in", () => {
-    const p = valueOn(entry, buyIn, prices, "2026-10-01")!;
+    const p = defined(valueOn(entry, buyIn, prices, "2026-10-01"));
     expect(p.totalUsd).toBe(100_000);
     expect(p.totalBtc).toBe(1);
   });
 
   it("prices every holding in BTC", () => {
     // SOL doubled: 250 x 400 + 2,500 x 20 = $150k at BTC $100k
-    const p = valueOn(entry, buyIn, prices, "2026-10-02")!;
+    const p = defined(valueOn(entry, buyIn, prices, "2026-10-02"));
     expect(p.totalBtc).toBe(1.5);
     expect(multiple(entry, p)).toBe(1.5);
   });
 
   it("carries a coin's last price forward and falls with a BTC rally", () => {
     // BTC +25% while the alts hold: $150k / $125k
-    expect(valueOn(entry, buyIn, prices, "2026-10-03")!.totalBtc).toBe(1.2);
+    expect(defined(valueOn(entry, buyIn, prices, "2026-10-03")).totalBtc).toBe(1.2);
   });
 
   it("gives one point per priced day from the buy-in", () => {
@@ -81,6 +82,6 @@ describe("valuation", () => {
   it("scores against the BTC put in, not against 1", () => {
     const half = { ...entry, btcIn: 0.5 };
     const halfTrades = buyIn.map((t) => ({ ...t, qty: t.qty / 2 }));
-    expect(multiple(half, valueOn(half, halfTrades, prices, "2026-10-02")!)).toBe(1.5);
+    expect(multiple(half, defined(valueOn(half, halfTrades, prices, "2026-10-02")))).toBe(1.5);
   });
 });

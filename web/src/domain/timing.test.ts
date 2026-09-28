@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { defined } from "@/lib/defined";
 import { nextGoodStretch, stanceAt, stretches, timingPoints, type BuyTimingData } from "./timing";
 
 const data: BuyTimingData = {
@@ -31,8 +32,8 @@ describe("buy timing", () => {
   it("splits the cycle into stretches", () => {
     const s = stretches(points, 90);
     expect(s[0]).toMatchObject({ from: 0, to: 89 });
-    expect(s[0].stance.verdict).toBe("good");
-    expect(s.at(-1)!.to).toBe(1455);
+    expect(s[0]?.stance.verdict).toBe("good");
+    expect(s.at(-1)?.to).toBe(1455);
   });
 });
 
@@ -42,7 +43,7 @@ describe("next good stretch", () => {
     expect(nextGoodStretch(s, 890)).toMatchObject({ stretch: { from: 0 }, nextCycle: true });
     expect(nextGoodStretch(s, 10)).toMatchObject({ stretch: { from: 0 }, nextCycle: false });
     // two good stretches back to back merge into one run
-    const run = nextGoodStretch([...s.slice(0, 1), { ...s[0], from: 90, to: 179 }, ...s.slice(2)], 890);
+    const run = nextGoodStretch([...s.slice(0, 1), { ...defined(s[0]), from: 90, to: 179 }, ...s.slice(2)], 890);
     expect(run?.stretch).toMatchObject({ from: 0, to: 179 });
   });
 });

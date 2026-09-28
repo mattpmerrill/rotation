@@ -38,5 +38,6 @@ export function digestMessage(challengeName: string, standings: Standing[], appU
 
 export function completeMessage(challengeName: string, standings: Standing[]): string {
   const winner = standings[0];
+  if (!winner) return `**${challengeName} is done.** Everyone is back in BTC.`;
   return `**${challengeName} is done.** Everyone is back in BTC. ${winner.entry.playerName} wins with ${formatMultiple(winner.multiple ?? 0)}.`;
 }

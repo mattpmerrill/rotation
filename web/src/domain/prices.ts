@@ -4,16 +4,17 @@ import type { Day, PriceBook } from "./types";
  *  has no price on or before `day`. */
 export function priceOn(book: PriceBook, asset: string, day: Day): number | null {
   const s = book[asset];
-  if (!s || s.dates.length === 0 || s.dates[0] > day) return null;
+  const first = s?.dates[0];
+  if (!s || first === undefined || first > day) return null;
   // binary search for the last date <= day
   let lo = 0;
   let hi = s.dates.length - 1;
   while (lo < hi) {
     const mid = (lo + hi + 1) >> 1;
-    if (s.dates[mid] <= day) lo = mid;
+    if ((s.dates[mid] ?? "") <= day) lo = mid;
     else hi = mid - 1;
   }
-  return s.closes[lo];
+  return s.closes[lo] ?? null;
 }
 
 /** `book` with `live` prices as the close for `today`: replaces today's close if the daily job
@@ -22,11 +23,11 @@ export function withLivePrices(book: PriceBook, live: Record<string, number>, to
   const out: PriceBook = { ...book };
   for (const [asset, price] of Object.entries(live)) {
     const s = book[asset];
-    if (!s || s.dates.length === 0) {
+    const last = s?.dates.at(-1);
+    if (!s || last === undefined) {
       out[asset] = { dates: [today], closes: [price] };
       continue;
     }
-    const last = s.dates.at(-1)!;
     if (last > today) continue;
     out[asset] =
       last === today

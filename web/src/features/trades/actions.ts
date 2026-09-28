@@ -10,6 +10,7 @@ import { slotsClosedReason, slotShare } from "@/domain/slots";
 import { checkTrade } from "@/domain/trades";
 import { BTC } from "@/domain/types";
 import { todayUtc } from "@/lib/days";
+import { firstIssue } from "@/lib/first-issue";
 import { fillInput, tradeInput } from "./schema";
 
 export interface TradeFormState {
@@ -22,7 +23,7 @@ export interface TradeFormState {
 export async function logTrade(_: TradeFormState, form: FormData): Promise<TradeFormState> {
   const viewer = await requireMember();
   const parsed = tradeInput.safeParse(Object.fromEntries(form));
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
   const t = parsed.data;
 
   const entry = await getEntry(t.entryId);
@@ -65,7 +66,7 @@ export async function removeTrade(tradeId: number): Promise<{ error?: string }> 
 export async function fillWaitingSlot(_: TradeFormState, form: FormData): Promise<TradeFormState> {
   const viewer = await requireMember();
   const parsed = fillInput.safeParse(Object.fromEntries(form));
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
   const f = parsed.data;
 
   const entry = await getEntry(f.entryId);

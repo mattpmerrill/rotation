@@ -41,6 +41,9 @@ export async function getTiming(coinId: string | null): Promise<TimingPage> {
     cycle,
     market: view("top10", "The top 10 alts", null),
     coin: chosen ? view(chosen.id, chosen.symbol, chosen) : null,
-    coinOptions: withHistory.map((id) => coins[id]).filter(Boolean),
+    coinOptions: withHistory.flatMap((id) => {
+      const coin = coins[id];
+      return coin ? [coin] : [];
+    }),
   };
 }

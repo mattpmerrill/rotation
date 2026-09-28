@@ -65,8 +65,9 @@ export interface Coin {
 /** Daily closes per asset, dates ascending. */
 export type PriceBook = Record<string, { dates: Day[]; closes: number[] }>;
 
-/** Holdings per asset (coin units; USDT in dollars). */
-export type Balances = Record<string, number>;
+/** Holdings per asset (coin units; USDT in dollars). BTC and USDT are always present; any other
+ *  asset is present only once it has been traded. */
+export type Balances = { [BTC]: number; [USDT]: number } & Record<string, number | undefined>;
 
 /**
  * Where an entry is in the challenge:

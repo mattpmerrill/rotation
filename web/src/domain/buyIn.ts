@@ -38,6 +38,7 @@ export function planBuyIn({ btcIn, btcPriceUsd, coinPricesUsd, basket, slots, fe
   const perCoin = (gross - sale.feeUsd) / basket.length;
   const buys = basket.map((asset): DraftTrade => {
     const priceUsd = coinPricesUsd[asset];
+    if (priceUsd === undefined) throw new Error(`planBuyIn: no price for ${asset}`);
     const cost = perCoin / (1 + feeRate); // cost + fee = perCoin
     return { asset, side: "buy", qty: cost / priceUsd, priceUsd, feeUsd: cost * feeRate };
   });
@@ -65,10 +66,11 @@ export function checkBuyIn(btcIn: number, basket: string[], slots: number, trade
   if (!(btcIn > 0) || btcIn > RULES.maxBtcIn) errors.push(`Put in more than 0 and at most ${RULES.maxBtcIn} BTC.`);
 
   const sales = trades.filter((t) => t.asset === BTC);
+  const sale = sales[0];
   if (
     sales.length !== 1 ||
-    sales[0].side !== "sell" ||
-    Math.abs(sales[0].qty - btcSoldAtBuyIn(btcIn, basket.length, slots)) > 1e-9
+    sale?.side !== "sell" ||
+    Math.abs(sale.qty - btcSoldAtBuyIn(btcIn, basket.length, slots)) > 1e-9
   )
     errors.push(
       slots

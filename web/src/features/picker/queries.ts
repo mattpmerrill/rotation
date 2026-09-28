@@ -7,7 +7,7 @@ import type { Viewer } from "@/data/viewer";
 import type { EligibleCoin } from "@/domain/basket";
 import { cycleReference } from "@/domain/cycle";
 import { BTC, type Challenge, type Entry, type PriceBook, type Trade } from "@/domain/types";
-import { addDays, todayUtc } from "@/lib/days";
+import { addDays, earlierDay, laterDay, todayUtc } from "@/lib/days";
 import { BUY_IN_LOOKBACK_DAYS } from "./schema";
 
 export type PickerData =
@@ -31,8 +31,8 @@ export type PickerData =
 /** Days an edited buy-in can be dated: the usual window, stretched back to the current buy-in. */
 export function editWindow(openedOn: string, startedOn: string): [string, string] {
   const today = todayUtc();
-  const usual = [openedOn, addDays(today, -BUY_IN_LOOKBACK_DAYS)].sort().at(-1)!;
-  return [[usual, startedOn].sort()[0], today];
+  const usual = laterDay(openedOn, addDays(today, -BUY_IN_LOOKBACK_DAYS));
+  return [earlierDay(usual, startedOn), today];
 }
 
 /** Coins an edited basket can hold: today's top 100, plus the coins already in it (a coin that
@@ -112,7 +112,7 @@ export async function getPickerData(viewer: Viewer): Promise<PickerData> {
   if (existing) return { status: "already_in", entryId: existing.id };
 
   const today = todayUtc();
-  const from = [challenge.openedOn, addDays(today, -BUY_IN_LOOKBACK_DAYS)].sort().at(-1)!;
+  const from = laterDay(challenge.openedOn, addDays(today, -BUY_IN_LOOKBACK_DAYS));
   const { coins, asOf } = await getEligibleCoins();
   const [prices, btc] = await Promise.all([
     getPriceBook([BTC, ...coins.map((c) => c.id)], addDays(from, -7)),

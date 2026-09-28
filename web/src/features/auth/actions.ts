@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import * as auth from "@/data/auth";
+import { firstIssue } from "@/lib/first-issue";
 import { requestOrigin } from "./origin";
 
 export interface AuthFormState {
@@ -21,7 +22,7 @@ function parse(form: FormData) {
 
 export async function signIn(_: AuthFormState, form: FormData): Promise<AuthFormState> {
   const input = parse(form);
-  if (!input.success) return { error: input.error.issues[0].message };
+  if (!input.success) return { error: firstIssue(input.error) };
   const error = await auth.signInWithPassword(input.data.email, input.data.password);
   if (error)
     return {
@@ -33,7 +34,7 @@ export async function signIn(_: AuthFormState, form: FormData): Promise<AuthForm
 
 export async function signUp(_: AuthFormState, form: FormData): Promise<AuthFormState> {
   const input = parse(form);
-  if (!input.success) return { error: input.error.issues[0].message };
+  if (!input.success) return { error: firstIssue(input.error) };
   const error = await auth.signUp(input.data.email, input.data.password, `${await requestOrigin()}/auth/callback`);
   return error ? { error } : { sent: true };
 }

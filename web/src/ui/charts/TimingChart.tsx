@@ -75,8 +75,8 @@ export function TimingChart({
             <Tooltip
               cursor={{ stroke: "var(--ink-3)" }}
               content={({ active, payload }) => {
-                if (!active || !payload?.length) return null;
-                const p = payload[0].payload as TimingPoint;
+                const p = payload?.[0]?.payload as TimingPoint | undefined;
+                if (!active || !p) return null;
                 return (
                   <ChartTooltip
                     title={`Bought ${formatDay(p.entry)}, day ${p.day}`}

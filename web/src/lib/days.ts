@@ -25,6 +25,16 @@ export function eachDay(from: string, to: string): string[] {
   return out;
 }
 
+/** The later of two days (they sort as strings). */
+export function laterDay(a: string, b: string): string {
+  return a > b ? a : b;
+}
+
+/** The earlier of two days. */
+export function earlierDay(a: string, b: string): string {
+  return a < b ? a : b;
+}
+
 export function isDay(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && fromTime(toTime(value)) === value;
 }

@@ -16,7 +16,11 @@ export function balancesOn(entry: Entry, trades: Trade[], day?: Day): Balances {
 
 /** The alts an entry still holds (non-dust), by asset. */
 export function altHoldings(b: Balances): Record<string, number> {
-  return Object.fromEntries(Object.entries(b).filter(([a, q]) => a !== BTC && a !== USDT && q > RULES.dust.coin));
+  const alts: Record<string, number> = {};
+  for (const [asset, qty] of Object.entries(b)) {
+    if (asset !== BTC && asset !== USDT && qty !== undefined && qty > RULES.dust.coin) alts[asset] = qty;
+  }
+  return alts;
 }
 
 /** Holding alts until they're all sold; then holding USDT until it's all back in BTC. */

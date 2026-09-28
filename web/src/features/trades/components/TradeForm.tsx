@@ -117,7 +117,7 @@ function TradeFields({
             >
               {held.map((a) => (
                 <option key={a} value={a}>
-                  {coins[a]?.symbol ?? a} ({formatQty(alts[a])} held)
+                  {coins[a]?.symbol ?? a} ({formatQty(alts[a] ?? 0)} held)
                 </option>
               ))}
             </select>

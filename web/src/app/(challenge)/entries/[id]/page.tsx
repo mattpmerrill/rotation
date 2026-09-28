@@ -53,7 +53,9 @@ export default async function EntryPage({ params }: { params: Promise<{ id: stri
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
             <p className="text-ink-3 text-sm">
               In since {formatDay(entry.startedOn)}.
-              {standing.best != null && ` Best ${standing.best.toFixed(2)}×, lowest ${standing.worst!.toFixed(2)}×.`}
+              {standing.best != null &&
+                standing.worst != null &&
+                ` Best ${standing.best.toFixed(2)}×, lowest ${standing.worst.toFixed(2)}×.`}
             </p>
             {!finished && <LiveRefresh liveAt={view.liveAt} />}
           </div>

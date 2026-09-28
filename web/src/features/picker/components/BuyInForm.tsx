@@ -37,7 +37,7 @@ export function BuyInForm({
   editing,
 }: {
   /** Set when editing an existing basket rather than starting one. */
-  editing?: BuyInEdit;
+  editing?: BuyInEdit | undefined;
   basket: string[];
   /** Waiting slots: their share of the BTC isn't sold. */
   slots: number;

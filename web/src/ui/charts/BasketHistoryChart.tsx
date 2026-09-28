@@ -17,7 +17,13 @@ import { ChartTooltip } from "./ChartTooltip";
 import { AXIS, GRID, SERIES } from "./theme";
 
 /** One past cycle: 1 BTC in the basket, in BTC, week by week, with the old sell window shaded. */
-export function BasketHistoryChart({ cycle, color = SERIES.line }: { cycle: CyclePreview; color?: string }) {
+export function BasketHistoryChart({
+  cycle,
+  color = SERIES.line,
+}: {
+  cycle: CyclePreview;
+  color?: string | undefined;
+}) {
   return (
     <div className="h-48" role="img" aria-label={`The basket in BTC, ${cycle.label}`}>
       <ResponsiveContainer width="100%" height="100%">
@@ -44,14 +50,16 @@ export function BasketHistoryChart({ cycle, color = SERIES.line }: { cycle: Cycl
           <ReferenceLine y={1} stroke="var(--ink-3)" strokeDasharray="4 4" />
           <Tooltip
             cursor={{ stroke: "var(--ink-3)" }}
-            content={({ active, payload }) =>
-              active && payload?.length ? (
+            content={({ active, payload }) => {
+              const point = payload?.[0]?.payload as { week: string; btc: number } | undefined;
+              if (!active || !point) return null;
+              return (
                 <ChartTooltip
-                  title={`Week of ${formatDay(payload[0].payload.week)}`}
-                  rows={[{ label: "Basket", value: formatBtc(payload[0].payload.btc, 2), color }]}
+                  title={`Week of ${formatDay(point.week)}`}
+                  rows={[{ label: "Basket", value: formatBtc(point.btc, 2), color }]}
                 />
-              ) : null
-            }
+              );
+            }}
           />
           <Line dataKey="btc" stroke={color} strokeWidth={2} dot={false} isAnimationActive={false} />
         </LineChart>

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { defined } from "@/lib/defined";
 import { checkBasket, type EligibleCoin } from "./basket";
 import { btcSoldAtBuyIn, checkBuyIn, planBuyIn, usdtAfter } from "./buyIn";
 import { entry, trade } from "./fixtures";
@@ -33,7 +34,7 @@ describe("waiting slots", () => {
       slots: 2,
       feeRate: 0.01,
     });
-    expect(t[0].qty).toBe(0.5);
+    expect(t[0]?.qty).toBe(0.5);
     expect(usdtAfter(t)).toBeCloseTo(0, 6);
     expect(checkBuyIn(1, ["solana", "chainlink"], 2, t)).toEqual([]);
     expect(checkBuyIn(1, ["solana", "chainlink"], 0, t)[0]).toMatch(/exactly the BTC/);
@@ -42,7 +43,9 @@ describe("waiting slots", () => {
   it("split the waiting BTC equally, and a fill spends one share", () => {
     expect(waitingBtc(slotted, buyIn)).toBe(0.5);
     expect(slotShare(slotted, buyIn)).toBe(0.25);
-    const [sale, buy] = planFill(0.25, 100_000, "sui", 2, 0.01);
+    const fill = planFill(0.25, 100_000, "sui", 2, 0.01);
+    const sale = defined(fill[0]);
+    const buy = defined(fill[1]);
     expect(sale).toMatchObject({ asset: "bitcoin", side: "sell", qty: 0.25, feeUsd: 250 });
     expect(buy.qty * buy.priceUsd + buy.feeUsd).toBeCloseTo(24_750, 6);
     expect(usdtAfter([sale, buy])).toBeCloseTo(0, 6);

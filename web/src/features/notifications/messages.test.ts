@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { defined } from "@/lib/defined";
 import { buyIn, entry, prices } from "@/domain/fixtures";
 import { standingOf } from "@/domain/standings";
 import { buyInMessage, digestMessage, rebuyWindowMessage, tradeMessage } from "./messages";
@@ -12,12 +13,12 @@ describe("Discord messages", () => {
   it("say who did what, never how much", () => {
     const msgs = [
       buyInMessage(entry, coins),
-      tradeMessage(entry, { ...buyIn[1], side: "sell", kind: "sell" }, coins),
+      tradeMessage(entry, { ...defined(buyIn[1]), side: "sell", kind: "sell" }, coins),
       digestMessage("1 Bitty Challenge", [standingOf(entry, buyIn, prices, "2026-10-03")], "https://app/"),
     ];
     expect(msgs[0]).toBe("**Wrenny** is in: SOL, LINK.");
     expect(msgs[1]).toBe("**Wrenny** sold SOL.");
-    expect(tradeMessage(entry, { ...buyIn[1], kind: "fill" }, coins)).toBe(
+    expect(tradeMessage(entry, { ...defined(buyIn[1]), kind: "fill" }, coins)).toBe(
       "**Wrenny** filled a waiting slot with SOL.",
     );
     expect(msgs[2]).toContain("1. Wrenny: 1.20× (+20%)");

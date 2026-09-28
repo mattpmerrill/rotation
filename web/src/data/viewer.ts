@@ -25,7 +25,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   return {
     id: claims.sub,
     email,
-    name: profile?.display_name ?? email.split("@")[0],
+    name: profile?.display_name ?? email.split("@")[0] ?? email,
     isMember: profile?.is_member ?? false,
   };
 });

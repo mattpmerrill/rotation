@@ -8,7 +8,7 @@ export function CoinTag({
   dashed = false,
 }: {
   symbol: string;
-  image?: string | null;
+  image?: string | null | undefined;
   muted?: boolean;
   /** A waiting slot rather than a coin. */
   dashed?: boolean;

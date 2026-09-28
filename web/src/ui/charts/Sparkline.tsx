@@ -1,3 +1,4 @@
+import { defined } from "@/lib/defined";
 /** A tiny line of an entry's BTC multiple over time, with the 1.0 start level dashed. */
 export function Sparkline({
   values,
@@ -17,7 +18,7 @@ export function Sparkline({
   const y = (v: number) => pad + (height - 2 * pad) * (1 - (v - lo) / (hi - lo || 1));
   const x = (i: number) => pad + ((width - 2 * pad) * i) / (values.length - 1);
   const d = values.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
-  const last = values.at(-1)!;
+  const last = defined(values.at(-1), "the last value");
   return (
     <svg
       role="img"

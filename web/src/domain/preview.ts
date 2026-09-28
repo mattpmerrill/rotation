@@ -61,8 +61,10 @@ export function previewBasket(
   sellWindowDays: [number, number],
   feeRate: number,
 ): CyclePreview[] {
-  return history.cycles.map((c) => {
+  return history.cycles.flatMap((c): CyclePreview[] => {
     const at = nearestWeek(c.weeks, addDays(c.halving, daysSinceHalving));
+    const entryWeek = c.weeks[at];
+    if (entryWeek === undefined) return []; // a cycle with no weeks has nothing to preview
     const weeks = c.weeks.slice(at);
     const sellWindow: [string, string] = [
       addDays(c.next_halving, sellWindowDays[0]),
@@ -70,32 +72,41 @@ export function previewBasket(
     ];
     const inWindow = weeks.flatMap((w, k) => (w >= sellWindow[0] && w <= sellWindow[1] ? [k] : []));
     const windowAvg = (line: number[]) =>
-      inWindow.length ? (inWindow.reduce((s, k) => s + line[k], 0) / inWindow.length) * (1 - feeRate) ** 2 : null;
+      inWindow.length
+        ? (inWindow.reduce((s, k) => s + (line[k] ?? 0), 0) / inWindow.length) * (1 - feeRate) ** 2
+        : null;
 
-    const lines = basket.map((id) => coinLine(c.coins[id] ?? [], at, c.weeks.length));
+    const held = basket.map((id) => ({ id, line: coinLine(c.coins[id] ?? [], at, c.weeks.length) }));
     const points = weeks.map((week, k) => ({
       week,
-      btc: basket.length ? (lines.reduce((s, l) => s + l.values[k], 0) / basket.length) * (1 - feeRate) : 0,
+      btc: held.length ? (held.reduce((s, h) => s + (h.line.values[k] ?? 0), 0) / held.length) * (1 - feeRate) : 0,
     }));
     const peak = points.reduce((best, p) => (p.btc > best.btc ? p : best), points[0] ?? { week: "", btc: 0 });
     const total = windowAvg(points.map((p) => p.btc / (1 - feeRate)));
 
-    return {
-      label: `${c.weeks[at].slice(0, 4)} → ${sellWindow[1].slice(0, 4)}`,
-      entryWeek: c.weeks[at],
-      coins: basket.map((id, j) => ({
-        id,
-        boughtLate: lines[j].buy != null && lines[j].buy! > at ? c.weeks[lines[j].buy!] : null,
-        neverListed: lines[j].buy == null,
-        atSellWindow: windowAvg(lines[j].values),
-      })),
-      points,
-      low: points.length ? Math.min(...points.map((p) => p.btc)) : 0,
-      peak,
-      atSellWindow: total,
-      sellWindow,
-      sellWindowWeeks: inWindow.length ? [weeks[inWindow[0]], weeks[inWindow.at(-1)!]] : null,
-    };
+    const firstInWindow = inWindow[0];
+    const lastInWindow = inWindow.at(-1);
+    const shadeFrom = firstInWindow === undefined ? undefined : weeks[firstInWindow];
+    const shadeTo = lastInWindow === undefined ? undefined : weeks[lastInWindow];
+
+    return [
+      {
+        label: `${entryWeek.slice(0, 4)} → ${sellWindow[1].slice(0, 4)}`,
+        entryWeek,
+        coins: held.map(({ id, line }) => ({
+          id,
+          boughtLate: line.buy != null && line.buy > at ? (c.weeks[line.buy] ?? null) : null,
+          neverListed: line.buy == null,
+          atSellWindow: windowAvg(line.values),
+        })),
+        points,
+        low: points.length ? Math.min(...points.map((p) => p.btc)) : 0,
+        peak,
+        atSellWindow: total,
+        sellWindow,
+        sellWindowWeeks: shadeFrom !== undefined && shadeTo !== undefined ? [shadeFrom, shadeTo] : null,
+      },
+    ];
   });
 }
 
@@ -116,7 +127,9 @@ function coinLine(prices: (number | null)[], at: number, length: number): { valu
     else if (i > last)
       values.push(0); // stopped trading
     else {
-      prev = prices[i] != null ? prices[i]! / prices[buy]! : prev; // a missing week keeps its last value
+      const price = prices[i];
+      const first = prices[buy];
+      prev = price != null && first != null ? price / first : prev; // a missing week keeps its last value
       values.push(prev);
     }
   }
@@ -126,7 +139,10 @@ function coinLine(prices: (number | null)[], at: number, length: number): { valu
 function nearestWeek(weeks: string[], day: string): number {
   let best = 0;
   for (let i = 1; i < weeks.length; i++) {
-    if (Math.abs(daysBetween(weeks[i], day)) < Math.abs(daysBetween(weeks[best], day))) best = i;
+    const week = weeks[i];
+    const current = weeks[best];
+    if (week === undefined || current === undefined) continue;
+    if (Math.abs(daysBetween(week, day)) < Math.abs(daysBetween(current, day))) best = i;
   }
   return best;
 }

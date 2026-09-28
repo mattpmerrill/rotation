@@ -13,7 +13,7 @@ export function LeaderboardList({ rows }: { rows: LeaderboardRow[] }) {
   return (
     <ol className="grid gap-3">
       {rows.map((r, i) => {
-        const leader = i === 0 && r.multiple != null;
+        const leader = i === 0 && r.now != null;
         return (
           <li key={r.entryId}>
             <Link
@@ -50,18 +50,18 @@ export function LeaderboardList({ rows }: { rows: LeaderboardRow[] }) {
               </span>
 
               <div className="grid justify-items-end gap-0.5 text-right">
-                {r.multiple == null ? (
+                {r.now == null ? (
                   <span className="text-ink-3 text-sm">Waiting for prices</span>
                 ) : (
                   <>
                     <span
-                      className={`font-display text-2xl sm:text-3xl ${r.multiple >= 1 ? "text-gradient-btc" : "text-gradient-loss"}`}
+                      className={`font-display text-2xl sm:text-3xl ${r.now.multiple >= 1 ? "text-gradient-btc" : "text-gradient-loss"}`}
                     >
-                      {formatMultiple(r.multiple)}
+                      {formatMultiple(r.now.multiple)}
                     </span>
-                    <Change value={r.multiple - 1} className="text-sm" />
+                    <Change value={r.now.multiple - 1} className="text-sm" />
                     <span className="text-ink-3 text-xs">
-                      <Money btc={r.valueBtc!} usd={r.valueUsd!} />
+                      <Money btc={r.now.valueBtc} usd={r.now.valueUsd} />
                     </span>
                   </>
                 )}

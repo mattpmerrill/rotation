@@ -1,3 +1,4 @@
+import { defined } from "@/lib/defined";
 import { addDays, daysBetween } from "@/lib/days";
 import type { Day } from "./types";
 
@@ -18,10 +19,13 @@ export function cycleReference(
   sellWindowDays: [number, number],
   today: Day,
 ): CycleReference {
-  const last = halvings
-    .filter((h) => h <= today)
-    .sort()
-    .at(-1)!;
+  const last = defined(
+    halvings
+      .filter((h) => h <= today)
+      .sort()
+      .at(-1),
+    "a halving on or before today",
+  );
   const next = addDays(last, intervalDays);
   return {
     lastHalving: last,

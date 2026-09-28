@@ -33,7 +33,10 @@ export function ValueChart({ series, btcIn }: { series: ValuePoint[]; btcIn: num
     held: inBtc ? btcIn : btcIn * p.btcPrice,
   }));
   // under ~6 months, label days ("Aug 20"); longer, label months
-  const shortSpan = series.length > 1 && daysBetween(series[0].day, series.at(-1)!.day) < 180;
+  const first = series[0];
+  const last = series.at(-1);
+  const shortSpan =
+    series.length > 1 && first !== undefined && last !== undefined && daysBetween(first.day, last.day) < 180;
   const layers = LAYERS.filter((l) => data.some((d) => Math.abs(d[l.key]) > 1e-9));
 
   if (data.length < 2) {
@@ -68,7 +71,8 @@ export function ValueChart({ series, btcIn }: { series: ValuePoint[]; btcIn: num
               cursor={{ stroke: "var(--ink-3)" }}
               content={({ active, payload }) => {
                 if (!active || !payload?.length) return null;
-                const d = payload[0].payload as (typeof data)[number];
+                const d = payload[0]?.payload as (typeof data)[number] | undefined;
+                if (!d) return null;
                 return (
                   <ChartTooltip
                     title={formatDay(d.day)}

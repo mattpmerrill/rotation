@@ -12,7 +12,7 @@ import { slotShare, slotsClosedReason, waitingBtc } from "@/domain/slots";
 import { standingOf, type Standing } from "@/domain/standings";
 import { BTC, USDT, type Coin, type Entry, type PriceBook, type Trade } from "@/domain/types";
 import type { EligibleCoin } from "@/domain/basket";
-import { addDays, todayUtc } from "@/lib/days";
+import { addDays, laterDay, todayUtc } from "@/lib/days";
 
 export interface EntryView {
   entry: Entry;
@@ -61,7 +61,12 @@ export async function getEntryView(entryId: number, viewer: Viewer): Promise<Ent
     changes: coinChanges(entry, trades, snap.prices, today),
     trades,
     holdings: { alts: altHoldings(balances), usdt: balances[USDT] },
-    prices: Object.fromEntries(assets.filter((a) => snap.prices[a]).map((a) => [a, snap.prices[a]])),
+    prices: Object.fromEntries(
+      assets.flatMap((a) => {
+        const series = snap.prices[a];
+        return series ? [[a, series]] : [];
+      }),
+    ),
     cycle: cycleReference(
       marketReference.halvings,
       marketReference.halvingIntervalDays,
@@ -91,7 +96,7 @@ export async function getMyEntryId(viewer: Viewer): Promise<number | null> {
 /** A slot can be filled with any of today's top 100 not already in the basket, dated up to
  *  30 days back (and not before the buy-in). */
 async function fillOptions(entry: Entry, today: string) {
-  const from = [entry.startedOn, addDays(today, -30)].sort().at(-1)!;
+  const from = laterDay(entry.startedOn, addDays(today, -30));
   const { coins } = await getEligibleCoins();
   const candidates = coins.filter((c) => !entry.basket.includes(c.id));
   const prices = await getPriceBook([BTC, ...candidates.map((c) => c.id)], addDays(from, -7));

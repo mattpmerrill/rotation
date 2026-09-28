@@ -48,13 +48,19 @@ export async function getEligibleCoins(): Promise<{ coins: EligibleCoin[]; asOf:
   if (error) throw error;
   return {
     asOf: latest.date,
-    coins: data.map((r) => ({
-      id: r.coin_id,
-      rank: r.rank!,
-      symbol: (r.coins?.symbol ?? r.coin_id).toUpperCase(),
-      name: r.coins?.name ?? r.coin_id,
-      image: smallIcon(r.coins?.image_url ?? null),
-    })),
+    coins: data.flatMap((r) =>
+      r.rank === null
+        ? []
+        : [
+            {
+              id: r.coin_id,
+              rank: r.rank,
+              symbol: (r.coins?.symbol ?? r.coin_id).toUpperCase(),
+              name: r.coins?.name ?? r.coin_id,
+              image: smallIcon(r.coins?.image_url ?? null),
+            },
+          ],
+    ),
   };
 }
 

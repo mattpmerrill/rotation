@@ -8,7 +8,7 @@ import { Field } from "@/ui/Field";
 import { Notice } from "@/ui/Notice";
 import { signIn, signInWithGoogle, signUp, type AuthFormState } from "../actions";
 
-export function LoginForm({ linkError }: { linkError?: string }) {
+export function LoginForm({ linkError }: { linkError?: string | undefined }) {
   const [signInState, signInAction, signingIn] = useActionState(signIn, {} as AuthFormState);
   const [signUpState, signUpAction, signingUp] = useActionState(signUp, {} as AuthFormState);
   const error = signInState.error ?? signUpState.error ?? linkError;

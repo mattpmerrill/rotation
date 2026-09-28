@@ -25,10 +25,11 @@ export function checkBasket(ids: string[], eligible: EligibleCoin[], slots = 0):
   else if (unique.size + slots < RULES.basketMin) errors.push(`Pick at least ${RULES.basketMin} coins or slots.`);
   if (unique.size + slots > RULES.basketMax) errors.push(`Pick at most ${RULES.basketMax} coins and slots in all.`);
   for (const id of unique) {
+    const coin = byId.get(id);
     if (id === BTC) errors.push("BTC is what you're measuring against, so it can't be in the basket.");
-    else if (!byId.has(id)) errors.push(`${id} isn't in today's top ${RULES.maxRank}.`);
-    else if (byId.get(id)!.rank > RULES.maxRank)
-      errors.push(`${byId.get(id)!.symbol} is ranked #${byId.get(id)!.rank}, outside the top ${RULES.maxRank}.`);
+    else if (!coin) errors.push(`${id} isn't in today's top ${RULES.maxRank}.`);
+    else if (coin.rank > RULES.maxRank)
+      errors.push(`${coin.symbol} is ranked #${coin.rank}, outside the top ${RULES.maxRank}.`);
   }
   return { errors };
 }

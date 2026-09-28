@@ -25,9 +25,13 @@ export interface TimingPoint {
 export function timingPoints(data: BuyTimingData, key: string): TimingPoint[] {
   const values = key === "top10" ? data.top10 : data.coins[key];
   if (!values) return [];
-  return values.flatMap((btc, i) =>
-    btc == null ? [] : [{ entry: data.entries[i], cycle: data.cycle[i], day: data.day[i], btc }],
-  );
+  return values.flatMap((btc, i) => {
+    const entry = data.entries[i];
+    const cycle = data.cycle[i];
+    const day = data.day[i];
+    if (btc == null || entry === undefined || cycle === undefined || day === undefined) return [];
+    return [{ entry, cycle, day, btc }];
+  });
 }
 
 export type Verdict = "good" | "poor" | "mixed" | "unknown";
@@ -85,7 +89,9 @@ export function stretches(points: TimingPoint[], size = 90, cycleDays = 1456): S
 function median(xs: number[]): number {
   const s = [...xs].sort((a, b) => a - b);
   const m = s.length >> 1;
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  const upper = s[m];
+  if (upper === undefined) throw new Error("median of no values");
+  return s.length % 2 ? upper : ((s[m - 1] ?? upper) + upper) / 2;
 }
 
 /** A stretch where buying beat holding BTC in most past cycles. */
@@ -109,5 +115,6 @@ export function nextGoodStretch(all: Stretch[], today: number): { stretch: Stret
   }
   const current = runs.find((r) => r.to >= today);
   if (current) return { stretch: current, nextCycle: false };
-  return runs.length ? { stretch: runs[0], nextCycle: true } : null;
+  const first = runs[0];
+  return first ? { stretch: first, nextCycle: true } : null;
 }

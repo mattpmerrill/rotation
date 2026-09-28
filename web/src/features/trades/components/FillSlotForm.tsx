@@ -35,13 +35,15 @@ export function FillSlotForm({
   const [state, action, pending] = useActionState(fillWaitingSlot, {} as TradeFormState);
   const [coin, setCoin] = useState(coins[0]?.id ?? "");
   const [day, setDay] = useState(todayUtc());
-  const [typed, setTyped] = useState<{ btc?: string; coin?: string; qty?: string }>({});
+  const [typed, setTyped] = useState<{ btc?: string | undefined; coin?: string | undefined; qty?: string | undefined }>(
+    {},
+  );
 
   const btcPrice = typed.btc ?? String(priceOn(prices, BTC, day) ?? "");
   const coinPrice = typed.coin ?? String(priceOn(prices, coin, day) ?? "");
   const planned =
     Number(btcPrice) > 0 && Number(coinPrice) > 0
-      ? planFill(share, Number(btcPrice), coin, Number(coinPrice), RULES.defaultFeeRate)[1].qty
+      ? (planFill(share, Number(btcPrice), coin, Number(coinPrice), RULES.defaultFeeRate)[1]?.qty ?? 0)
       : 0;
   const qty = typed.qty ?? (planned ? String(Number(planned.toPrecision(8))) : "");
   const chosen = coins.find((c) => c.id === coin);
