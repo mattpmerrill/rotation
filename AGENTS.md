@@ -64,6 +64,7 @@ reverse one without Matt.
 
 ## Read first
 
+0. [docs/status.md](docs/status.md): where the last session left off, what is open, and what to do next.
 1. [docs/architecture.md](docs/architecture.md): what goes where and why.
 2. [CONTRIBUTING.md](CONTRIBUTING.md): the working rules and the check commands.
 3. [docs/decisions/](docs/decisions/): the ADRs. [docs/exceptions.md](docs/exceptions.md): the known

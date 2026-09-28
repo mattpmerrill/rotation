@@ -142,7 +142,7 @@ The standards migrate by table, so each pass retires the risk for a whole table.
 
 Roughly cheapest and most valuable first.
 
-1. **Confirm the second CI run is green.** The first run passed everything but the engine tests (fixed).
+1. ~~Confirm the second CI run is green.~~ Done: every workflow has been green since, most recently on 2026-09-28.
 2. ~~The kebab-case rename.~~ Done 2026-09-28: 42 files, 101 imports, the guard's list is empty.
 3. ~~The service layer, and the typed result with stable error codes.~~ Done 2026-09-28 for `trades`, `picker`,
    `auth` and `admin`: exceptions 1 and 2 are retired.

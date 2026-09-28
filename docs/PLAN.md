@@ -11,7 +11,7 @@ own exchange and log them.
 
 Owner: Matt. Architect: Beck. Last updated 2026-09-26.
 
-- How it's built: [architecture.md](architecture.md). How to change it: [../CONTRIBUTING.md](../CONTRIBUTING.md).
+- Where we left off: [status.md](status.md). How it's built: [architecture.md](architecture.md). How to change it: [../CONTRIBUTING.md](../CONTRIBUTING.md).
 - App: https://rotation-web-seven.vercel.app (Vercel project `rotation-web`, root `web/`).
 
 ## What the research says (read before picking)
