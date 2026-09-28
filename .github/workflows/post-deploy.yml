@@ -1,0 +1,49 @@
+name: post-deploy
+# Trunk is production: a push to main deploys, and there is no preview to test first. This waits
+# until production reports the pushed commit, then drives the signed-out suites against it. It is
+# the substitute for the standards' preview smoke test (docs/exceptions.md, exception 14): it
+# shortens an outage, it does not prevent one. A red run here means production is broken or
+# stuck on an older build: roll back (docs/runbooks/rollback-deployment.md), then fix forward.
+on:
+  push: { branches: [main] }
+
+permissions:
+  contents: read
+
+# Only the newest push matters: an older run would wait for a commit that was already replaced.
+concurrency:
+  group: post-deploy
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for production to report this commit
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          SHA: ${{ github.sha }}
+        run: |
+          for i in $(seq 1 60); do
+            live=$(curl -sf --max-time 10 "$APP_URL/api/health" | node -pe 'JSON.parse(require("fs").readFileSync(0, "utf8")).commit' || true)
+            if [ "$live" = "$SHA" ]; then echo "production is on $SHA"; exit 0; fi
+            echo "production is on '${live:-nothing yet}', waiting for $SHA ($i/60)"
+            sleep 10
+          done
+          echo "::error::production did not report $SHA within 10 minutes"
+          exit 1
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+        env:
+          E2E_BASE_URL: ${{ secrets.APP_URL }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: web/test-results/
+          retention-days: 7

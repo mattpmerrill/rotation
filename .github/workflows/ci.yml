@@ -1,7 +1,13 @@
 name: ci
+# The detector, not the gate: the gate is `node scripts/check.mjs` and the pre-push hook. CI reruns
+# the same checks on a clean Linux checkout, which catches what a laptop cannot (case-sensitive
+# paths, a clean install from the lockfile). See docs/enforcement-matrix.md.
 on:
   push: { branches: [main] }
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   engine:
@@ -32,11 +38,39 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci
 
+  e2e:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            web/test-results/
+            web/playwright-report/
+          retention-days: 7
+
   database:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
-        with: { version: latest }
+        with: { version: 2.115.0 } # the version the committed types were generated with
       - run: supabase db start
       - run: supabase test db
+      - name: Generated database types are current
+        run: |
+          supabase gen types typescript --local --schema public > "$RUNNER_TEMP/database.types.ts"
+          diff -u web/src/data/database.types.ts "$RUNNER_TEMP/database.types.ts" \
+            || { echo "::error::web/src/data/database.types.ts is stale. Run 'npm run db:types' in web/ and commit it."; exit 1; }

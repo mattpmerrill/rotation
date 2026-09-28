@@ -2,6 +2,9 @@ name: daily
 # 1. Engine: today's market state and prices -> Supabase.
 # 2. Web app: value every entry and post what's new to Discord (the app decides what, and
 #    posts each thing once).
+permissions:
+  contents: read
+
 on:
   schedule:
     - cron: "15 13 * * *"   # 13:15 UTC, after CoinMetrics publishes the prior day
