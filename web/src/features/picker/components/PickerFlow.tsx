@@ -8,7 +8,7 @@ import { buttonClass } from "@/ui/Button";
 import { CoinTag } from "@/ui/CoinTag";
 import { Notice } from "@/ui/Notice";
 import { Section } from "@/ui/Section";
-import { BuyInForm } from "./BuyInForm";
+import { BuyInForm, type BuyInEdit } from "./BuyInForm";
 import { CoinPicker } from "./CoinPicker";
 import { PreviewPanel } from "./PreviewPanel";
 
@@ -20,8 +20,14 @@ export function PickerFlow({
   window,
   prices,
   initialBasket = [],
+  initialSlots = 0,
   btcIcon,
+  edit,
 }: {
+  /** Waiting slots to start with (when editing). */
+  initialSlots?: number;
+  /** Set when editing an existing basket. */
+  edit?: BuyInEdit;
   btcIcon: string | null;
   /** Coins to start with, e.g. from "Try this basket" on Joi's top picks. */
   initialBasket?: string[];
@@ -36,7 +42,7 @@ export function PickerFlow({
   );
   const toggle = (id: string) => setBasket((b) => (b.includes(id) ? b.filter((x) => x !== id) : [...b, id]));
   const symbols = Object.fromEntries(coins.map((c) => [c.id, c.symbol]));
-  const [slots, setSlots] = useState(0);
+  const [slots, setSlots] = useState(initialSlots);
   const slotIds = Array.from({ length: slots }, (_, i) => `slot-${i + 1}`);
   const byId: Record<string, Coin> = {
     ...Object.fromEntries(coins.map((c) => [c.id, c])),
@@ -104,7 +110,7 @@ export function PickerFlow({
 
       {ready && (
         <Section title="Buy in" panel>
-          <BuyInForm basket={basket} slots={slots} symbols={symbols} prices={prices} window={window} />
+          <BuyInForm basket={basket} slots={slots} symbols={symbols} prices={prices} window={window} editing={edit} />
         </Section>
       )}
 

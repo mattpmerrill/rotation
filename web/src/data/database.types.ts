@@ -417,6 +417,18 @@ export type Database = {
       }
     }
     Functions: {
+      delete_entry: { Args: { p_entry_id: number }; Returns: undefined }
+      edit_entry: {
+        Args: {
+          p_basket: string[]
+          p_btc_in: number
+          p_entry_id: number
+          p_slots: number
+          p_started_on: string
+          p_trades: Json
+        }
+        Returns: undefined
+      }
       fill_slot: {
         Args: {
           p_coin: string

@@ -9,9 +9,19 @@ import { formatBtc, formatUsd } from "@/lib/format";
 import { Button } from "@/ui/Button";
 import { Field } from "@/ui/Field";
 import { Notice } from "@/ui/Notice";
-import { startChallenge, type BuyInState } from "../actions";
+import { editBasket, startChallenge, type BuyInState } from "../actions";
 
 type Overrides = Record<string, { qty?: string; price?: string }>;
+
+/** A saved buy-in to edit: the form starts from what was logged. */
+export interface BuyInEdit {
+  entryId: number;
+  btcIn: number;
+  startedOn: string;
+  feeRate: number;
+  /** The logged amounts and prices, by asset. */
+  overrides: Overrides;
+}
 
 /**
  * The buy-in: how much BTC, which day, and the trades. The app plans equal dollar amounts at
@@ -23,7 +33,10 @@ export function BuyInForm({
   symbols,
   prices,
   window,
+  editing,
 }: {
+  /** Set when editing an existing basket rather than starting one. */
+  editing?: BuyInEdit;
   basket: string[];
   /** Waiting slots: their share of the BTC isn't sold. */
   slots: number;
@@ -31,11 +44,11 @@ export function BuyInForm({
   prices: PriceBook;
   window: [string, string];
 }) {
-  const [btcIn, setBtcIn] = useState("1");
-  const [day, setDay] = useState(window[1]);
-  const [feePct, setFeePct] = useState(String(RULES.defaultFeeRate * 100));
-  const [overrides, setOverrides] = useState<Overrides>({});
-  const [state, action, pending] = useActionState(startChallenge, {} as BuyInState);
+  const [btcIn, setBtcIn] = useState(editing ? String(editing.btcIn) : "1");
+  const [day, setDay] = useState(editing?.startedOn ?? window[1]);
+  const [feePct, setFeePct] = useState(String(Number(((editing?.feeRate ?? RULES.defaultFeeRate) * 100).toFixed(4))));
+  const [overrides, setOverrides] = useState<Overrides>(editing?.overrides ?? {});
+  const [state, action, pending] = useActionState(editing ? editBasket : startChallenge, {} as BuyInState);
 
   const feeRate = Number(feePct) / 100;
   const btcPrice = priceOn(prices, BTC, day);
@@ -71,6 +84,7 @@ export function BuyInForm({
   return (
     <form action={action} className="grid gap-5">
       <input type="hidden" name="payload" value={payload} />
+      {editing && <input type="hidden" name="entryId" value={editing.entryId} />}
       <div className="grid gap-4 sm:grid-cols-3">
         <Field
           id="btcIn"
@@ -182,7 +196,7 @@ export function BuyInForm({
 
       <div>
         <Button disabled={pending || !trades.length || problems.length > 0}>
-          {pending ? "Starting…" : "Start my challenge"}
+          {editing ? (pending ? "Saving…" : "Save changes") : pending ? "Starting…" : "Start my challenge"}
         </Button>
       </div>
     </form>

@@ -107,6 +107,34 @@ export async function startEntry(
   return { entryId: data ?? null, error: error?.message ?? null };
 }
 
+/** Redo the viewer's buy-in: allowed only while the buy-in is all the entry has. */
+export async function editEntry(
+  entryId: number,
+  startedOn: string,
+  btcIn: number,
+  basket: string[],
+  slots: number,
+  trades: DraftTrade[],
+) {
+  const db = await supabaseServer();
+  const { error } = await db.rpc("edit_entry", {
+    p_entry_id: entryId,
+    p_started_on: startedOn,
+    p_btc_in: btcIn,
+    p_basket: basket,
+    p_slots: slots,
+    p_trades: toRpcTrades(trades),
+  });
+  return error?.message ?? null;
+}
+
+/** Delete the viewer's entry and all its trades. Returns an error, or null. */
+export async function deleteEntry(entryId: number): Promise<string | null> {
+  const db = await supabaseServer();
+  const { error } = await db.rpc("delete_entry", { p_entry_id: entryId });
+  return error?.message ?? null;
+}
+
 /** Fill one of the viewer's waiting slots with `coin`: one slot's BTC sold, the coin bought. */
 export async function fillSlot(entryId: number, tradedOn: string, coin: string, trades: DraftTrade[]) {
   const db = await supabaseServer();

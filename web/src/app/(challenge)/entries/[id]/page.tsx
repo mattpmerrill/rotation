@@ -10,6 +10,10 @@ import { TradeForm } from "@/features/trades/components/TradeForm";
 import { FillSlotForm } from "@/features/trades/components/FillSlotForm";
 import { TradeLog } from "@/features/trades/components/TradeLog";
 import { BTC } from "@/domain/types";
+import { editLockedReason } from "@/domain/buyIn";
+import { DeleteBasketButton } from "@/features/picker/components/DeleteBasketButton";
+import { buttonClass } from "@/ui/Button";
+import Link from "next/link";
 import { formatBtc, formatDay } from "@/lib/format";
 import { Section } from "@/ui/Section";
 
@@ -26,14 +30,25 @@ export default async function EntryPage({ params }: { params: Promise<{ id: stri
   const buyInSale = view.trades.find((t) => t.asset === BTC && t.side === "sell" && t.tradedOn === entry.startedOn);
   const startUsd = entry.btcIn * (buyInSale?.priceUsd ?? standing.series[0]?.btcPrice ?? 0);
   const finished = standing.phase === "back_in_btc";
+  const editable = isOwner && !editLockedReason(view.trades);
 
   return (
     <>
       <section className="grid gap-5">
         <div className="grid gap-1">
-          <h1 className="text-ink-2 text-lg font-semibold">
-            {isOwner ? "Your basket" : `${entry.playerName}'s basket`}
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-ink-2 text-lg font-semibold">
+              {isOwner ? "Your basket" : `${entry.playerName}'s basket`}
+            </h1>
+            {isOwner && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Link href={`/entries/${entry.id}/edit`} className={buttonClass("quiet")}>
+                  {editable ? "Edit basket" : "Edit or delete"}
+                </Link>
+                {editable && <DeleteBasketButton entryId={entry.id} />}
+              </div>
+            )}
+          </div>
           <p className="text-ink-3 text-sm">
             In since {formatDay(entry.startedOn)}.
             {standing.best != null && ` Best ${standing.best.toFixed(2)}×, lowest ${standing.worst!.toFixed(2)}×.`}

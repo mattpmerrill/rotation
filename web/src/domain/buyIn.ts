@@ -44,6 +44,16 @@ export function planBuyIn({ btcIn, btcPriceUsd, coinPricesUsd, basket, slots, fe
   return [sale, ...buys];
 }
 
+/**
+ * Why the buy-in can't be edited, or null if it can. Sells, rebuys and slot fills depend on the
+ * buy-in, so once any is logged the buy-in is locked. The database enforces the same (edit_entry()).
+ */
+export function editLockedReason(trades: { kind: string }[]): string | null {
+  return trades.some((t) => t.kind !== "buy_in")
+    ? "You've logged trades since the buy-in, so it's locked. Delete your sells and rebuys to edit it, or delete the basket and start again."
+    : null;
+}
+
 /** USDT left over after the buy-in trades (negative means it spends more than the sale raised). */
 export function usdtAfter(trades: DraftTrade[]): number {
   return trades.reduce((usdt, t) => usdt + (t.side === "sell" ? 1 : -1) * t.qty * t.priceUsd - t.feeUsd, 0);

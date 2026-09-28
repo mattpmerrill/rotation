@@ -1,7 +1,7 @@
 -- The 1 Bitty Challenge: access rules and fairness rules. Run: supabase test db
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(35);
+select plan(47);
 
 -- Deferred checks fire at commit; fire them per statement so each test sees its own error.
 set constraints all immediate;
@@ -141,11 +141,52 @@ select throws_ok($$ select public.fill_slot(pg_temp.entry_of('00000000-0000-0000
 select lives_ok($$ select * from public.price_series(array['solana'], current_date - 1) $$,
   'members can read price series');
 
+-- Editing and deleting a basket ------------------------------------------------------------------------
+-- A has a sell logged, so their buy-in is locked; B can't touch A's basket; A can delete it.
+select pg_temp.act_as('00000000-0000-0000-0000-00000000000a');
+select throws_ok($$ select public.edit_entry(pg_temp.entry_of('00000000-0000-0000-0000-00000000000a'), current_date, 1,
+    array['solana', 'chainlink'], 0, '[]'::jsonb) $$, '23514', null, 'a buy-in is locked once a sell is logged');
+select pg_temp.act_as('00000000-0000-0000-0000-00000000000b');
+select throws_ok($$ select public.delete_entry(pg_temp.entry_of('00000000-0000-0000-0000-00000000000a')) $$,
+  '42501', null, 'nobody deletes someone else''s basket');
+select throws_ok($$ select public.edit_entry(pg_temp.entry_of('00000000-0000-0000-0000-00000000000a'), current_date, 1,
+    array['solana', 'chainlink'], 0, '[]'::jsonb) $$, '42501', null, 'nobody edits someone else''s basket');
+select pg_temp.act_as('00000000-0000-0000-0000-00000000000a');
+select lives_ok($$ select public.delete_entry(pg_temp.entry_of('00000000-0000-0000-0000-00000000000a')) $$,
+  'a person can delete their own basket');
+select is((select count(*) from public.entry_trades where entry_id in (select id from ids)), 0::bigint,
+  'deleting a basket deletes its trades');
+
+-- A starts again, then edits the untouched buy-in to half a BTC with a waiting slot.
+select lives_ok($$ select pg_temp.buy_in(1, array['solana', 'chainlink']) $$, 'after deleting, a person can start again');
+select throws_ok($$ select public.edit_entry(pg_temp.entry_of('00000000-0000-0000-0000-00000000000a'), current_date, 0.5,
+    array['solana', 'chainlink'], 1, jsonb_build_array(
+    jsonb_build_object('asset', 'bitcoin', 'side', 'sell', 'qty', 0.5, 'price_usd', 100000))) $$,
+  '23514', null, 'an edit keeps each slot''s share as BTC');
+select throws_ok($$ select public.edit_entry(pg_temp.entry_of('00000000-0000-0000-0000-00000000000a'), current_date, 0.3,
+    array['solana', 'chainlink'], 0, jsonb_build_array(
+    jsonb_build_object('asset', 'bitcoin', 'side', 'sell', 'qty', 0.3, 'price_usd', 100000),
+    jsonb_build_object('asset', 'solana', 'side', 'buy', 'qty', 1000, 'price_usd', 200))) $$,
+  '23514', null, 'an edit cannot spend more USDT than it sold');
+select lives_ok($$ select public.edit_entry(pg_temp.entry_of('00000000-0000-0000-0000-00000000000a'), current_date, 0.6,
+    array['solana', 'chainlink'], 1, jsonb_build_array(
+    jsonb_build_object('asset', 'bitcoin', 'side', 'sell', 'qty', 0.4, 'price_usd', 100000),
+    jsonb_build_object('asset', 'solana', 'side', 'buy', 'qty', 100, 'price_usd', 200),
+    jsonb_build_object('asset', 'chainlink', 'side', 'buy', 'qty', 1000, 'price_usd', 20))) $$,
+  'a person can edit an untouched buy-in');
+select is((select array[btc_in::text, open_slots::text] || basket from public.entries
+           where id = pg_temp.entry_of('00000000-0000-0000-0000-00000000000a')),
+  array['0.6', '1', 'solana', 'chainlink'], 'the edit saves the new BTC in, slots and coins');
+select is((select round(qty, 8) from public.entry_balances
+           where asset = 'bitcoin' and entry_id = pg_temp.entry_of('00000000-0000-0000-0000-00000000000a')),
+  0.2::numeric, 'the old buy-in is replaced, not added to');
+
 -- Signed out: nothing ----------------------------------------------------------------------------
 select set_config('role', 'anon', true);
 select throws_ok($$ select count(*) from public.entries $$, '42501', null, 'signed out: no access');
 select throws_ok($$ select public.fill_slot(1, current_date, 'x', '[]'::jsonb) $$, '42501', null,
   'signed out: cannot fill slots');
+select throws_ok($$ select public.delete_entry(1) $$, '42501', null, 'signed out: cannot delete baskets');
 
 -- The daily job (secret key) reads everything it values entries with.
 select set_config('role', 'service_role', true);
