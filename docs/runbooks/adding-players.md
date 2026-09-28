@@ -4,9 +4,13 @@ How a friend joins, and what the admin does. The decision behind it is
 [ADR-006](../decisions/ADR-006-signup-and-approval.md).
 
 **Status.** The whole journey below (sign up, wait, approve, help link, reject) is exercised by
-`web/e2e/signed-in` against a real local Supabase and runs in CI. It has not yet been run by a real friend
-on production. Making an admin with SQL was done on production on 2026-09-28. Turning sign-ups off and
-turning email confirmation back on are untested.
+`web/e2e/signed-in` against a real local Supabase and runs in CI. On 2026-09-28 it was also run on
+production with a throwaway account (deleted afterwards): sign-up with email, the waiting screen, and the
+screen switching to the challenge by itself once the account was approved (with SQL, because the Approve
+button needs an admin session). It has not yet been run by a real friend, and nobody has yet used the
+Approve button on production. Making an admin with SQL, and the Management API call that sets auth
+settings (`mailer_autoconfirm`, `password_min_length`), were done on production on 2026-09-28. Turning
+sign-ups off and turning email confirmation back on are untested.
 
 ## What a friend does
 
