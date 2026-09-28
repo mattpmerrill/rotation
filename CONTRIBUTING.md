@@ -1,12 +1,21 @@
 # Contributing
 
 The rules for changing this repo, for people and coding agents alike. The structure is
-explained in [docs/architecture.md](docs/architecture.md); decisions are logged in
-[docs/PLAN.md](docs/PLAN.md).
+explained in [docs/architecture.md](docs/architecture.md); product decisions are logged in
+[docs/PLAN.md](docs/PLAN.md) and engineering decisions in [docs/decisions/](docs/decisions/). The
+engineering rules themselves are the
+[GetLatest engineering standards](https://github.com/get-latest/company/tree/main/engineering);
+[AGENTS.md](AGENTS.md) is their digest, and [docs/enforcement-matrix.md](docs/enforcement-matrix.md)
+says which of them a tool checks and which are still only intentions.
 
 ## Set up
 
 ```sh
+# once per clone: install the pre-push and commit-msg hooks
+git config core.hooksPath .githooks
+
+# runtimes: Node 22 (see .nvmrc) and uv (which installs Python 3.12 for the engine)
+
 # database (needs Docker)
 supabase start                     # local Postgres + Auth; applies every migration
 supabase test db                   # the access and fairness tests
@@ -25,15 +34,23 @@ npm run dev
 Local users: create them in the local Studio or with the Auth admin API, then
 `update profiles set is_member = true where ...` to let them in.
 
-## The checks (all must pass before a commit)
+## The checks (all must pass before a push)
 
-| Part | Command |
+One command runs everything: `node scripts/check.mjs`. It is what the pre-push hook runs, so a
+push that fails it is refused. Bypassing the hook with `--no-verify` is an exception: record it
+(see below).
+
+| Part | What it runs |
 |---|---|
-| web | `npm run check` (lint incl. layer rules, prettier, types, unit tests) and `npm run build` |
-| engine | `uv run ruff check src tests && uv run ruff format --check src tests && uv run pytest` |
-| database | `supabase test db` |
+| web | `npm run check` (lint incl. layer rules and the literal-value rule, prettier, types, the import graph, the filename and env guards, unit tests) and `npm run build` |
+| engine | `uv run ruff check`, `ruff format --check`, `mypy`, `rotation config`, `pytest` |
+| database | `supabase test db` (needs Docker; the script says so loudly when it skips it) |
+| browser | `npm run e2e` in `web/`, or `node scripts/check.mjs --e2e`: Playwright and axe, signed-out pages |
 
-CI runs all three on every push and pull request.
+CI runs the same checks on every push, plus the browser tests, the generated-types check, secret
+and dependency scans, and (after a deploy) a smoke test against production. CI is the detector,
+not the gate: a red run on `main` is a production problem, so fix forward or revert before
+starting other work.
 
 ## Rules
 
@@ -50,7 +67,9 @@ CI runs all three on every push and pull request.
 **Database**
 
 6. Every schema change is a new file in `supabase/migrations/` (never edit one that's been
-   applied to production). Name it `YYYYMMDDHHMMSS_what_it_does.sql`.
+   applied to production). Name it `YYYYMMDDHHMMSS_what_it_does.sql`. The local filenames match
+   production's migration history exactly; check with `supabase db push --dry-run`, which must say
+   "Remote database is up to date" once a change is applied.
 7. Grants are explicit in the migration (`anon`, `authenticated`, `service_role`); don't rely on
    project defaults. Every table has RLS on.
 8. A new access or fairness rule gets a pgTAP test in `supabase/tests/database/`.
@@ -82,7 +101,18 @@ CI runs all three on every push and pull request.
 
 ## Commits and deploys
 
-- Small commits with a message that says what and why. Branch for anything risky.
-- `main` deploys: Vercel builds `web/` on push. Apply database migrations first
-  (`supabase db push`), then push the code that needs them.
-- Record decisions that change the plan in `docs/PLAN.md` (the decisions table).
+- One coherent change per commit. The subject is `<area>: <what changed>` (`web: add the health
+  endpoint`), the body says why, and no em-dash or en-dash appears anywhere (the `commit-msg`
+  hook refuses them). An exception to a rule goes in the commit as
+  `Exception: <rule> - <why> - expires YYYY-MM-DD`, or in `docs/exceptions.md` if it outlives the
+  commit.
+- Trunk is production. `main` is the only long-lived branch and a push to it deploys through
+  Vercel's Git integration (verified 2026-09-28: every push has a Production deployment built from
+  that commit). The gate is the local check and the pre-push hook. A short-lived branch is fine to
+  try something risky; it is deleted once it has answered the question.
+- Apply database migrations first (`supabase db push`), then push the code that needs them, and
+  make schema changes backward compatible (expand and contract), so rolling back the code is safe.
+- After a push, watch CI and the post-deploy check to the end, then check that `/api/health`
+  reports the pushed commit. To roll back: [docs/runbooks/rollback-deployment.md](docs/runbooks/rollback-deployment.md).
+- Record product decisions in `docs/PLAN.md` (the decisions table) and hard-to-reverse engineering
+  decisions as an ADR in `docs/decisions/`.

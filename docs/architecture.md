@@ -127,3 +127,64 @@ app ─▶ features ─▶ data ─▶ domain ─▶ lib
 | `web/.env.development.local` | local Supabase keys (`supabase status`) | local dev |
 
 Only `web/src/data/env.ts` reads `process.env` in the app; it validates everything with zod.
+
+## The auth model
+
+- **Who can sign in:** anyone can create an account (email and password, or Google). Nothing is
+  visible until `profiles.is_member` is set, by Matt, in SQL. Non-members see one screen saying so.
+- **How identity is known:** Supabase Auth issues a session cookie. `proxy.ts` only refreshes it
+  (`data/session.ts`); it is not the authorization boundary. Pages and actions verify identity with
+  `getClaims()` (`data/viewer.ts`), never the unverified session user.
+- **Who may do what:** `requireViewer()` at the top of every private page; `requireMember()` at the
+  top of every Server Action, because actions are reachable by direct POST. Members read everyone's
+  entries and trades and write only their own.
+- **What actually enforces it:** row-level security and the `SECURITY DEFINER` functions, which check
+  the caller themselves ([ADR-005](decisions/ADR-005-security-definer-functions.md)). The app checks
+  first to give friendly messages; the database is the authority.
+- **The one machine caller:** `/api/jobs/daily` accepts `Authorization: Bearer <CRON_SECRET>`,
+  compared in constant time. The secret (service) key lives only in `data/supabase/admin.ts`, used
+  by that job.
+
+## Environments
+
+| Environment | Where | Database | Configuration |
+|---|---|---|---|
+| Local | your machine | Docker Supabase (`supabase start`) | `web/.env.development.local`, `.env` |
+| Production | Vercel project `rotation-web` (root `web/`) | Supabase project `rotation` (us-west-1, free plan) | Vercel env, GitHub secrets |
+
+There is no staging environment. Vercel's Preview scope currently carries the production Supabase URL
+and publishable key, so a preview of a non-`main` branch would talk to production data: only `main`
+is pushed, and this is recorded as [exception 15](exceptions.md).
+
+## Deployment
+
+Trunk is production ([ADR-001](decisions/ADR-001-adopt-engineering-standards.md)).
+
+1. The local check and the pre-push hook are the gate (`node scripts/check.mjs`).
+2. A push to `main` starts Vercel's Git integration, which builds `web/` on Node 22 (`engines` in
+   `web/package.json`) and deploys it to production.
+3. CI reruns the checks on a clean Linux checkout. The `post-deploy` workflow waits for
+   `/api/health` to report the pushed commit, then runs the browser suites against production.
+4. Database migrations are applied before the code that needs them, with `supabase db push`, and are
+   backward compatible so a code rollback stays safe.
+5. The daily job (`daily.yml`, 13:15 UTC) is independent of deploys.
+
+Rollback: [runbooks/rollback-deployment.md](runbooks/rollback-deployment.md).
+
+## Integrations
+
+Each vendor is reached through one module, and vendor shapes stop there.
+
+| Vendor | Used for | Where | If it is down |
+|---|---|---|---|
+| CoinGecko | Top-250 market list and ranks (engine), live prices (web) | `engine/.../data/coingecko.py`, `web/src/data/prices.ts`, `data/live.ts` | Live value falls back to daily closes; the engine run fails and retries next day |
+| CoinMetrics | BTC price and MVRV | `engine/.../data/coinmetrics.py` | The engine run fails; nothing saved changes |
+| Discord | Posts (buy-ins, trades, the rebuy window, Sunday standings) | `web/src/data/discord.ts` | Posts are released and retried on the next daily run. At the time of writing (2026-09-28) `DISCORD_WEBHOOK_URL` is not set in Vercel, so no posts go out |
+| Google OAuth | Sign-in | Supabase Auth | Email sign-in still works |
+
+## Backup and restore
+
+There is no backup of members' data today: the Supabase project is on the free plan. Market data can
+be rebuilt by the engine; baskets and trades cannot. This is [exception 11](exceptions.md); the
+procedure, and what is and is not recoverable, is in
+[runbooks/restore-database.md](runbooks/restore-database.md).

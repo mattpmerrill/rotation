@@ -5,7 +5,11 @@ near the top, and rebuy BTC in the bear. Scored in BTC.
 
 - The plan and decisions: [docs/PLAN.md](docs/PLAN.md)
 - How it's built: [docs/architecture.md](docs/architecture.md)
-- How to work on it: [CONTRIBUTING.md](CONTRIBUTING.md)
+- How to work on it: [CONTRIBUTING.md](CONTRIBUTING.md) (one command runs every check: `node scripts/check.mjs`)
+- Engineering decisions, known gaps and what is enforced: [docs/decisions/](docs/decisions/),
+  [docs/exceptions.md](docs/exceptions.md), [docs/enforcement-matrix.md](docs/enforcement-matrix.md)
+- Who it is for and what it assumes: [docs/system-context.md](docs/system-context.md). When something
+  breaks: [docs/runbooks/](docs/runbooks/)
 
 | Folder | What |
 |---|---|
