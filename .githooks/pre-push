@@ -1,0 +1,5 @@
+#!/bin/sh
+# Refuses the push if the full check fails (version-control.md: a push to main deploys to
+# production, so the gate is before the push). Bypassing it with --no-verify is an exception and
+# is recorded as one (an `Exception:` trailer in the commit, or docs/exceptions.md).
+exec node "$(git rev-parse --show-toplevel)/scripts/check.mjs"

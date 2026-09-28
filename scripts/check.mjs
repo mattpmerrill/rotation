@@ -1,0 +1,75 @@
+// The one command that runs every check (version-control.md: "the full check command").
+// It is what the pre-push hook runs and what the README names. Plain Node, no shell syntax, so it
+// runs the same on macOS, Linux and Windows.
+//
+//   node scripts/check.mjs               everything; the database step is skipped if Docker is off
+//   node scripts/check.mjs --require-db  fail instead of skipping when the database can't run
+//   node scripts/check.mjs --e2e         also run the browser tests (needs Playwright's browser)
+import { spawnSync } from "node:child_process";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const args = new Set(process.argv.slice(2));
+const isWindows = process.platform === "win32";
+
+/** The build needs the public settings to exist, not to be real. */
+const buildEnv = {
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "ci",
+};
+
+function run(cmd, cmdArgs, { cwd = ".", env = {}, quiet = false } = {}) {
+  return spawnSync(cmd, cmdArgs, {
+    cwd: join(root, cwd),
+    env: { ...process.env, ...env },
+    stdio: quiet ? "ignore" : "inherit",
+    shell: isWindows, // npm and uv are .cmd shims on Windows
+  });
+}
+
+const dockerRuns = () => run("docker", ["info"], { quiet: true }).status === 0;
+
+const steps = [
+  { name: "web: lint, format, types, import graph, guards, unit tests", cwd: "web", cmd: "npm", args: ["run", "check"] },
+  { name: "web: production build", cwd: "web", cmd: "npm", args: ["run", "build"], env: buildEnv },
+  { name: "engine: lint", cwd: "engine", cmd: "uv", args: ["run", "ruff", "check", "src", "tests"] },
+  { name: "engine: format", cwd: "engine", cmd: "uv", args: ["run", "ruff", "format", "--check", "src", "tests"] },
+  { name: "engine: types", cwd: "engine", cmd: "uv", args: ["run", "mypy"] },
+  { name: "engine: config", cwd: "engine", cmd: "uv", args: ["run", "rotation", "config"] },
+  { name: "engine: tests", cwd: "engine", cmd: "uv", args: ["run", "pytest", "-q"] },
+  { name: "database: pgTAP access and fairness tests", cmd: "supabase", args: ["test", "db"], needsDocker: true },
+  ...(args.has("--e2e")
+    ? [{ name: "web: browser tests", cwd: "web", cmd: "npm", args: ["run", "e2e"], env: buildEnv }]
+    : []),
+];
+
+const results = [];
+for (const step of steps) {
+  process.stdout.write(`\n=== ${step.name}\n`);
+  if (step.needsDocker && !dockerRuns()) {
+    const msg = "Docker is not running, so this step could not run.";
+    if (args.has("--require-db")) {
+      console.error(`FAILED: ${msg}`);
+      results.push({ name: step.name, status: "FAILED" });
+    } else {
+      console.warn(`SKIPPED: ${msg} CI runs it on every push. Start Docker and re-run to check it here.`);
+      results.push({ name: step.name, status: "SKIPPED" });
+    }
+    continue;
+  }
+  const started = Date.now();
+  const r = run(step.cmd, step.args, { cwd: step.cwd, env: step.env });
+  const seconds = ((Date.now() - started) / 1000).toFixed(1);
+  results.push({ name: step.name, status: r.status === 0 ? "passed" : "FAILED", seconds });
+}
+
+console.log("\n=== Summary");
+for (const r of results) console.log(`${r.status.padEnd(8)} ${r.name}${r.seconds ? `  (${r.seconds}s)` : ""}`);
+const failed = results.filter((r) => r.status === "FAILED").length;
+const skipped = results.filter((r) => r.status === "SKIPPED").length;
+if (failed) {
+  console.error(`\n${failed} check(s) failed.`);
+  process.exit(1);
+}
+console.log(skipped ? `\nAll checks that could run passed; ${skipped} skipped (see above).` : "\nAll checks passed.");
