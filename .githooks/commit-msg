@@ -1,0 +1,4 @@
+#!/bin/sh
+# Refuses a commit message that breaks version-control.md: the subject is "<area>: <what>", no
+# em-dash or en-dash, and an Exception trailer is well formed.
+exec node "$(git rev-parse --show-toplevel)/web/scripts/guards/commit-message.mjs" "$1"
