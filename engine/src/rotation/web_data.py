@@ -26,8 +26,8 @@ import pandas as pd
 
 from rotation.config import REPO_ROOT, get_config
 from rotation.data import cache
+from rotation.rules.cycle import HALVING_INTERVAL_DAYS
 from rotation.rules.indicators import weekly_close
-from rotation.signal import HALVING_INTERVAL_DAYS
 
 OUT = REPO_ROOT / "web" / "public" / "data"
 GENERATED = REPO_ROOT / "web" / "src" / "generated"

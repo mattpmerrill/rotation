@@ -22,10 +22,10 @@ import math
 import numpy as np
 import pandas as pd
 
-from rotation.backtest.cycle_study import HALVINGS, OUT
+from rotation.backtest.btc_cycle import HALVINGS, REPORT_DIR
 from rotation.config import REPO_ROOT, get_config
 from rotation.data import cache
-from rotation.signal import HALVING_INTERVAL_DAYS
+from rotation.rules.cycle import HALVING_INTERVAL_DAYS
 
 FEE = 0.01
 STEP_DAYS = 14
@@ -165,6 +165,6 @@ def write() -> list[str]:
     data, report = build()
     web = REPO_ROOT / "web" / "public" / "data" / "buy-timing.json"
     web.write_text(json.dumps(data, separators=(",", ":")) + "\n")
-    md = OUT / "buy-timing.md"
+    md = REPORT_DIR / "buy-timing.md"
     md.write_text(report)
     return [str(web), str(md)]

@@ -12,7 +12,12 @@ CoinGecko market caps have two kinds of bad data, both filtered before ranking:
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from collections.abc import Set as AbstractSet
+
 import pandas as pd
+
+from rotation.config import PegDetector, Ranking
 
 SPIKE_WINDOW = 7
 SPIKE_RATIO = 5.0
@@ -42,7 +47,9 @@ def eligible(
     return (n >= min_days) & (med / df["market_cap_usd"] >= min_turnover)
 
 
-def rank_by_day(df: pd.DataFrame, exclude: set[str] = frozenset(), ranking=None) -> pd.DataFrame:
+def rank_by_day(
+    df: pd.DataFrame, exclude: AbstractSet[str] = frozenset(), ranking: Ranking | None = None
+) -> pd.DataFrame:
     """Rank coins by market cap within each date (1 = largest). Ties broken by coin_id.
 
     `ranking` is the universe.yaml ranking config; defaults to the loaded config."""
@@ -68,7 +75,7 @@ def is_excluded(
     categories: list[str],
     exclude_categories: list[str],
     exclude_ids: list[str],
-    force_include_ids: list[str] = (),
+    force_include_ids: Sequence[str] = (),
 ) -> bool:
     """Excluded if listed by id, or if any category exactly matches (case-insensitive).
     force_include_ids wins over categories, but not over exclude_ids."""
@@ -80,7 +87,7 @@ def is_excluded(
     return any(c.strip().casefold() in wanted for c in categories)
 
 
-def pegged_coins(df: pd.DataFrame, peg) -> set[str]:
+def pegged_coins(df: pd.DataFrame, peg: PegDetector) -> set[str]:
     """Coins whose price sat flat inside the peg band on most of their days: stablecoins
     that CoinGecko never categorised. Expects coin_id, date, price_usd."""
     df = df.sort_values(["coin_id", "date"])
@@ -90,7 +97,7 @@ def pegged_coins(df: pd.DataFrame, peg) -> set[str]:
     lo_band, hi_band = peg.price_band
     flat = (hi / lo - 1 < peg.max_range) & df["price_usd"].between(lo_band, hi_band)
     share = flat.groupby(df["coin_id"]).mean()
-    return set(share[share >= peg.min_share_of_days].index)
+    return {str(coin_id) for coin_id, s in share.items() if s >= peg.min_share_of_days}
 
 
 # --- build (I/O) --------------------------------------------------------------

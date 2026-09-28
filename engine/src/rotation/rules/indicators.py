@@ -53,8 +53,3 @@ def higher_lows(s: pd.Series, window: int, lookback: int, min_lows: int) -> pd.S
     oldest_ff = oldest.reindex(s.index).ffill()
     within = (s.index.to_series() - oldest_ff) < pd.Timedelta(days=lookback)
     return rising_ff & within.fillna(False)
-
-
-def pct_change_over(s: pd.Series, days: int) -> pd.Series:
-    """Change vs the value `days` calendar rows earlier (daily series)."""
-    return s / s.shift(days) - 1

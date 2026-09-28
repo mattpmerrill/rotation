@@ -20,7 +20,10 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+from rotation.config import Cycle
 from rotation.rules.indicators import sma, weekly_close
+
+HALVING_INTERVAL_DAYS = 1456  # ~210,000 blocks at 10 min; real intervals ran 1,319-1,461 days
 
 
 @dataclass(frozen=True)
@@ -44,7 +47,7 @@ class BuyRules:
     deadline_days_since_ath: int  # deploy whatever is left by then: never sit out a bull
 
 
-def rules_from_config(c) -> tuple[SellRules, BuyRules]:
+def rules_from_config(c: Cycle) -> tuple[SellRules, BuyRules]:
     """c: config.Cycle (the `cycle:` section of rules.yaml)."""
     return SellRules(**c.sell.model_dump()), BuyRules(**c.buy.model_dump())
 
@@ -61,7 +64,7 @@ def cycle_features(
     f["ath"] = ath
     f["drawdown"] = 1 - btc / ath
     is_ath = btc >= ath
-    last_ath = pd.Series(np.where(is_ath, btc.index, pd.NaT), index=btc.index).ffill()
+    last_ath = pd.Series(btc.index, index=btc.index).where(is_ath).ffill()
     f["days_since_ath"] = (btc.index - pd.DatetimeIndex(last_ath)).days
     hs = pd.DatetimeIndex(sorted(halvings))
     last_h = [hs[hs <= t].max() if (hs <= t).any() else pd.NaT for t in btc.index]
@@ -69,12 +72,10 @@ def cycle_features(
     f["days_since_halving"] = (btc.index - f["last_halving"]).dt.days
     wk = weekly_close(btc)
     below = (wk < sma(wk, weekly_sma)).reindex(btc.index, method="ffill").fillna(False)
-    f["weekly_below_sma"] = below & (btc.index.dayofweek == 6)  # only on the weekly close
+    f["weekly_below_sma"] = below & (
+        pd.DatetimeIndex(btc.index).dayofweek == 6
+    )  # only on the weekly close
     return f
-
-
-def in_sell_window(days_since_halving: float, r: SellRules) -> bool:
-    return r.window_start_days <= days_since_halving <= r.window_end_days
 
 
 def clock_tranche_days(r: SellRules) -> list[int]:

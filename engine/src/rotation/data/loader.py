@@ -14,6 +14,7 @@ import io
 import json
 import os
 import re
+from collections.abc import Iterable
 
 import pandas as pd
 
@@ -27,7 +28,7 @@ def prepare(cfg: Config, since: str) -> dict[str, pd.DataFrame]:
     px = cache.read("universe", "prices")
     fmap = cache.read("universe", "futures_map")
     funding = cache.read("universe", "funding")
-    oi = cache.read("universe", "open_interest")
+    oi = cache.read_if_exists("universe", "open_interest")
     onchain = cache.read("coinmetrics", "btc")
     cats = cache.read("coingecko_meta", "categories")
     meta = pd.read_parquet(cache.data_dir() / "coingecko_backfill" / "_coins.parquet")
@@ -119,7 +120,7 @@ KEYS = {
 }
 
 
-def _pg_array(v) -> str:
+def _pg_array(v: Iterable[object]) -> str:
     return "{" + ",".join('"' + str(x).replace('"', '\\"') + '"' for x in v) + "}"
 
 

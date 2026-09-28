@@ -16,16 +16,21 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
+from typing import TYPE_CHECKING, Any, cast
 
 import httpx
 import numpy as np
 import pandas as pd
 
-from rotation.config import Config
+from rotation.config import Config, Universe
 from rotation.data.universe import is_excluded
 from rotation.rules.cycle import buy_started, rules_from_config
+
+if TYPE_CHECKING:
+    from psycopg import Cursor
 
 log = logging.getLogger(__name__)
 
@@ -45,18 +50,19 @@ class MarketState:
 
 def market_state(f: pd.DataFrame, cfg: Config, day: date) -> MarketState:
     """Today's row from the cycle features (rotation.rules.cycle.cycle_features)."""
-    row = f.loc[pd.Timestamp(day)]
+    row = cast("pd.Series[Any]", f.loc[pd.Timestamp(day)])
+    v = row.to_dict()
     _, buy = rules_from_config(cfg.rules.cycle)
-    days_since_ath = int(row["days_since_ath"])
+    days_since_ath = int(v["days_since_ath"])
     return MarketState(
         day=day,
-        btc_price=float(row["btc"]),
-        ath=float(row["ath"]),
+        btc_price=float(v["btc"]),
+        ath=float(v["ath"]),
         ath_date=(pd.Timestamp(day) - pd.Timedelta(days=days_since_ath)).date(),
-        drawdown=float(row["drawdown"]),
+        drawdown=float(v["drawdown"]),
         days_since_ath=days_since_ath,
-        mvrv=None if np.isnan(row["mvrv"]) else float(row["mvrv"]),
-        days_since_halving=int(row["days_since_halving"]),
+        mvrv=None if np.isnan(v["mvrv"]) else float(v["mvrv"]),
+        days_since_halving=int(v["days_since_halving"]),
         rebuy_window_open=buy_started(row, buy),
     )
 
@@ -69,10 +75,11 @@ def rank_markets(markets: pd.DataFrame, excluded: set[str]) -> pd.DataFrame:
     eligible = ~m["id"].isin(excluded | {"bitcoin"})
     m["rank"] = pd.NA
     m.loc[eligible, "rank"] = range(1, int(eligible.sum()) + 1)
-    return pd.concat([m, markets[~markets["id"].isin(m["id"])].assign(rank=pd.NA)])
+    unranked = markets[~markets["id"].isin(m["id"])].assign(rank=pd.NA)  # type: ignore[arg-type]  # pandas-stubs reject pd.NA; it is valid
+    return pd.concat([m, unranked])
 
 
-def _write_market_state(cur, s: MarketState, config_hash: str) -> None:
+def _write_market_state(cur: Cursor[Any], s: MarketState, config_hash: str) -> None:
     cur.execute(
         """insert into public.market_state (day, btc_price, ath, ath_date, drawdown,
              days_since_ath, mvrv, days_since_halving, rebuy_window_open, config_hash)
@@ -97,7 +104,7 @@ def _write_market_state(cur, s: MarketState, config_hash: str) -> None:
     )
 
 
-def _coins_in_entries(cur) -> set[str]:
+def _coins_in_entries(cur: Cursor[Any]) -> set[str]:
     """Every coin an entry picked or has traded: these get priced even outside the top 250."""
     cur.execute(
         """select unnest(basket) from public.entries
@@ -107,33 +114,38 @@ def _coins_in_entries(cur) -> set[str]:
 
 
 def classify_new_coins(
-    markets: pd.DataFrame, known: dict[str, bool], categories_of, universe
-) -> tuple[list[tuple], list[str]]:
+    markets: pd.DataFrame,
+    known: dict[str, bool],
+    categories_of: Callable[[str], list[str]],
+    universe: Universe,
+) -> tuple[list[tuple[Any, ...]], list[str]]:
     """Coins never seen before, classified by their CoinGecko categories like the backtest.
     Returns (rows for `coins`: id, symbol, name, categories, excluded) and the ids whose
     categories couldn't be fetched. Those are left out for the day (no rank, so an
     unclassified stablecoin can't take a top-100 place) and retried tomorrow."""
-    rows, failed = [], []
+    rows: list[tuple[Any, ...]] = []
+    failed: list[str] = []
     for r in markets.itertuples():
-        if r.id in known:
+        coin_id = str(r.id)
+        if coin_id in known:
             continue
         try:
-            cats = [] if r.id == "bitcoin" else categories_of(r.id)
+            cats = [] if coin_id == "bitcoin" else categories_of(coin_id)
         except httpx.HTTPError:
-            failed.append(r.id)
+            failed.append(coin_id)
             continue
         excl = is_excluded(
-            r.id,
+            coin_id,
             cats,
             universe.exclude_categories,
             universe.exclude_ids,
             universe.force_include_ids,
         )
-        rows.append((r.id, r.symbol, r.name, cats, excl))
+        rows.append((coin_id, r.symbol, r.name, cats, excl))
     return rows, failed
 
 
-def refresh_prices(cur, cfg: Config, day: date, wanted: set[str]) -> int:
+def refresh_prices(cur: Cursor[Any], cfg: Config, day: date, wanted: set[str]) -> int:
     """Save today's prices for BTC, the top 250 and every `wanted` coin to daily_prices.
     Needs COINGECKO_API_KEY (the free Demo key is enough); without it, prices nothing."""
     if not os.environ.get("COINGECKO_API_KEY"):
@@ -169,7 +181,7 @@ def refresh_prices(cur, cfg: Config, day: date, wanted: set[str]) -> int:
             r.current_price,
             r.total_volume,
             r.market_cap,
-            None if pd.isna(r.rank) else int(r.rank),
+            None if pd.isna(r.rank) else int(cast("int", r.rank)),
         )
         for r in ranked.itertuples()
         if not pd.isna(r.current_price)

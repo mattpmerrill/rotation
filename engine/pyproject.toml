@@ -17,7 +17,13 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8", "ruff>=0.6"]
+dev = [
+    "mypy>=2.3.1",
+    "pandas-stubs>=3.0.5.260914",
+    "pytest>=8",
+    "ruff>=0.6",
+    "types-pyyaml>=6.0.12.20260906",
+]
 
 [project.scripts]
 rotation = "rotation.cli:app"
@@ -37,3 +43,23 @@ addopts = "-m 'not network'"
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]
+# python.md: public functions and module boundaries are annotated, and the checker runs in CI.
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+
+# The two research modules index and add to pandas scalars (last_valid_index(), .at[...]). The
+# pandas stubs type those as a broad scalar union that a Timedelta cannot be added to, so mypy
+# reports errors on code that runs correctly (their output is regenerated and compared). Only
+# these three error codes, only these two modules; annotations and every other check still apply.
+[[tool.mypy.overrides]]
+module = ["rotation.backtest.buy_timing", "rotation.backtest.challenge_exits"]
+disable_error_code = ["arg-type", "index", "operator"]

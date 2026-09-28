@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import Any
 
 import httpx
 
@@ -39,5 +40,5 @@ def get(
     raise AssertionError("unreachable")
 
 
-def client(**kwargs) -> httpx.Client:
+def client(**kwargs: Any) -> httpx.Client:
     return httpx.Client(timeout=60, follow_redirects=True, **kwargs)

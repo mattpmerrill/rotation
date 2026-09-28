@@ -11,6 +11,7 @@ import os
 import threading
 import time
 from datetime import UTC, datetime
+from typing import Any
 
 import pandas as pd
 
@@ -43,7 +44,7 @@ class CoinGecko:
         if slot > now:
             time.sleep(slot - now)
 
-    def _get(self, path: str, params: dict | None = None):
+    def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
         self._throttle()
         r = http.get(self._c, path, params=params)
         return None if r.status_code == 404 else r.json()

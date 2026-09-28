@@ -91,5 +91,7 @@ CoinGecko has impossible market caps on dead markets; CoinMetrics publishes MVRV
 
 Phase 0 (2026-09-23 to 09-25) built the data, a rule engine for the original program doc and the
 backtests (`docs/backtests/phase0-report.md`: the original alt-trading rules lost BTC;
-`docs/backtests/cycle-harvest.md`: the BTC cycle harvest). That engine stays in the repo as
-research, tested and switched off. `docs/RULES.md` describes it.
+`docs/backtests/cycle-harvest.md`: the BTC cycle harvest). That engine was archived on 2026-09-28
+([ADR-004](decisions/ADR-004-archive-cycle-harvest-engine.md)): the code lives in the git tag
+`archive/cycle-harvest-2026-09-28`, the studies stay in `docs/backtests/`, and `docs/RULES.md`
+describes it. Only the halving clock and BTC cycle features remain in the engine.

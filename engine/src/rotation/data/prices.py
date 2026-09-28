@@ -38,7 +38,7 @@ def match_coinmetrics(
     cg_idx = cg[cg["date"] >= VALIDATE_FROM].set_index(["coin_id", "date"])["price_usd"]
     best: dict[str, tuple[float, str]] = {}  # coin_id -> (err, asset)
     for asset, s in cm[cm["date"] >= VALIDATE_FROM].groupby("asset"):
-        base = asset.split("_")[0]
+        base = str(asset).split("_")[0]
         for coin_id in by_symbol.get(base, []):
             if coin_id not in cg_idx.index.get_level_values(0):
                 continue
@@ -48,9 +48,9 @@ def match_coinmetrics(
             ).dropna()
             if len(j) < MIN_OVERLAP_DAYS:
                 continue
-            err = (j["cm"] / j["cg"] - 1).abs().median()
+            err = float((j["cm"] / j["cg"] - 1).abs().median())
             if err < MAX_MEDIAN_ERR and err < best.get(coin_id, (1.0, ""))[0]:
-                best[coin_id] = (err, asset)
+                best[coin_id] = (err, str(asset))
     return {asset: coin_id for coin_id, (_, asset) in best.items()}
 
 

@@ -56,16 +56,14 @@ def fetch_prices(c: httpx.Client, assets: list[str], start: str = "2010-07-18") 
     Cached as one frame: asset, date, price_usd."""
     rows: list[dict] = []
     for i in range(0, len(assets), 20):  # keep URLs short
-        url, params = (
-            URL,
-            {
-                "assets": ",".join(assets[i : i + 20]),
-                "metrics": "PriceUSD",
-                "frequency": "1d",
-                "start_time": start,
-                "page_size": 10000,
-            },
-        )
+        url: str | None = URL
+        params: dict[str, object] | None = {
+            "assets": ",".join(assets[i : i + 20]),
+            "metrics": "PriceUSD",
+            "frequency": "1d",
+            "start_time": start,
+            "page_size": 10000,
+        }
         while url:
             body = http.get(c, url, params=params).json()
             rows.extend(body["data"])

@@ -29,7 +29,7 @@ from itertools import pairwise
 import numpy as np
 import pandas as pd
 
-from rotation.backtest.cycle_study import HALVINGS, OUT, load_features
+from rotation.backtest.btc_cycle import HALVINGS, REPORT_DIR, load_features
 from rotation.config import get_config
 from rotation.data import cache
 from rotation.rules.cycle import buy_started, clock_tranche_days, rules_from_config
@@ -222,6 +222,6 @@ backtest supports (`docs/backtests/cycle-harvest.md`). Each person still decides
 
 
 def write() -> str:
-    out = OUT / "challenge-exits.md"
+    out = REPORT_DIR / "challenge-exits.md"
     out.write_text(build())
     return str(out)

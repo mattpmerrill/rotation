@@ -16,6 +16,7 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pandas as pd
 
@@ -27,7 +28,7 @@ log = logging.getLogger(__name__)
 DATASET = "coingecko_backfill"
 
 
-def _dir():
+def _dir() -> Path:
     d = cache.data_dir() / DATASET
     d.mkdir(parents=True, exist_ok=True)
     return d
