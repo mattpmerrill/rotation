@@ -5,7 +5,7 @@ import { listTrades } from "@/data/trades.repository";
 import { buyInWindow, editLockedReason, editWindow } from "@/domain/buy-in";
 import { getCoins, getEligibleCoins, getPriceBook } from "@/data/prices.repository";
 import { marketReference } from "@/data/reference.repository";
-import type { Viewer } from "@/data/viewer";
+import type { Viewer } from "@/domain/viewer";
 import type { EligibleCoin } from "@/domain/basket";
 import { cycleReference } from "@/domain/cycle";
 import { BTC, type Challenge, type Entry, type PriceBook, type Trade } from "@/domain/types";

@@ -3,7 +3,7 @@ import { deleteEntry, editEntry, findEntryFor, getEntry, startEntry } from "@/da
 import { getCurrentChallenge } from "@/data/challenges.repository";
 import { getEligibleCoins } from "@/data/prices.repository";
 import { listTrades } from "@/data/trades.repository";
-import type { Viewer } from "@/data/viewer";
+import type { Viewer } from "@/domain/viewer";
 import { checkBasket } from "@/domain/basket";
 import { buyInWindow, checkBuyIn, editLockedReason, editWindow } from "@/domain/buy-in";
 import { todayUtc } from "@/lib/days";

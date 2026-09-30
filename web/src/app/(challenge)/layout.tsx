@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireViewer } from "@/data/viewer";
+import { requireViewer } from "@/features/auth/viewer";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { countWaiting } from "@/features/admin/queries";
 import { WaitingForApproval } from "@/features/auth/components/waiting-for-approval";

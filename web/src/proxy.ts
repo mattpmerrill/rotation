@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
-import { refreshSession } from "@/data/session";
+import { refreshSession } from "@/features/auth/session";
 
-// Session refresh only. Pages and actions check access themselves (data/viewer).
+// Session refresh only. Pages and actions check access themselves (features/auth/viewer).
 export async function proxy(request: NextRequest) {
   return refreshSession(request);
 }

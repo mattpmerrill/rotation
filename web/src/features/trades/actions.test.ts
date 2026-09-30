@@ -1,13 +1,14 @@
 import { revalidatePath } from "next/cache";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { requireMember, type Viewer } from "@/data/viewer";
+import { requireMember } from "@/data/guards";
+import type { Viewer } from "@/domain/viewer";
 import { fail, ok } from "@/lib/result";
 import { fillWaitingSlot, logTrade, removeTrade } from "./actions";
 import { fillSlotWithCoin, recordTrade, retractTrade } from "./service";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("@/data/viewer", () => ({ requireMember: vi.fn() }));
+vi.mock("@/data/guards", () => ({ requireMember: vi.fn() }));
 vi.mock("./service", () => ({ recordTrade: vi.fn(), retractTrade: vi.fn(), fillSlotWithCoin: vi.fn() }));
 
 const viewer: Viewer = { id: "u1", email: "a@example.com", name: "A", isMember: true, isAdmin: false };

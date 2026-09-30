@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { requireViewer } from "@/data/viewer";
+import { requireViewer } from "@/features/auth/viewer";
 import { PeopleList } from "@/features/admin/components/people-list";
 import { getPeople } from "@/features/admin/queries";
 

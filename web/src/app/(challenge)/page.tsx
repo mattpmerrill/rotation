@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireViewer } from "@/data/viewer";
+import { requireViewer } from "@/features/auth/viewer";
 import { LeaderboardList } from "@/features/leaderboard/components/leaderboard-list";
 import { MarketStrip } from "@/features/leaderboard/components/market-strip";
 import { getLeaderboard } from "@/features/leaderboard/queries";

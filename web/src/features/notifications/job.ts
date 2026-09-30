@@ -1,11 +1,12 @@
 import "server-only";
-import { postToDiscord } from "@/data/discord";
+import { env } from "@/data/env";
 import { getMarketState } from "@/data/market.repository";
-import { claimNotification, releaseNotification } from "@/data/notifications.repository";
+import { sendOnce } from "@/data/notifications.repository";
 import { loadCurrentChallenge } from "@/data/snapshot.repository";
 import { supabaseAdmin } from "@/data/supabase/admin";
 import { isChallengeComplete, rankStandings, standingOf } from "@/domain/standings";
 import { isBuyInTrade } from "@/domain/trades";
+import { postToDiscord } from "@/integrations/discord";
 import { addDays } from "@/lib/days";
 import { buyInMessage, completeMessage, digestMessage, rebuyWindowMessage, tradeMessage } from "./messages";
 
@@ -61,15 +62,9 @@ export async function runDailyJob(today: string, appUrl: string): Promise<string
   }
 
   const sent: string[] = [];
+  const webhookUrl = env().DISCORD_WEBHOOK_URL;
   for (const p of posts) {
-    if (!(await claimNotification(p.key))) continue;
-    try {
-      if (await postToDiscord(p.text)) sent.push(p.key);
-      else await releaseNotification(p.key); // no webhook yet: post it once one is set
-    } catch (err) {
-      await releaseNotification(p.key);
-      throw err;
-    }
+    if (await sendOnce(p.key, () => postToDiscord(webhookUrl, p.text))) sent.push(p.key);
   }
   return sent;
 }

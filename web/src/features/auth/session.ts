@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { Database } from "./database.types";
-import { env } from "./env";
+import type { Database } from "@/data/database.types";
+import { env } from "@/data/env";
 
 /** Refreshes the auth cookie on every request (Supabase's documented proxy pattern). */
 export async function refreshSession(request: NextRequest) {

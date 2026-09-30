@@ -1,7 +1,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { requireMember, type Viewer } from "@/data/viewer";
+import { requireMember } from "@/data/guards";
+import type { Viewer } from "@/domain/viewer";
 import { fail, FORM, ok } from "@/lib/result";
 import { editBasket, removeBasket, startChallenge } from "./actions";
 import { deleteBasket, enterChallenge, redoBuyIn } from "./service";
@@ -14,7 +15,7 @@ vi.mock("next/navigation", () => ({
     throw new Error(`NEXT_REDIRECT ${to}`);
   }),
 }));
-vi.mock("@/data/viewer", () => ({ requireMember: vi.fn() }));
+vi.mock("@/data/guards", () => ({ requireMember: vi.fn() }));
 vi.mock("./service", () => ({ enterChallenge: vi.fn(), redoBuyIn: vi.fn(), deleteBasket: vi.fn() }));
 
 const viewer: Viewer = { id: "u1", email: "a@example.com", name: "A", isMember: true, isAdmin: false };

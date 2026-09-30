@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { requireViewer } from "@/data/viewer";
+import { requireViewer } from "@/features/auth/viewer";
 import { CoinTable } from "@/features/entry/components/coin-table";
 import { ReferenceDates } from "@/features/entry/components/reference-dates";
 import { ScoreHero } from "@/features/entry/components/score-hero";

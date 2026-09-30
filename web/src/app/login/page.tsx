@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getViewer } from "@/data/viewer";
+import { getViewer } from "@/features/auth/viewer";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { loginErrorMessage } from "@/features/auth/login-errors";
 

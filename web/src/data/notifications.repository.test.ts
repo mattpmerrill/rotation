@@ -1,11 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { postToDiscord } from "./discord";
-import { announceOnce } from "./notifications.repository";
+import { sendOnce } from "./notifications.repository";
 
 vi.mock("server-only", () => ({}));
-vi.mock("./discord", () => ({ postToDiscord: vi.fn() }));
 
-// The table calls announceOnce makes through the admin client: claim (upsert) and release (delete).
+// The table calls sendOnce makes through the admin client: claim (upsert) and release (delete).
 const table = { claim: vi.fn(), release: vi.fn() };
 vi.mock("./supabase/admin", () => ({
   supabaseAdmin: () => ({
@@ -20,51 +18,40 @@ const claimed = { data: [{ key: "k" }], error: null };
 const alreadyClaimed = { data: [], error: null };
 
 afterEach(() => {
-  vi.restoreAllMocks();
   vi.resetAllMocks();
 });
 
-function quiet() {
-  vi.spyOn(console, "log").mockImplementation(() => {});
-  return vi.spyOn(console, "error").mockImplementation(() => {});
-}
-
-describe("announceOnce", () => {
-  it("posts the first time, and not again once the key is claimed", async () => {
-    quiet();
+describe("sendOnce", () => {
+  it("sends the first time, and not again once the key is claimed", async () => {
+    const send = vi.fn().mockResolvedValue(true);
     table.claim.mockResolvedValueOnce(claimed).mockResolvedValueOnce(alreadyClaimed);
-    vi.mocked(postToDiscord).mockResolvedValue(true);
-    await announceOnce("waiting:u1", "hello");
-    await announceOnce("waiting:u1", "hello");
-    expect(postToDiscord).toHaveBeenCalledTimes(1);
-    expect(postToDiscord).toHaveBeenCalledWith("hello");
+    expect(await sendOnce("waiting:u1", send)).toBe(true);
+    expect(await sendOnce("waiting:u1", send)).toBe(false);
+    expect(send).toHaveBeenCalledTimes(1);
   });
 
-  it("releases the key when no webhook is set, so it is posted once one is", async () => {
-    quiet();
+  it("releases the key when nothing was sent, so it is sent once there is somewhere to send it", async () => {
     table.claim.mockResolvedValue(claimed);
     table.release.mockResolvedValue({});
-    vi.mocked(postToDiscord).mockResolvedValue(false);
-    await announceOnce("waiting:u1", "hello");
+    expect(await sendOnce("waiting:u1", async () => false)).toBe(false);
     expect(table.release).toHaveBeenCalledTimes(1);
   });
 
-  it("never throws: a Discord failure releases the key and is logged as an error", async () => {
-    const err = quiet();
+  it("releases the key and rethrows when sending fails", async () => {
     table.claim.mockResolvedValue(claimed);
     table.release.mockResolvedValue({});
-    vi.mocked(postToDiscord).mockRejectedValue(new Error("Discord answered 500"));
-    await expect(announceOnce("waiting:u1", "hello")).resolves.toBeUndefined();
+    await expect(
+      sendOnce("waiting:u1", async () => {
+        throw new Error("Discord answered 500");
+      }),
+    ).rejects.toThrow("Discord answered 500");
     expect(table.release).toHaveBeenCalledTimes(1);
-    expect(String(err.mock.calls[0]?.[0])).toContain("notification.announce_failed");
-    expect(String(err.mock.calls[0]?.[0])).toContain("Discord answered 500");
   });
 
-  it("never throws when the database is unavailable either", async () => {
-    const err = quiet();
+  it("throws, and sends nothing, when the database is unavailable", async () => {
+    const send = vi.fn();
     table.claim.mockResolvedValue({ data: null, error: new Error("connection refused") });
-    await expect(announceOnce("waiting:u1", "hello")).resolves.toBeUndefined();
-    expect(postToDiscord).not.toHaveBeenCalled();
-    expect(err).toHaveBeenCalledTimes(1);
+    await expect(sendOnce("waiting:u1", send)).rejects.toThrow("connection refused");
+    expect(send).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { requireViewer } from "@/data/viewer";
+import { requireViewer } from "@/data/guards";
 import { fail, ok } from "@/lib/result";
 import { setNewPassword, signIn, signUp } from "./actions";
 import { changePassword, createAccount, signIn as signInUseCase } from "./service";
@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 vi.mock("@/data/origin", () => ({ requestOrigin: vi.fn(async () => "https://app.example") }));
-vi.mock("@/data/viewer", () => ({ requireViewer: vi.fn() }));
+vi.mock("@/data/guards", () => ({ requireViewer: vi.fn() }));
 vi.mock("./service", () => ({
   changePassword: vi.fn(),
   createAccount: vi.fn(),

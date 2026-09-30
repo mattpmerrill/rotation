@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireViewer } from "@/data/viewer";
+import { requireViewer } from "@/features/auth/viewer";
 import { PickCard } from "@/features/picks/components/pick-card";
 import { getPicks } from "@/features/picks/queries";
 import { Notice } from "@/ui/notice";

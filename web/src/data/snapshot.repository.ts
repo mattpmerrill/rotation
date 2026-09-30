@@ -3,9 +3,8 @@ import { BTC, type Challenge, type Coin, type Entry, type PriceBook, type Trade 
 import { getCurrentChallenge } from "./challenges.repository";
 import { listEntries } from "./entries.repository";
 import { listTrades } from "./trades.repository";
-import { withLivePrices } from "@/domain/prices";
+import { withLivePrices, type LivePrices } from "@/domain/prices";
 import { todayUtc } from "@/lib/days";
-import { getLivePrices } from "./live";
 import { getCoins, getPriceBook } from "./prices.repository";
 import type { Db } from "./supabase/server";
 
@@ -21,11 +20,12 @@ export interface ChallengeSnapshot {
   liveAt: number | null;
 }
 
-/** `live` adds today's prices from CoinGecko (cached a minute) on top of the daily closes, for
- *  pages people watch. The daily job leaves it off so its numbers match the stored closes. */
+/** `liveQuotes` adds today's prices on top of the daily closes, for pages people watch. The caller
+ *  passes the function that fetches them (a feature hands in the CoinGecko integration, which this
+ *  layer may not import). The daily job leaves it out so its numbers match the stored closes. */
 export async function loadCurrentChallenge(
   db?: Db,
-  { live = false }: { live?: boolean } = {},
+  { liveQuotes }: { liveQuotes?: (ids: string[]) => Promise<LivePrices | null> } = {},
 ): Promise<ChallengeSnapshot | null> {
   const challenge = await getCurrentChallenge(db);
   if (!challenge) return null;
@@ -39,7 +39,7 @@ export async function loadCurrentChallenge(
   const [daily, coins, quotes] = await Promise.all([
     getPriceBook(assets, from, db),
     getCoins(assets, db),
-    live ? getLivePrices(assets) : null,
+    liveQuotes ? liveQuotes(assets) : null,
   ]);
   const prices = quotes ? withLivePrices(daily, quotes.prices, todayUtc()) : daily;
   return { challenge, entries, trades, prices, coins, liveAt: quotes?.at ?? null };

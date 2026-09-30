@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getViewer } from "@/data/viewer";
+import { getViewer } from "@/features/auth/viewer";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
 
 export const metadata: Metadata = { title: "Choose a new password" };

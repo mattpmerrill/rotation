@@ -1,37 +1,14 @@
 import "server-only";
 import { redirect } from "next/navigation";
-import { cache } from "react";
-import { supabaseServer } from "./supabase/server";
+import type { Viewer } from "@/domain/viewer";
+import { getViewer } from "./viewer.repository";
 
-export interface Viewer {
-  id: string;
-  email: string;
-  name: string;
-  isMember: boolean;
-  /** May approve people and see the admin page. */
-  isAdmin: boolean;
-}
-
-/** The signed-in person (verified from the JWT), or null. Cached for the request. */
-export const getViewer = cache(async (): Promise<Viewer | null> => {
-  const db = await supabaseServer();
-  const { data } = await db.auth.getClaims();
-  const claims = data?.claims;
-  if (!claims) return null;
-  const { data: profile } = await db
-    .from("profiles")
-    .select("display_name, is_member, is_admin")
-    .eq("id", claims.sub)
-    .maybeSingle();
-  const email = (claims.email as string | undefined) ?? "";
-  return {
-    id: claims.sub,
-    email,
-    name: profile?.display_name ?? email.split("@")[0] ?? email,
-    isMember: profile?.is_member ?? false,
-    isAdmin: profile?.is_admin ?? false,
-  };
-});
+/**
+ * The access checks every private page and Server Action starts with. They live here, below the
+ * features, because every feature's actions need them and features may not import each other;
+ * pages reach them through `features/auth/viewer`. The proxy is not the authorization boundary,
+ * and the database checks again.
+ */
 
 /** The signed-in person, or a redirect to sign in. Call at the top of every private page and
  *  every Server Action: actions are reachable by direct POST, not only through the UI. */

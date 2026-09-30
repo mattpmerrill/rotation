@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireMember } from "@/data/viewer";
+import { requireMember } from "@/data/guards";
 import { firstIssue } from "@/lib/first-issue";
 import { fillInput, tradeIdInput, tradeInput } from "./schema";
 import { fillSlotWithCoin, recordTrade, retractTrade } from "./service";

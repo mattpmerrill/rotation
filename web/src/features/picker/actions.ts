@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireMember } from "@/data/viewer";
+import { requireMember } from "@/data/guards";
 import { firstIssue } from "@/lib/first-issue";
 import { formMessages } from "@/lib/result";
 import { buyInInput, entryIdArgument, entryIdField } from "./schema";

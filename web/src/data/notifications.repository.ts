@@ -1,7 +1,8 @@
 import "server-only";
-import { logEvent } from "@/lib/log";
-import { postToDiscord } from "./discord";
 import { supabaseAdmin } from "./supabase/admin";
+
+/** The repository for `notifications`: a row per Discord post already sent, keyed by what it was
+ *  about, so a job that runs twice posts once. */
 
 /** Record that the notification `key` was sent. True the first time, false if it already was:
  *  the job posts each notification once however often it runs. */
@@ -19,21 +20,20 @@ export async function releaseNotification(key: string): Promise<void> {
   await supabaseAdmin().from("notifications").delete().eq("key", key);
 }
 
-/** Post `text` to Discord once per `key`, however many times this is called. Best effort: this runs
- *  alongside something that matters more (a sign-up), so a failure is logged and never thrown. */
-export async function announceOnce(key: string, text: string): Promise<void> {
+/**
+ * Run `send` at most once per `key`, however many times this is called: claim the key first, and
+ * release it if `send` reports nothing was sent (false: no webhook yet) or throws, so the next run
+ * tries again. Returns true when `send` ran and sent. `send` is the caller's, so this layer knows
+ * nothing about Discord.
+ */
+export async function sendOnce(key: string, send: () => Promise<boolean>): Promise<boolean> {
+  if (!(await claimNotification(key))) return false;
   try {
-    if (!(await claimNotification(key))) return;
-    try {
-      if (!(await postToDiscord(text))) await releaseNotification(key); // no webhook yet: try again later
-    } catch (err) {
-      await releaseNotification(key);
-      throw err;
-    }
+    if (await send()) return true;
+    await releaseNotification(key);
+    return false;
   } catch (err) {
-    logEvent("error", "notification.announce_failed", {
-      key,
-      detail: err instanceof Error ? err.message : String(err),
-    });
+    await releaseNotification(key);
+    throw err;
   }
 }

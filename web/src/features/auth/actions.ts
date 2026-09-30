@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireViewer } from "@/data/viewer";
+import { requireViewer } from "@/data/guards";
 import { firstIssue } from "@/lib/first-issue";
 import { requestOrigin } from "@/data/origin";
 import {

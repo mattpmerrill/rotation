@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireViewer } from "@/data/viewer";
+import { requireViewer } from "@/features/auth/viewer";
 import { BTC } from "@/domain/types";
 import { DeleteBasketButton } from "@/features/picker/components/delete-basket-button";
 import { PickerFlow } from "@/features/picker/components/picker-flow";

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireViewer } from "@/data/viewer";
+import { requireViewer } from "@/features/auth/viewer";
 import { CoinChooser } from "@/features/timing/components/coin-chooser";
 import { StretchTable } from "@/features/timing/components/stretch-table";
 import { TimingVerdict } from "@/features/timing/components/timing-verdict";

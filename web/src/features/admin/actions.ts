@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requestOrigin } from "@/data/origin";
-import { requireAdmin } from "@/data/viewer";
+import { requireAdmin } from "@/data/guards";
 import { firstIssue } from "@/lib/first-issue";
 import { personIdInput } from "./schema";
 import { approvePerson, createHelpLink, rejectPerson, removeMembership } from "./service";

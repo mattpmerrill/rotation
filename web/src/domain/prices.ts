@@ -1,5 +1,12 @@
 import type { Day, PriceBook } from "./types";
 
+/** Live USD prices for some assets, and when the newest quote was made. */
+export interface LivePrices {
+  prices: Record<string, number>;
+  /** Epoch ms of the newest quote. */
+  at: number;
+}
+
 /** The close on `day`, or the last one before it if that day has no price. Null if the asset
  *  has no price on or before `day`. */
 export function priceOn(book: PriceBook, asset: string, day: Day): number | null {

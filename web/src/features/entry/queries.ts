@@ -4,8 +4,9 @@ import { findEntryFor } from "@/data/entries.repository";
 import { getEligibleCoins, getPriceBook } from "@/data/prices.repository";
 import { getMarketState } from "@/data/market.repository";
 import { marketReference } from "@/data/reference.repository";
+import { env } from "@/data/env";
 import { loadCurrentChallenge } from "@/data/snapshot.repository";
-import type { Viewer } from "@/data/viewer";
+import type { Viewer } from "@/domain/viewer";
 import { coinChanges, type CoinChange } from "@/domain/coins";
 import { cycleReference, type CycleReference } from "@/domain/cycle";
 import { altHoldings, balancesOn } from "@/domain/holdings";
@@ -13,7 +14,11 @@ import { slotShare, slotsClosedReason, waitingBtc } from "@/domain/slots";
 import { standingOf, type Standing } from "@/domain/standings";
 import { BTC, USDT, type Coin, type Entry, type MarketState, type PriceBook, type Trade } from "@/domain/types";
 import type { EligibleCoin } from "@/domain/basket";
+import { getLivePrices } from "@/integrations/coingecko";
 import { addDays, laterDay, todayUtc } from "@/lib/days";
+
+/** Today's prices from CoinGecko, cached a minute; null (daily closes only) if it is down. */
+const liveQuotes = (ids: string[]) => getLivePrices(ids, { apiKey: env().COINGECKO_API_KEY });
 
 export interface EntryView {
   entry: Entry;
@@ -45,7 +50,7 @@ export interface EntryView {
 
 /** One entry in the current challenge, valued as of today. Null if it isn't in it. */
 export async function getEntryView(entryId: number, viewer: Viewer): Promise<EntryView | null> {
-  const [snap, market] = await Promise.all([loadCurrentChallenge(undefined, { live: true }), getMarketState()]);
+  const [snap, market] = await Promise.all([loadCurrentChallenge(undefined, { liveQuotes }), getMarketState()]);
   const entry = snap?.entries.find((e) => e.id === entryId);
   if (!snap || !entry) return null;
   const today = todayUtc();

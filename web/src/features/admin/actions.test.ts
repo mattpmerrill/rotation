@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { requireAdmin } from "@/data/viewer";
+import { requireAdmin } from "@/data/guards";
 import { fail, ok } from "@/lib/result";
 import { approve, helpLink, reject, removeMember } from "./actions";
 import { approvePerson, createHelpLink, rejectPerson, removeMembership } from "./service";
@@ -8,7 +8,7 @@ import { approvePerson, createHelpLink, rejectPerson, removeMembership } from ".
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/data/origin", () => ({ requestOrigin: vi.fn(async () => "https://app.example") }));
-vi.mock("@/data/viewer", () => ({ requireAdmin: vi.fn() }));
+vi.mock("@/data/guards", () => ({ requireAdmin: vi.fn() }));
 vi.mock("./service", () => ({
   approvePerson: vi.fn(),
   createHelpLink: vi.fn(),

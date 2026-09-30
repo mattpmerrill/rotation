@@ -1,10 +1,15 @@
 import "server-only";
 import { getMarketState } from "@/data/market.repository";
+import { env } from "@/data/env";
 import { loadCurrentChallenge } from "@/data/snapshot.repository";
-import type { Viewer } from "@/data/viewer";
+import type { Viewer } from "@/domain/viewer";
 import { isChallengeComplete, rankStandings, standingOf } from "@/domain/standings";
 import type { Challenge, Coin, MarketState, Phase } from "@/domain/types";
+import { getLivePrices } from "@/integrations/coingecko";
 import { todayUtc } from "@/lib/days";
+
+/** Today's prices from CoinGecko, cached a minute; null (daily closes only) if it is down. */
+const liveQuotes = (ids: string[]) => getLivePrices(ids, { apiKey: env().COINGECKO_API_KEY });
 
 export interface LeaderboardRow {
   entryId: number;
@@ -32,7 +37,7 @@ export interface Leaderboard {
 }
 
 export async function getLeaderboard(viewer: Viewer): Promise<Leaderboard | null> {
-  const [snap, market] = await Promise.all([loadCurrentChallenge(undefined, { live: true }), getMarketState()]);
+  const [snap, market] = await Promise.all([loadCurrentChallenge(undefined, { liveQuotes }), getMarketState()]);
   if (!snap) return null;
   const today = todayUtc();
   const standings = rankStandings(
