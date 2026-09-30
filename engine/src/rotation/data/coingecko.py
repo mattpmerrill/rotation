@@ -10,12 +10,12 @@ from __future__ import annotations
 import os
 import threading
 import time
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 import pandas as pd
 
-from rotation.data import cache, http
+from rotation.data import http
 
 BASE = {"demo": "https://api.coingecko.com/api/v3", "pro": "https://pro-api.coingecko.com/api/v3"}
 HEADER = {"demo": "x-cg-demo-api-key", "pro": "x-cg-pro-api-key"}
@@ -48,9 +48,6 @@ class CoinGecko:
         self._throttle()
         r = http.get(self._c, path, params=params)
         return None if r.status_code == 404 else r.json()
-
-    def ping(self) -> dict:
-        return self._get("/ping")
 
     def coins_list(self, status: str = "active") -> pd.DataFrame:
         """status='inactive' (Analyst+) returns delisted coins: needed to avoid survivorship bias."""
@@ -91,13 +88,6 @@ class CoinGecko:
             {"vs_currency": "usd", "from": int(start.timestamp()), "to": int(end.timestamp())},
         )
         return parse_market_chart(body or {})
-
-    def fetch_history(self, coin_id: str, start: datetime | None = None) -> pd.DataFrame:
-        start = start or datetime(2013, 4, 28, tzinfo=UTC)
-        df = self.market_chart(coin_id, start, datetime.now(UTC))
-        if df.empty:
-            return df
-        return cache.upsert(df, "coingecko_daily", coin_id)
 
 
 def parse_market_chart(body: dict) -> pd.DataFrame:

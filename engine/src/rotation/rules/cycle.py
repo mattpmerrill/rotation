@@ -33,8 +33,7 @@ class SellRules:
     window_end_days: int
     clock_share: float  # share of the target sold on the clock; the rest on the trend break
     clock_tranches: int
-    trend_weekly_sma: int  # sell the remaining target on a weekly close below this...
-    trend_needs_new_ath: bool = True  # ...but only after a new ATH inside the window
+    trend_weekly_sma: int  # sell the remaining target on a weekly close below this
 
 
 @dataclass(frozen=True)
