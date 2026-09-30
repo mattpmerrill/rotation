@@ -3,8 +3,9 @@
 The audit of this repo against the engineering standards it follows ([ADR-001](decisions/ADR-001-adopt-engineering-standards.md)): for each rule area, what checks it, where that check runs, and whether it is running
 today. A MUST with nothing behind it is an intention, and it is listed as one.
 
-Status is **re-derived from the repo, not edited from memory** (the standards require it). Derived on
-2026-09-28, after the first round of enforcement work. Update a row when the check behind it changes,
+Status is **re-derived from the repo, not edited from memory** (the standards require it). Re-derived on
+2026-09-30, after the layer, security-header and seed work on the `cleanup/showcase` branch (rows whose
+evidence carries an earlier date were not re-run; the date says when they were). Update a row when the check behind it changes,
 and re-derive the whole table when you touch this file.
 
 ## Status vocabulary
@@ -23,32 +24,32 @@ and re-derive the whole table when you touch this file.
 |---|---|---|---|
 | Type safety, compiler baseline (strict + 4 flags) | `tsc --noEmit` | local check, CI | Automated |
 | No non-null assertions | ESLint `no-non-null-assertion` | local check, CI | Automated |
-| Unsafe type assertions carry a reason | - | - | Unenforced (exception 5) |
+| Unsafe type assertions carry a reason | grep, in review: 4 `as` casts in non-test `web/src`, each with a comment (2026-09-30) | Review | Review (exception 5 retired; no linter can tell a reason from a comment) |
 | Lint | ESLint (Next config) | local check, CI | Automated |
 | Formatting | `prettier --check` (web), `ruff format --check` (engine) | local check, CI | Automated (partial: root `scripts/` and workflows are not formatted by anything) |
-| Unit tests | Vitest (200), pytest (47) | local check, CI | Automated |
+| Unit tests | Vitest (250 tests in 43 files), pytest (46, plus 1 skipped without the research cache) | local check, CI | Automated |
 | Component tests | - | - | Unenforced (exception 8) |
 | Generated DB types match schema | `supabase gen types` diff, CLI pinned | CI `database` job | Automated (passed in CI on 2026-09-28; needs Docker, so not in the local check) |
-| Layer and import boundaries | ESLint `no-restricted-imports` per layer; dependency-cruiser rules | local check, CI | Automated |
+| Layer and import boundaries | ESLint `no-restricted-imports` per layer (`lib`, `domain`, `data`, `integrations`, `ui`, `features`, `app` and `proxy.ts`); dependency-cruiser rules `no-circular`, `domain-and-lib-are-pure`, `components-do-not-touch-data`, `only-features-use-integrations`, `integrations-import-domain-and-lib-only`, `routes-do-not-touch-data`, `not-to-test-files` | local check, CI | Automated |
 | No circular imports, no orphaned modules (web) | dependency-cruiser | local check, CI | Automated (web only; the engine has no dead-code check) |
-| Domain and lib import no framework, database or Node built-ins | dependency-cruiser | local check, CI | Automated |
-| Components never import `data/` | dependency-cruiser | local check, CI | Automated |
-| Queries only inside `data/` | ESLint (pages) and dependency-cruiser (components); "every Supabase call is in `data/`" was verified by grep on 2026-09-28 | local check, CI | Automated (partial: no guard for a feature calling Supabase itself) |
-| Handler, service, repository chain | - | - | Unenforced: every feature (`trades`, `picker`, `auth`, `admin`) follows it and no action calls the data layer (checked by grep on 2026-09-28), but nothing stops new code from skipping it. See "Migrating to the chain" below |
+| Domain and lib import no framework, database or Node built-ins | ESLint and dependency-cruiser (`domain-and-lib-use-no-node-builtins`) | local check, CI | Automated |
+| Components and `ui` never import `data/` or `integrations/`; routes never import either | ESLint and dependency-cruiser | local check, CI | Automated |
+| Queries only inside `data/` | ESLint (routes) and dependency-cruiser (routes, components); "every Supabase call is in `data/`" was verified by grep on 2026-09-30, with one exception: `features/auth/session.ts` builds a Supabase client to refresh the auth cookie for the proxy, which is not a query | local check, CI | Automated (partial: no guard for a feature calling Supabase itself) |
+| Handler, service, repository chain | Routes cannot import `data/` (Automated), but nothing checks that an action calls a service | - | Unenforced: `trades`, `picker`, `auth` and `admin` follow it and no action calls a repository except for the access guards (grep, 2026-09-30); nothing stops new code from skipping it |
 | One definition per domain concept | - | Review | Unenforced (no canonical-definitions guard) |
 | Server-only modules out of client code | `server-only` import (Next build); dependency-cruiser | Vercel build, CI | Automated (partial) |
 | Env parsed once, centrally | ESLint refuses `process.env` outside `data/env.ts` | local check, CI | Automated |
 | `.env.example` lists every variable | `scripts/guards/env-example.mjs` | local check, CI | Automated |
-| Runtime validation at trust boundaries | zod in actions and env; nothing checks new boundaries | Review | Review (known gap: `data/live.ts`, exception 4) |
+| Runtime validation at trust boundaries | zod in actions, env, the CoinGecko adapter and the engine's JSON files (`data/engine-files.test.ts` parses the committed files); nothing checks new boundaries | Review | Review (exception 4 retired 2026-09-30) |
 | Typed result, stable error codes, no raw DB or Auth text to users | - | - | Unenforced: every feature returns `ApplicationResult`, `dbFailure` and `authFailure` translate and log, and no raw `error.message` reaches a user (grep, 2026-09-28); nothing stops a new one |
-| Auth rechecked at every boundary | `requireMember()` convention; e2e proves every private route sends a signed-out visitor to sign in | CI | Review (partial: the signed-out gates are Automated) |
+| Auth rechecked at every boundary | `requireViewer()`, `requireMember()` and `requireAdmin()` (`data/guards.ts`) by convention; e2e proves every private route sends a signed-out visitor to sign in | CI | Review (partial: the signed-out gates are Automated) |
 | RLS present on exposed tables | pgTAP `rls-is-on.test.sql`, against the catalogue | CI `database` job | Automated (passed in CI on 2026-09-28; the query was also checked against production: 12 of 12 tables) |
 | RLS allowed and denied tests | pgTAP `challenge.test.sql` and `signup-approval.test.sql` (allowed and denied paths for every write and admin function): 74 tests across 3 files | local check (when Docker runs), CI `database` job | Automated (also run against production inside a rolled-back transaction before the migration was applied) |
 | Clean DB reset from migrations | `supabase db start` replays every migration | CI `database` job | Automated |
 | Migration history matches production | `supabase db push --dry-run` | manual | Local only (verified 2026-09-28: "Remote database is up to date") |
 | Integration behaviour against a real DB | - | - | Unenforced |
 | Production build | `next build` | local check, CI, Vercel | Automated |
-| Critical E2E journeys | Playwright: 28 signed-out tests (desktop and phone) and a 9-step signed-in journey (sign up with email, wait, approval, admin-only page, neutral duplicate email, help link used once, rejection, audit trail) against the local Supabase | CI `e2e` and `signed-in` jobs; locally with `--e2e` and `--signed-in` | Automated (partial: the signed-in journey covers sign-up and approval, not yet logging a trade, editing a basket or filling a slot, exception 9) |
+| Critical E2E journeys | Playwright: 38 signed-out runs (the specs run on a desktop and a phone profile: pages, sign-in gates, axe, security headers) and a 9-step signed-in journey (sign up with email, wait, approval, admin-only page, neutral duplicate email, help link used once, rejection, audit trail, URL text never shown) against the local Supabase | CI `e2e` and `signed-in` jobs; locally with `--e2e` and `--signed-in` | Automated (partial: the signed-in journey covers sign-up and approval, not yet logging a trade, editing a basket or filling a slot, exception 9). It expects a freshly reset database |
 | Accessibility checks | axe at WCAG 2.2 AA, gated at serious and critical, plus a self-test | CI `e2e` job | Automated (passed in CI on 2026-09-28); partial: signed-out pages (exception 9) |
 | No literal colours, radii, shadows, z-indexes | ESLint ratchet, 11 files listed | local check, CI | Automated (partial: spacing unchecked; the list only shrinks) |
 | UI built from the `/design` kit | - | - | Unenforced (no `/design` page yet, exception 8) |
@@ -64,7 +65,9 @@ and re-derive the whole table when you touch this file.
 | Python type checking | mypy (annotated functions, checked bodies) | local check, CI | Automated (two research modules suppress three pandas-stub error codes, in `pyproject.toml`) |
 | Structured logs with a correlation ID | - | - | Unenforced (exception 3) |
 | Alerts reach a channel a human reads | - | - | Unenforced (exception 3) |
-| Security headers and CSP | - | - | Unenforced (exception 10) |
+| Security headers and CSP | `e2e/security-headers.spec.ts` asserts the static headers and a nonce-based CSP on a page; the policy is built per request in `proxy.ts` | local `--e2e`, CI `e2e` job, post-deploy against production | Automated (exception 10 retired 2026-09-30) |
+| A deterministic demo seed | `supabase/seed.sql`, generated by `supabase/seed/build_seed.py`; `supabase db reset` loads it and the pgTAP suite passes on it | local | Local only (CI's database job does not assert on the seed's contents; exception 18 retired 2026-09-30) |
+| Engine JSON files match the schemas the app parses | zod at server start; `data/engine-files.test.ts` parses the committed files | local check, CI | Automated |
 | Documented RPO and RTO, a backup, a tested restore | - | - | Unenforced (exception 11) |
 | Rollback exercised once | - | - | Unenforced (runbook exists, untested) |
 | Definition of Done walked | - | Review | Review |
@@ -81,9 +84,11 @@ post-deploy check, which ran green against production on its first run. The gene
 RLS catalogue test also passed in CI. The local gate (pre-push and commit-msg hooks) is Automated once
 per clone. The first CI run on 2026-09-28 passed every job except one, described below.
 
-The two biggest remaining gaps are structural, and both are in [exceptions.md](exceptions.md): there
-is no service layer between the Server Actions and the data layer (exception 1), and errors are free
-text with no correlation ID or alerting (exceptions 2 and 3). Those are the next phase.
+The biggest remaining gaps are in [exceptions.md](exceptions.md): errors and logs carry no correlation ID and
+nothing alerts (exception 3), BTC is computed in floats (exception 7), the UI has no component kit or `/design`
+page (exception 8), and members' data is not backed up (exception 11). The layer work of 2026-09-30 (an
+integrations layer, repository naming, routes that cannot import `data`, a nonce-based CSP, runtime validation
+at the two remaining boundaries and a demo seed) retired exceptions 4, 5, 10 and 18.
 
 ## What was found by adding these
 
@@ -124,18 +129,18 @@ Worth recording: a check earns its keep by what it finds on its first run.
 
 ## Migrating to the chain, by table
 
-The standards migrate by table, so each pass retires the risk for a whole table. Measured 2026-09-28.
+The standards migrate by table, so each pass retires the risk for a whole table. Files renamed to `<thing>.repository.ts` on 2026-09-30; the state column was last checked 2026-09-28.
 
 | Table | Repository | Service | State |
 |---|---|---|---|
-| `entry_trades` | `data/trades.ts` (the only place it is queried) | `features/trades/service.ts` | Done: 3 use cases, 24 tests for the service and actions (37 with the shared result, logging and failure-mapping tests) |
-| `entries` | `data/entries.ts` (with `start_entry`, `edit_entry`, `delete_entry`) | `features/picker/service.ts` | Done: 3 use cases, 28 tests for the service and actions |
-| `challenges` | `data/challenges.ts` | read by the picker service and `features/*/queries.ts` | Done |
-| `profiles` | `data/viewer.ts` (own row), `data/people.ts` (admin functions) | `features/auth`, `features/admin/service.ts` | Done: sign-in, sign-up, approval, help links; 36 tests for the services, actions, callbacks and error codes |
+| `entry_trades` | `data/trades.repository.ts` (the only place it is queried) | `features/trades/service.ts` | Done: 3 use cases, 24 tests for the service and actions (37 with the shared result, logging and failure-mapping tests) |
+| `entries` | `data/entries.repository.ts` (with `start_entry`, `edit_entry`, `delete_entry`) | `features/picker/service.ts` | Done: 3 use cases, 28 tests for the service and actions |
+| `challenges` | `data/challenges.repository.ts` | read by the picker service and `features/*/queries.ts` | Done |
+| `profiles` | `data/viewer.repository.ts` (own row), `data/people.repository.ts` (admin functions) | `features/auth`, `features/admin/service.ts` | Done: sign-in, sign-up, approval, help links; 36 tests for the services, actions, callbacks and error codes |
 | `admin_actions` | written only by the admin functions | read by admins through RLS | Done: allowed and denied pgTAP tests |
-| `auth.users` | `data/auth.ts` (Supabase Auth), `data/auth-admin.ts` (secret key) | `features/auth/service.ts` | Done: Auth failures translated by `authFailure` |
-| `coins`, `daily_prices`, `market_state` | `data/prices.ts`, `data/market.ts` | read-only, via `features/*/queries.ts` | Reads only; no rule to centralise |
-| `notifications` | `data/notifications.ts` | `features/notifications/job.ts` | Already has one owner |
+| `auth.users` | `data/auth.repository.ts` (Supabase Auth), `data/auth-admin.repository.ts` (secret key) | `features/auth/service.ts` | Done: Auth failures translated by `authFailure` |
+| `coins`, `daily_prices`, `market_state` | `data/prices.repository.ts`, `data/market.repository.ts` | read-only, via `features/*/queries.ts` | Reads only; no rule to centralise |
+| `notifications` | `data/notifications.repository.ts` | `features/notifications/job.ts` | Already has one owner |
 
 ## Ranked by cost to fix
 
@@ -151,9 +156,9 @@ Roughly cheapest and most valuable first.
    exception 8 and shrinks the literal-values list.
 7. **The rest of the signed-in journey**: logging a trade, editing a basket, filling a slot, and axe on
    signed-in pages. The sign-up and approval journey exists and runs in CI.
-8. **Security headers and CSP.**
+8. ~~Security headers and CSP.~~ Done 2026-09-30: exception 10 is retired.
 9. **A scheduled dump of the user tables**, then a restore drill. Retires exception 11.
-10. **Trim the dead config, tables and secrets** left by the archive (exception 16).
+10. **Trim the rest of the dead config and tables** left by the archive (exception 16, partly done: the CoinGecko methods went on 2026-09-30; the 17 `rules.yaml` sections and two tables remain).
 
 ## Keeping it honest
 
