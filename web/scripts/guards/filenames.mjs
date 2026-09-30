@@ -19,6 +19,9 @@ function stemOf(name) {
 /** Next.js route syntax is allowed in folder names: (group), [param], [...rest], @slot. */
 const ROUTE_FOLDER = /^(?:\([a-z0-9-]+\)|\[\.{0,3}[a-z0-9-]+\]|@[a-z0-9-]+)$/;
 
+/** A layer's README names the folder it describes, by convention in capitals. */
+const DOC_FILES = new Set(["README.md"]);
+
 /** Generated files are owned by their generator. */
 const GENERATED = new Set(["src/data/database.types.ts"]);
 
@@ -28,6 +31,7 @@ export function violates(path) {
   const parts = path.split("/");
   return parts.some((part, i) => {
     const isFile = i === parts.length - 1;
+    if (isFile && DOC_FILES.has(part)) return false;
     if (!isFile && ROUTE_FOLDER.test(part)) return false;
     return !KEBAB.test(isFile ? stemOf(part) : part);
   });

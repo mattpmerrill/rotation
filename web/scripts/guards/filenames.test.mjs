@@ -37,6 +37,11 @@ describe("violates", () => {
       expect(violates(p), p).toBe(true);
   });
 
+  it("lets a layer keep its README.md", () => {
+    expect(violates("src/domain/README.md")).toBe(false);
+    expect(violates("src/domain/Readme.md")).toBe(true);
+  });
+
   it("leaves generated database types alone", () => {
     expect(violates("src/data/database.types.ts")).toBe(false);
   });
