@@ -5,14 +5,17 @@ import nextTs from "eslint-config-next/typescript";
 /**
  * Layer rules (see docs/architecture.md). Each layer may import only from the layers below it:
  *
- *   app  ->  features  ->  data  ->  domain  ->  lib
- *                  \-> ui --------------/
+ *   app -> features -> data ---------> domain -> lib
+ *      \          \-> integrations --/
+ *       \-> ui (features use ui too) -> domain
  *
  * - domain: pure rules and math. No React, no Next, no I/O.
- * - data:   Supabase, Discord, env. Never imports features, ui or app.
- * - ui:     presentational components. Never touches data or features.
- * - features: one folder per feature; a feature never imports another feature.
- * - app:    routes compose features. Only data/viewer (the access check) is imported directly.
+ * - data: repositories (Supabase), env, failure translation. Imports only domain and lib.
+ * - integrations: one adapter per outside vendor. Imports only domain and lib.
+ * - ui: presentational components. Never touches data, integrations or features.
+ * - features: one folder per feature; a feature never imports another feature. The only layer
+ *   that imports data and integrations.
+ * - app: routes compose features. Never imports data or integrations.
  */
 const layer = (files, patterns) => ({
   files,
@@ -74,13 +77,38 @@ const eslintConfig = defineConfig([
     ["src/domain/**"],
     [
       ...noFramework,
-      { group: ["@/data/*", "@/features/*", "@/ui/*", "@/app/*"], message: "domain is pure: only @/domain and @/lib." },
+      {
+        group: ["@/data/*", "@/features/*", "@/ui/*", "@/app/*", "@/integrations/*"],
+        message: "domain is pure: only @/domain and @/lib.",
+      },
     ],
   ),
-  layer(["src/data/**"], [{ group: ["@/features/*", "@/ui/*", "@/app/*"], message: "data is below features and ui." }]),
+  layer(
+    ["src/data/**"],
+    [
+      {
+        group: ["@/features/*", "@/ui/*", "@/app/*", "@/integrations/*"],
+        message: "data is below features and ui, and does not reach vendors: a feature passes the vendor call in.",
+      },
+    ],
+  ),
+  layer(
+    ["src/integrations/**"],
+    [
+      {
+        group: ["@/data/*", "@/features/*", "@/ui/*", "@/app/*"],
+        message: "An integration adapter imports only @/domain and @/lib.",
+      },
+    ],
+  ),
   layer(
     ["src/ui/**"],
-    [{ group: ["@/data/*", "@/features/*", "@/app/*"], message: "ui is presentational: pass data in as props." }],
+    [
+      {
+        group: ["@/data/*", "@/integrations/*", "@/features/*", "@/app/*"],
+        message: "ui is presentational: pass data in as props.",
+      },
+    ],
   ),
   layer(
     ["src/features/**"],
@@ -96,8 +124,8 @@ const eslintConfig = defineConfig([
     ["src/app/**", "src/proxy.ts"],
     [
       {
-        group: ["@/data/*", "!@/data/viewer", "!@/data/session"],
-        message: "Pages reach data through features (only data/viewer for access checks).",
+        group: ["@/data/*", "@/integrations/*"],
+        message: "Routes reach data and vendors through features: call a feature query, action or guard.",
       },
     ],
   ),

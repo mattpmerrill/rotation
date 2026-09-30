@@ -7,6 +7,8 @@ describe("violates", () => {
       "src/domain/buy-in.ts",
       "src/domain/buy-in.test.ts",
       "src/features/picker/buy-in.schema.ts",
+      "src/data/trades.repository.ts",
+      "src/data/trades.repository.test.ts",
       "src/ui/charts/sparkline.tsx",
       "src/lib/days.ts",
       "src/proxy.ts",

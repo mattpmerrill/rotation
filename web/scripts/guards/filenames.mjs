@@ -11,9 +11,9 @@ import { fileURLToPath } from "node:url";
 
 const KEBAB = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-/** The parts of a name that are not the stem: `.test`, `.schema`, `.d`, and the extension. */
+/** The parts of a name that are not the stem: `.test`, `.schema`, `.repository`, `.d`, and the extension. */
 function stemOf(name) {
-  return name.replace(/\.(?:test|schema|d)(?=\.)/, "").replace(/\.[^.]+$/, "");
+  return name.replace(/\.(?:test|schema|repository|d)(?=\.)/g, "").replace(/\.[^.]+$/, "");
 }
 
 /** Next.js route syntax is allowed in folder names: (group), [param], [...rest], @slot. */

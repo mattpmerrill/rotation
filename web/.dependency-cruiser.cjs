@@ -30,10 +30,31 @@ module.exports = {
     },
     {
       name: "components-do-not-touch-data",
-      comment: "Components and ui call actions and receive props. They never import the data layer.",
+      comment: "Components and ui call actions and receive props. They never import the data or integrations layers.",
       severity: "error",
       from: { path: "^src/(ui|features/[^/]+/components)/" },
-      to: { path: "^src/data/" },
+      to: { path: "^src/(data|integrations)/" },
+    },
+    {
+      name: "only-features-use-integrations",
+      comment: "Vendor adapters are called by features (and by themselves and tests), nothing else.",
+      severity: "error",
+      from: { path: "^src/", pathNot: ["^src/features/", "^src/integrations/", "\\.test\\.[mc]?[jt]sx?$"] },
+      to: { path: "^src/integrations/" },
+    },
+    {
+      name: "integrations-import-domain-and-lib-only",
+      comment: "An adapter returns domain types and is configured by its caller: no data, features, ui or app.",
+      severity: "error",
+      from: { path: "^src/integrations/" },
+      to: { path: "^src/(data|features|ui|app)/" },
+    },
+    {
+      name: "routes-do-not-touch-data",
+      comment: "Routes reach data and vendors through features.",
+      severity: "error",
+      from: { path: "^src/(app/|proxy\\.ts$)" },
+      to: { path: "^src/(data|integrations)/" },
     },
     {
       name: "not-to-test-files",
