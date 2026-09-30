@@ -1,6 +1,6 @@
 import "server-only";
-import { createRecoveryToken } from "@/data/auth-admin";
-import { listPeople, recordHelpLink, rejectSignup, setMember } from "@/data/people";
+import { createRecoveryToken } from "@/data/auth-admin.repository";
+import { listPeople, recordHelpLink, rejectSignup, setMember } from "@/data/people.repository";
 import { fail, ok, type ApplicationResult } from "@/lib/result";
 
 /**

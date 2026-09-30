@@ -5,7 +5,7 @@ import { ok, type ApplicationResult } from "@/lib/result";
 import type { Database } from "./database.types";
 import { dbFailure } from "./failure";
 import { supabaseServer, type Db } from "./supabase/server";
-import { toRpcTrades } from "./trades";
+import { toRpcTrades } from "./trades.repository";
 
 /**
  * The repository for `entries` and the functions that write them with their buy-in trades

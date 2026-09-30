@@ -1,7 +1,7 @@
 import "server-only";
-import { getEntry } from "@/data/entries";
-import { getCoins, getEligibleCoins } from "@/data/prices";
-import { addTrade, deleteTrade, fillSlot, listTrades } from "@/data/trades";
+import { getEntry } from "@/data/entries.repository";
+import { getCoins, getEligibleCoins } from "@/data/prices.repository";
+import { addTrade, deleteTrade, fillSlot, listTrades } from "@/data/trades.repository";
 import type { Viewer } from "@/data/viewer";
 import { usdtAfter } from "@/domain/buy-in";
 import { balancesOn } from "@/domain/holdings";

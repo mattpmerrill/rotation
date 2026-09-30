@@ -1,5 +1,5 @@
 import "server-only";
-import { getCoins, getEligibleCoins } from "@/data/prices";
+import { getCoins, getEligibleCoins } from "@/data/prices.repository";
 import type { EligibleCoin } from "@/domain/basket";
 
 /** Coins an edited basket can hold: today's top 100, plus the coins already in it (a coin that

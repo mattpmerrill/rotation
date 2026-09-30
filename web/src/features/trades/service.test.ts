@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getEntry } from "@/data/entries";
-import { getCoins, getEligibleCoins } from "@/data/prices";
-import { addTrade, deleteTrade, fillSlot, listTrades } from "@/data/trades";
+import { getEntry } from "@/data/entries.repository";
+import { getCoins, getEligibleCoins } from "@/data/prices.repository";
+import { addTrade, deleteTrade, fillSlot, listTrades } from "@/data/trades.repository";
 import type { Viewer } from "@/data/viewer";
 import { buyIn, entry, trade } from "@/domain/fixtures";
 import { planFill } from "@/domain/slots";
@@ -10,9 +10,9 @@ import { fillSlotWithCoin, recordTrade, retractTrade } from "./service";
 import type { FillInput, TradeInput } from "./schema";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/data/entries", () => ({ getEntry: vi.fn() }));
-vi.mock("@/data/prices", () => ({ getCoins: vi.fn(), getEligibleCoins: vi.fn() }));
-vi.mock("@/data/trades", () => ({ addTrade: vi.fn(), deleteTrade: vi.fn(), fillSlot: vi.fn(), listTrades: vi.fn() }));
+vi.mock("@/data/entries.repository", () => ({ getEntry: vi.fn() }));
+vi.mock("@/data/prices.repository", () => ({ getCoins: vi.fn(), getEligibleCoins: vi.fn() }));
+vi.mock("@/data/trades.repository", () => ({ addTrade: vi.fn(), deleteTrade: vi.fn(), fillSlot: vi.fn(), listTrades: vi.fn() }));
 
 const viewer: Viewer = { id: "u1", email: "alice@example.com", name: "Alice", isMember: true, isAdmin: false };
 const coinsById = { solana: { id: "solana", symbol: "SOL", name: "Solana", image: null } };

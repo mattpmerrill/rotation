@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as auth from "@/data/auth";
-import { announceOnce } from "@/data/notifications";
+import * as auth from "@/data/auth.repository";
+import { announceOnce } from "@/data/notifications.repository";
 import { getViewer, type Viewer } from "@/data/viewer";
 import { fail, ok } from "@/lib/result";
 import { changePassword, completeSignIn, confirmHelpLink, createAccount, signIn } from "./service";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/data/auth", () => ({
+vi.mock("@/data/auth.repository", () => ({
   signInWithPassword: vi.fn(),
   signUp: vi.fn(),
   googleSignInUrl: vi.fn(),
@@ -15,7 +15,7 @@ vi.mock("@/data/auth", () => ({
   updatePassword: vi.fn(),
   signOut: vi.fn(),
 }));
-vi.mock("@/data/notifications", () => ({ announceOnce: vi.fn() }));
+vi.mock("@/data/notifications.repository", () => ({ announceOnce: vi.fn() }));
 vi.mock("@/data/viewer", () => ({ getViewer: vi.fn() }));
 
 const ADMIN_URL = "https://app.example/admin";

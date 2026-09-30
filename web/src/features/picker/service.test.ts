@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getCurrentChallenge } from "@/data/challenges";
-import { deleteEntry, editEntry, findEntryFor, getEntry, startEntry } from "@/data/entries";
-import { getEligibleCoins } from "@/data/prices";
-import { listTrades } from "@/data/trades";
+import { getCurrentChallenge } from "@/data/challenges.repository";
+import { deleteEntry, editEntry, findEntryFor, getEntry, startEntry } from "@/data/entries.repository";
+import { getEligibleCoins } from "@/data/prices.repository";
+import { listTrades } from "@/data/trades.repository";
 import type { Viewer } from "@/data/viewer";
 import type { EligibleCoin } from "@/domain/basket";
 import { planBuyIn } from "@/domain/buy-in";
@@ -15,16 +15,16 @@ import type { BuyInInput } from "./schema";
 import { deleteBasket, enterChallenge, redoBuyIn } from "./service";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/data/challenges", () => ({ getCurrentChallenge: vi.fn() }));
-vi.mock("@/data/entries", () => ({
+vi.mock("@/data/challenges.repository", () => ({ getCurrentChallenge: vi.fn() }));
+vi.mock("@/data/entries.repository", () => ({
   deleteEntry: vi.fn(),
   editEntry: vi.fn(),
   findEntryFor: vi.fn(),
   getEntry: vi.fn(),
   startEntry: vi.fn(),
 }));
-vi.mock("@/data/prices", () => ({ getEligibleCoins: vi.fn() }));
-vi.mock("@/data/trades", () => ({ listTrades: vi.fn() }));
+vi.mock("@/data/prices.repository", () => ({ getEligibleCoins: vi.fn() }));
+vi.mock("@/data/trades.repository", () => ({ listTrades: vi.fn() }));
 vi.mock("./editable-coins", () => ({ editableCoins: vi.fn() }));
 
 const viewer: Viewer = { id: "u1", email: "alice@example.com", name: "Alice", isMember: true, isAdmin: false };

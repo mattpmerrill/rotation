@@ -1,7 +1,7 @@
 import "server-only";
-import { getCoins } from "@/data/prices";
-import { marketReference } from "@/data/reference";
-import { buyTiming } from "@/data/timing";
+import { getCoins } from "@/data/prices.repository";
+import { marketReference } from "@/data/reference.repository";
+import { buyTiming } from "@/data/timing.repository";
 import { cycleReference, type CycleReference } from "@/domain/cycle";
 import { stanceAt, stretches, timingPoints, type Stance, type Stretch, type TimingPoint } from "@/domain/timing";
 import type { Coin } from "@/domain/types";

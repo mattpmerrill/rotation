@@ -1,10 +1,10 @@
 import "server-only";
-import { getCurrentChallenge } from "@/data/challenges";
-import { findEntryFor, getEntry } from "@/data/entries";
-import { listTrades } from "@/data/trades";
+import { getCurrentChallenge } from "@/data/challenges.repository";
+import { findEntryFor, getEntry } from "@/data/entries.repository";
+import { listTrades } from "@/data/trades.repository";
 import { buyInWindow, editLockedReason, editWindow } from "@/domain/buy-in";
-import { getCoins, getEligibleCoins, getPriceBook } from "@/data/prices";
-import { marketReference } from "@/data/reference";
+import { getCoins, getEligibleCoins, getPriceBook } from "@/data/prices.repository";
+import { marketReference } from "@/data/reference.repository";
 import type { Viewer } from "@/data/viewer";
 import type { EligibleCoin } from "@/domain/basket";
 import { cycleReference } from "@/domain/cycle";

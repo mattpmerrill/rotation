@@ -1,5 +1,5 @@
 import "server-only";
-import { listPeople } from "@/data/people";
+import { listPeople } from "@/data/people.repository";
 import { groupPeople, type Person } from "@/domain/people";
 
 /** Everyone who has signed up, grouped for the admin page. Throws if the list can't be read: that

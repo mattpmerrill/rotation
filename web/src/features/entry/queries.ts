@@ -1,10 +1,10 @@
 import "server-only";
-import { getCurrentChallenge } from "@/data/challenges";
-import { findEntryFor } from "@/data/entries";
-import { getEligibleCoins, getPriceBook } from "@/data/prices";
-import { getMarketState } from "@/data/market";
-import { marketReference } from "@/data/reference";
-import { loadCurrentChallenge } from "@/data/snapshot";
+import { getCurrentChallenge } from "@/data/challenges.repository";
+import { findEntryFor } from "@/data/entries.repository";
+import { getEligibleCoins, getPriceBook } from "@/data/prices.repository";
+import { getMarketState } from "@/data/market.repository";
+import { marketReference } from "@/data/reference.repository";
+import { loadCurrentChallenge } from "@/data/snapshot.repository";
 import type { Viewer } from "@/data/viewer";
 import { coinChanges, type CoinChange } from "@/domain/coins";
 import { cycleReference, type CycleReference } from "@/domain/cycle";

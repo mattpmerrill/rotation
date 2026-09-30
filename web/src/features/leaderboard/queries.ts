@@ -1,6 +1,6 @@
 import "server-only";
-import { getMarketState } from "@/data/market";
-import { loadCurrentChallenge } from "@/data/snapshot";
+import { getMarketState } from "@/data/market.repository";
+import { loadCurrentChallenge } from "@/data/snapshot.repository";
 import type { Viewer } from "@/data/viewer";
 import { isChallengeComplete, rankStandings, standingOf } from "@/domain/standings";
 import type { Challenge, Coin, MarketState, Phase } from "@/domain/types";

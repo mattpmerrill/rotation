@@ -1,8 +1,8 @@
 import "server-only";
-import { deleteEntry, editEntry, findEntryFor, getEntry, startEntry } from "@/data/entries";
-import { getCurrentChallenge } from "@/data/challenges";
-import { getEligibleCoins } from "@/data/prices";
-import { listTrades } from "@/data/trades";
+import { deleteEntry, editEntry, findEntryFor, getEntry, startEntry } from "@/data/entries.repository";
+import { getCurrentChallenge } from "@/data/challenges.repository";
+import { getEligibleCoins } from "@/data/prices.repository";
+import { listTrades } from "@/data/trades.repository";
 import type { Viewer } from "@/data/viewer";
 import { checkBasket } from "@/domain/basket";
 import { buyInWindow, checkBuyIn, editLockedReason, editWindow } from "@/domain/buy-in";

@@ -1,8 +1,8 @@
 import "server-only";
 import { postToDiscord } from "@/data/discord";
-import { getMarketState } from "@/data/market";
-import { claimNotification, releaseNotification } from "@/data/notifications";
-import { loadCurrentChallenge } from "@/data/snapshot";
+import { getMarketState } from "@/data/market.repository";
+import { claimNotification, releaseNotification } from "@/data/notifications.repository";
+import { loadCurrentChallenge } from "@/data/snapshot.repository";
 import { supabaseAdmin } from "@/data/supabase/admin";
 import { isChallengeComplete, rankStandings, standingOf } from "@/domain/standings";
 import { isBuyInTrade } from "@/domain/trades";

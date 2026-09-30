@@ -1,6 +1,6 @@
 import "server-only";
-import * as auth from "@/data/auth";
-import { announceOnce } from "@/data/notifications";
+import * as auth from "@/data/auth.repository";
+import { announceOnce } from "@/data/notifications.repository";
 import { getViewer } from "@/data/viewer";
 import { waitingMessage } from "@/domain/people";
 import { fail, ok, type ApplicationResult } from "@/lib/result";

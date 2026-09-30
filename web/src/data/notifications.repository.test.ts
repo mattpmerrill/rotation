@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { postToDiscord } from "./discord";
-import { announceOnce } from "./notifications";
+import { announceOnce } from "./notifications.repository";
 
 vi.mock("server-only", () => ({}));
 vi.mock("./discord", () => ({ postToDiscord: vi.fn() }));

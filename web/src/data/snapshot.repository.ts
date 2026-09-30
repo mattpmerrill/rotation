@@ -1,12 +1,12 @@
 import "server-only";
 import { BTC, type Challenge, type Coin, type Entry, type PriceBook, type Trade } from "@/domain/types";
-import { getCurrentChallenge } from "./challenges";
-import { listEntries } from "./entries";
-import { listTrades } from "./trades";
+import { getCurrentChallenge } from "./challenges.repository";
+import { listEntries } from "./entries.repository";
+import { listTrades } from "./trades.repository";
 import { withLivePrices } from "@/domain/prices";
 import { todayUtc } from "@/lib/days";
 import { getLivePrices } from "./live";
-import { getCoins, getPriceBook } from "./prices";
+import { getCoins, getPriceBook } from "./prices.repository";
 import type { Db } from "./supabase/server";
 
 /** Everything needed to value a challenge's entries: the entries, their trades, and daily

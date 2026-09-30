@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createRecoveryToken } from "@/data/auth-admin";
-import { listPeople, recordHelpLink, rejectSignup, setMember } from "@/data/people";
+import { createRecoveryToken } from "@/data/auth-admin.repository";
+import { listPeople, recordHelpLink, rejectSignup, setMember } from "@/data/people.repository";
 import type { Person } from "@/domain/people";
 import { fail, ok } from "@/lib/result";
 import { approvePerson, createHelpLink, rejectPerson, removeMembership } from "./service";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/data/auth-admin", () => ({ createRecoveryToken: vi.fn() }));
-vi.mock("@/data/people", () => ({
+vi.mock("@/data/auth-admin.repository", () => ({ createRecoveryToken: vi.fn() }));
+vi.mock("@/data/people.repository", () => ({
   listPeople: vi.fn(),
   recordHelpLink: vi.fn(),
   rejectSignup: vi.fn(),

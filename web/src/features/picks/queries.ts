@@ -1,7 +1,7 @@
 import "server-only";
-import { basketHistory } from "@/data/history";
-import { getCoins } from "@/data/prices";
-import { marketReference } from "@/data/reference";
+import { basketHistory } from "@/data/history.repository";
+import { getCoins } from "@/data/prices.repository";
+import { marketReference } from "@/data/reference.repository";
 import { cycleReference } from "@/domain/cycle";
 import { previewBasket, type CyclePreview } from "@/domain/preview";
 import { RULES } from "@/domain/rules";
