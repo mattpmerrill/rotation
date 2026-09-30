@@ -8,7 +8,7 @@
 
 The data standard says money is
 "integer minor units or Postgres `numeric`. Never floating point." The database follows that
-(`numeric` columns). The web app does not: `data/challenge.ts` reads `Number(row.btc_in)`, and the
+(`numeric` columns). The web app does not: `data/entries.repository.ts` reads `Number(row.btc_in)`, and the
 domain layer (`web/src/domain`) computes valuations, fills and standings in JavaScript floats.
 
 The amounts are small (at most 1 BTC per person, four people), so today's errors are far below a

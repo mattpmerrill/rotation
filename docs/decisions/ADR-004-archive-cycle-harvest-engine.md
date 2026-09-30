@@ -66,7 +66,7 @@ deviation from the Python standard.
   the `cycle` section and `version` are used. `rotation load` also stores the whole rules object in
   `config_versions`. Removing
   them changes the recorded config hash, so it needs a `version` bump and a line in
-  `docs/CHANGELOG-RULES.md` (CONTRIBUTING rule 11).
+  `docs/CHANGELOG-RULES.md` (the thresholds rule in AGENTS.md).
 - **Unused database tables.** `rotation load` still writes `exchange_symbols` and
   `derivatives_daily` from a Binance cache that nothing can rebuild any more, and no app code reads
   them. Dropping them is a migration and a decision about the data.
