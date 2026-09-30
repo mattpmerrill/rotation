@@ -158,7 +158,7 @@ Roughly cheapest and most valuable first.
    signed-in pages. The sign-up and approval journey exists and runs in CI.
 8. ~~Security headers and CSP.~~ Done 2026-09-30: exception 10 is retired.
 9. **A scheduled dump of the user tables**, then a restore drill. Retires exception 11.
-10. **Trim the rest of the dead config and tables** left by the archive (exception 16, partly done: the CoinGecko methods went on 2026-09-30; the 17 `rules.yaml` sections and two tables remain).
+10. **Drop the two unused tables** left by the archive (exception 16, mostly done: the CoinGecko methods and the dead `rules.yaml` sections went on 2026-09-30; only `exchange_symbols` and `derivatives_daily` remain, and the production database is paused).
 
 ## Keeping it honest
 
