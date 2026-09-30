@@ -23,7 +23,7 @@ def feats(prices, mvrv=2.0):
 
 
 def test_clock_tranches_are_spread_over_the_window():
-    r = SellRules(1 / 3, 450, 630, clock_share=1.0, clock_tranches=4, trend_weekly_sma=20)
+    r = SellRules(450, 630, clock_tranches=4, trend_weekly_sma=20)
     assert clock_tranche_days(r) == [450, 495, 540, 585]
 
 

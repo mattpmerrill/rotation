@@ -202,7 +202,7 @@ def build() -> str:
     )
 
 
-FINDINGS = """## What it says (Beck, 2026-09-26)
+FINDINGS = """## What it says (2026-09-26)
 
 1. **No trend alert beat the clock.** In the 2018 cycle every alert that fired sold earlier
    than the clock and ended with less BTC after the rebuy (e.g. top 10: clock 3.83, usd20

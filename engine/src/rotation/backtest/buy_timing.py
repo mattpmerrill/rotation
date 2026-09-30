@@ -146,7 +146,7 @@ after the halving the buy was. Blank: that sell window hasn't come yet.
     return data, report
 
 
-FINDINGS = """## What it says (Beck, 2026-09-26)
+FINDINGS = """## What it says (2026-09-26)
 
 1. **The best time was around the halving**: from about a year before it to about nine months
    after (days ~1080 of one cycle to ~270 of the next). Those buys were sold into the 2017 and

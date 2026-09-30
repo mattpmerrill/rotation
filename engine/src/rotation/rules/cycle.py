@@ -28,12 +28,10 @@ HALVING_INTERVAL_DAYS = 1456  # ~210,000 blocks at 10 min; real intervals ran 1,
 
 @dataclass(frozen=True)
 class SellRules:
-    target_frac: float  # share of the stack to hold as USDT at the top
     window_start_days: int  # after the halving
     window_end_days: int
-    clock_share: float  # share of the target sold on the clock; the rest on the trend break
     clock_tranches: int
-    trend_weekly_sma: int  # sell the remaining target on a weekly close below this
+    trend_weekly_sma: int  # weekly SMA used for the trend-break feature
 
 
 @dataclass(frozen=True)

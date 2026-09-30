@@ -1,218 +1,22 @@
 # Rotation rule configuration. Every threshold the engine uses lives here.
 #
 # Conventions
-#   - Fractions, not percents: 0.30 means 30%. Funding is per 8h: 0.0001 = 0.01%/8h.
+#   - Fractions, not percents: 0.30 means 30%.
 #   - Windows are in days unless the key says weeks.
-#   - Keys marked "# DEFAULT" are Beck's proposed definitions for things the
-#     program doc left open. Review them in docs/RULES.md.
+#   - Keys marked "# DEFAULT" are proposed definitions for things the program doc
+#     left open. The program doc is docs/archive/RULES.md.
 #   - Any change here: bump `version` and add a line to docs/CHANGELOG-RULES.md.
 #     Every engine output records the sha256 of this file.
 
-version: 1
-
-universe:
-  top_n: 100                          # point-in-time CoinGecko rank, ex stables/wrapped
-  min_avg_daily_volume_usd: 20_000_000
-  volume_avg_days: 30                 # DEFAULT
-  min_major_exchanges: 2
-  major_exchanges: [binance, coinbase, kraken, okx, bybit]   # DEFAULT
-  max_unlock_frac_90d: 0.03           # live only; no free history, skipped in backtests
-  min_history_days: 365
-  altbtc_sma_days: 50
-  higher_lows:                        # DEFAULT: last N swing lows on ALT/BTC each higher than the one before
-    swing_window: 5                   # a low is a swing low if lowest within +/- 5 days
-    lookback_days: 90
-    min_lows: 2
-  require_catalyst: true              # manual field; ignored in backtests
-
-score:
-  trend: { fast_sma: 50, slow_sma: 200 }
-  beating_btc:
-    sma: 50
-    rising_lookback_days: 10          # DEFAULT: ALT/BTC today > ALT/BTC 10 days ago
-  location:
-    sma: 20
-    max_distance: 0.20                # within 20% of 20D SMA
-    support_lookback_days: 30         # DEFAULT: "near support" = close within 10% above the 30D low
-    support_max_distance: 0.10
-  crowding:
-    max_funding_8h: 0.0001            # 0.01%/8h
-    max_oi_change_7d: 0.30
-    no_perp_market: pass              # DEFAULT: no perps listed = no leveraged crowd. pass | fail
-                                      # (funding but no OI history -> judged on funding alone)
-  flow:
-    fast_days: 7                      # DEFAULT: "volume rising" = 7D avg volume > 30D avg volume
-    slow_days: 30
-  full_size_at: 4
-  half_size_at: 3
-  min_reward_risk: 3.0
-
-# DEFAULT: the program doc needs an initial stop and a target for reward-to-risk,
-# rotation upside (U) and leverage sizing, but does not define them.
-entry:
-  initial_stop:
-    lookback_days: 30                 # below the 30D swing low...
-    buffer: 0.02                      # ...minus 2%
-    max_distance: 0.25                # never more than 25% below entry
-  target:
-    lookback_days: 365                # next target = highest high of the last 365D above price
-    fallback_gain: 1.00               # if price is at the high, target = +100% (top ladder rung)
-
-buckets:                              # target weights by regime; each column sums to 1.0
-  expand:     { vault_btc: 0.35, large: 0.20, mid: 0.15, small: 0.10, dry_powder: 0.10, leverage: 0.10 }
-  accumulate: { vault_btc: 0.50, large: 0.15, mid: 0.10, small: 0.05, dry_powder: 0.15, leverage: 0.05 }
-  euphoria:   { vault_btc: 0.50, large: 0.10, mid: 0.05, small: 0.00, dry_powder: 0.35, leverage: 0.00 }
-  defend:     { vault_btc: 0.60, large: 0.05, mid: 0.00, small: 0.00, dry_powder: 0.30, leverage: 0.05 }
-  size_tiers:                         # DEFAULT: point-in-time market-cap rank
-    large_max_rank: 20
-    mid_max_rank: 50                  # 51-100 = small
-
-positions:
-  max_positions: 10
-  max_alt_weight: 0.10
-  trim_at_weight: 0.15                # trim back to max_alt_weight
-  reentry_cooldown_days: 7            # DEFAULT: no re-buying a coin within 7 days of fully exiting it
-                                      # (without it: 33 same-day stop-and-rebuy whipsaws, 2019-26)
-
-ladder:                               # gains measured in USD from average entry price
-  rungs:                              # sell = fraction of the ORIGINAL position size
-    - { gain: 0.30, sell: 0.20, stop_to_gain: 0.00 }   # stop to break-even
-    - { gain: 0.60, sell: 0.20, stop_to_gain: 0.25 }
-    - { gain: 1.00, sell: 0.25, stop_to_gain: 0.50 }
-  runner:                             # remaining 35% exits on whichever hits first
-    trail_sma_days: 20                # daily close below the 20D SMA
-    trail_from_high: 0.25             # or 25% off the high since entry
-
-routing:
-  tax_reserve_rate: 0.30              # of net short-term realized gain, taken first
-  long_term_rate: 0.15                # DEFAULT: gains on positions held >= 365 days
-  long_term_days: 365
-  vault_btc: 0.50
-  dry_powder: 0.25
-  recycle: 0.25
-
-time_stop:
-  days: 45
-  min_gain: 0.10
-  exit_if_score_below: 3
-
-rotation:
-  hurdle_pp: 10                       # U_B*S_B/5 - U_A*S_A/5 must exceed fees% + tax% + 10
-  protect_score: 4                    # never rotate out of a position scoring >= 4 in a trend
-  round_trip_fee: 0.006               # fees% term, as a fraction
-  upside: ladder                      # DEFAULT: U = upside to the next ladder rung (candidate: first
-                                      # rung, +30%; runner: 0). "target" = the entry target instead,
-                                      # which churned 728 rotations in the 2019-26 test.
-  min_hold_days: 14                   # DEFAULT: churn guard
-  max_per_week: 1                     # DEFAULT: churn guard
-
-leverage:
-  enabled: false                      # off until the backtest shows it adds BTC (see PLAN.md)
-  bucket_is: collateral               # bucket % = margin posted, not exposure
-  max_multiple: 3
-  margin_mode: isolated
-  risk_per_trade: 0.01                # of total portfolio
-  maintenance_margin: 0.005           # DEFAULT: exchange MMR, for the liquidation price
-  min_liq_to_stop_ratio: 2.0
-  max_open: 2
-  assets: [BTC, ETH, SOL]
-  min_score: 5
-  direction: long
-
-regime:                               # evaluated weekly at the Sunday UTC close; first match wins
-  order: [euphoria, defend, expand, accumulate]
-  btc_sma_days: 200
-  btc_sma_slope_days: 20              # "200D falling" = SMA today < SMA 20 days ago
-  dominance_trend_days: 30
-  breadth_min: 0.50                   # share of universe with ALT/BTC above its 50D SMA
-  euphoria_min_flags: 3
-
-flags:
-  mvrv_z_above: 5.0
-  mayer_multiple_above: 2.2
-  funding:
-    assets: [BTC, ETH]                # DEFAULT: the average of the two
-    above_8h: 0.0005                  # 0.05%/8h
-    persist_days: 14                  # on every one of the last 14 days
-  altseason_index_above: 75           # computed in-house: % of top-50 beating BTC over 90D
-  altseason_window_days: 90
-  dominance_drop_pts: 8
-  dominance_drop_days: 60
-  retail_mania: false                 # manual toggle
-  memes_in_top20_min: 3
-  btc_weekly_rsi_above: 85
-  rsi_period: 14
-
-euphoria_actions:
-  tiers:                              # sell_alts = fraction of alts held at that moment
-    - { min_flags: 3, sell_alts: 0.25, vault_to_stables: 0.00 }
-    - { min_flags: 5, sell_alts: 0.50, vault_to_stables: 0.20 }
-    - { min_flags: 6, sell_alts: 1.00, vault_to_stables: 0.20 }
-  backstop:                           # weekly close below 20W SMA after >= 3 flags -> same as the 6-flag tier
-    weekly_sma: 20
-    after_min_flags: 3
-    armed_weeks: 26                   # DEFAULT: "after" = 3+ flags seen within the last 26 weeks
-  rebuy:
-    drawdown_from_ath: 0.50
-    mvrv_z_below: 1.0
-    tranches: 4
-    tranche_spacing_days: 14          # DEFAULT
-  pause_entries: true                 # DEFAULT: no new alt buys after a euphoria sale...
-  reset_weeks: 8                      # DEFAULT: ...until 8 straight weeks below 3 flags
-
-portfolio:                            # Matt, 2026-09-24: BTC core + alt sleeve
-  mode: btc_sleeve                    # btc_sleeve: a BTC core that is never sold to rebalance, plus
-                                      #   an alt sleeve that runs all the rules; idle sleeve money is
-                                      #   held as BTC; bucket weights apply inside the sleeve.
-                                      # usd_buckets: the program doc's table as USD weights of the whole
-                                      #   portfolio (see the Phase 0 report for why that loses BTC).
-  initial_btc: 1                      # example; this section belongs to the archived engine (ADR-004)
-  sleeve_frac: 0.10                   # a tenth of the stack. Losses are never topped up from the core.
-
-rebalance:                            # DEFAULT: how bucket targets are enforced
-  weekday: 6                          # weekly, on the Sunday close
-  sell_excess_band: 0.05              # bucket > target + 5% of portfolio -> sell lowest scores first
-  min_trade_frac: 0.005               # ignore trades smaller than 0.5% of the portfolio
-  vault: two_way                      # OPEN QUESTION for Matt. two_way: trim the Vault back to target
-                                      # when it is more than vault_band over. top_up_only: the Vault is
-                                      # never sold to rebalance (then alt buckets starve as BTC rises).
-  vault_band: 0.05
-  vault_tax: long_term                # DEFAULT: Vault sales reserve tax at the long-term rate
-
-breakers:
-  measure: usd                        # DEFAULT: portfolio peak-to-now drawdown in USD
-  level_1: { drawdown: 0.15, close_leverage: true, entry_freeze_days: 7 }
-  level_2: { drawdown: 0.25, force_regime: defend }
-  defend_days: 7                      # DEFAULT: forced Defend lasts a week, then weekly regime resumes
-  rebase_after_fire: true             # DEFAULT: after level 2 fires, the peak resets to today's value,
-                                      # so the breaker re-arms instead of latching until a new high
-
-backtest:
-  fee_per_side: 0.003
-  slippage_per_side: 0.001            # DEFAULT
-  signal_at: close                    # decide on the daily close...
-  fill_at: close                      # crypto is 24/7: the next open IS this close (checked:
-                                      # BTCUSDT open vs prior close, median gap 0.000%)
-  initial_usd: 100_000
-  delisted_haircut: 0.30              # DEFAULT: coin data ends -> exit at last price minus 30%
-  delisted_after_days: 7
-  walk_forward: { train_days: 730, test_days: 180 }
+version: 2
 
 cycle:                                # BTC cycle harvest (Matt, 2026-09-24): the primary strategy
-  account:                            # research assumption: 0% tax, 1% fee per trade
-    fee_per_trade: 0.01
-    tax_rate: 0.0
   halvings: [2012-11-28, 2016-07-09, 2020-05-11, 2024-04-19]   # add the next one when it happens
   sell:
-    target_frac: 0.5                  # Matt, 2026-09-25: half the BTC into USDT near the top
     window_start_days: 500            # chosen on 2012-2020 (archived study, see ADR-004)
-    window_end_days: 580              # leave-one-cycle-out pick under the account terms above
-    clock_share: 1.0                  # share of the target sold on the clock (rest: trend break)
+    window_end_days: 580              # leave-one-cycle-out pick (0% tax, 1% fee per trade)
     clock_tranches: 4
     trend_weekly_sma: 20
-  alts:                               # Matt, 2026-09-25: the alt basket (per-person budget + coins in the app)
-    slice_days: [0, 60, 120, 180]     # buy in 4 equal slices from the halving to +180 days
-    max_rank: 100                     # a coin must be in the top 100 on the buy date
   buy:
     start_days_since_ath: 360
     start_drawdown: 0.80
