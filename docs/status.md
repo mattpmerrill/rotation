@@ -15,9 +15,11 @@ production because the database is paused (next section).
 ## Production database is paused (2026-09-30)
 
 The Supabase project `rotation` was paused on 2026-09-30 (status INACTIVE) to free the free-plan project slot.
-While it is paused the daily job fails at its "Market data" step, and sign-in on the live site does not work.
-Matt chose to leave it paused for now. To bring it back, restore the project in the Supabase dashboard (or
-with the Supabase CLI or MCP `restore_project`), then re-run the daily job and check `/api/health`. Anything
+While it is paused sign-in on the live site does not work, and the daily job would fail at its "Market data"
+step, so its workflow is disabled in GitHub (2026-09-30; the file is unchanged). Matt chose to leave it paused
+for now. To bring it back: restore the project in the Supabase dashboard (or with the Supabase CLI or MCP
+`restore_project`), run `gh workflow enable daily.yml` and `gh workflow run daily.yml`, then check that run and
+`/api/health`. Anything
 that needs the production database waits for that, including dropping the two unused tables (exception 16).
 
 ## What this project is
