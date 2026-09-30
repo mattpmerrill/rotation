@@ -16,6 +16,8 @@ const schema = z.object({
   DISCORD_WEBHOOK_URL: z.url().optional(),
   /** CoinGecko Demo key for live prices. Optional: the keyless API works, with lower limits. */
   COINGECKO_API_KEY: z.string().min(1).optional(),
+  /** Set by Next.js. Anything but "development" is treated as production, so the stricter policy wins. */
+  NODE_ENV: z.enum(["development", "production", "test"]).default("production"),
   /** The commit this deployment was built from. Vercel sets it; absent locally. */
   VERCEL_GIT_COMMIT_SHA: z.string().min(7).optional(),
 });
@@ -31,6 +33,7 @@ export function env(): Env {
     CRON_SECRET: process.env.CRON_SECRET || undefined,
     DISCORD_WEBHOOK_URL: process.env.DISCORD_WEBHOOK_URL || undefined,
     COINGECKO_API_KEY: process.env.COINGECKO_API_KEY || undefined,
+    NODE_ENV: process.env.NODE_ENV || undefined,
     VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA || undefined,
   });
   return cached;

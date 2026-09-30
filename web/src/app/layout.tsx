@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   description: "How many BTC can you get from one? A friendly alt-basket challenge, scored in BTC.",
 };
 
+/** Every page renders per request: the Content-Security-Policy's nonce (src/proxy.ts) can only be put on
+ *  scripts that are rendered for one request, so a prerendered page would load with its scripts blocked. */
+export const dynamic = "force-dynamic";
+
 export const viewport: Viewport = { themeColor: "#0d0f14", colorScheme: "dark" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
