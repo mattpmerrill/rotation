@@ -4,7 +4,7 @@ import { listPeople, recordHelpLink, rejectSignup, setMember } from "@/data/peop
 import { fail, ok, type ApplicationResult } from "@/lib/result";
 
 /**
- * The admin's use cases (architecture.md: the service is the use case): approve someone, take a
+ * The admin's use cases (the service is the use case): approve someone, take a
  * membership away, reject a sign-up, and make a one-time sign-in help link. The Server Action has
  * already checked that the caller is an admin, and the database functions check it again.
  */

@@ -27,7 +27,7 @@ const noFramework = [
 ];
 
 /**
- * frontend.md: no literal colour, radius, shadow or z-index in UI code. Use the tokens in
+ * The frontend standard: no literal colour, radius, shadow or z-index in UI code. Use the tokens in
  * globals.css (bg-surface, text-btc, rounded-*, shadow-*); if the value you need is not on a
  * scale, add it to the scale.
  *
@@ -63,10 +63,10 @@ const literalSelectors = (pattern, message) => [
   { selector: `TemplateElement[value.raw=/${pattern}/]`, message },
 ];
 const noLiterals = [
-  ...literalSelectors(HEX, "No hex colour: use a token from globals.css (frontend.md)."),
-  ...literalSelectors(FN, "No literal colour function: use a token from globals.css (frontend.md)."),
-  ...literalSelectors(ARBITRARY, "No literal radius, shadow or z-index: add it to the scale (frontend.md)."),
-  ...literalSelectors(PALETTE, "No raw palette class: use the design tokens (frontend.md)."),
+  ...literalSelectors(HEX, "No hex colour: use a token from globals.css (the frontend standard)."),
+  ...literalSelectors(FN, "No literal colour function: use a token from globals.css (the frontend standard)."),
+  ...literalSelectors(ARBITRARY, "No literal radius, shadow or z-index: add it to the scale (the frontend standard)."),
+  ...literalSelectors(PALETTE, "No raw palette class: use the design tokens (the frontend standard)."),
 ];
 
 const eslintConfig = defineConfig([
@@ -130,7 +130,7 @@ const eslintConfig = defineConfig([
     ],
   ),
   {
-    // typescript.md: non-null assertions are prohibited outside generated code. Handle the
+    // The TypeScript standard: non-null assertions are prohibited outside generated code. Handle the
     // missing case, or use defined() from @/lib/defined where its absence would be a bug.
     files: ["src/**/*.{ts,tsx}"],
     rules: { "@typescript-eslint/no-non-null-assertion": "error" },
@@ -141,7 +141,7 @@ const eslintConfig = defineConfig([
     rules: { "no-restricted-syntax": ["error", ...noLiterals] },
   },
   {
-    // configuration.md: environment variables are parsed and validated once, in one module.
+    // The configuration standard: environment variables are parsed and validated once, in one module.
     files: ["src/**/*.{ts,tsx}"],
     ignores: ["src/data/env.ts"],
     rules: {

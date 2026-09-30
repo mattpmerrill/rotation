@@ -1,5 +1,5 @@
 /**
- * The response headers that harden every page (security.md: CSP and the standard headers). Plain
+ * The response headers that harden every page (the security standard: CSP and the usual headers). Plain
  * strings and a pure builder, so next.config.ts can import them and a test can read them.
  *
  * Two kinds: the static ones (`staticSecurityHeaders`) go on every response from next.config.ts;

@@ -14,7 +14,7 @@ import {
 } from "./service";
 
 /**
- * Transport for the sign-in use cases (architecture.md): validate the form, call one service, turn
+ * Transport for the sign-in use cases: validate the form, call one service, turn
  * its result into what the form shows, and redirect on success. These are the entry points a
  * signed-out visitor can reach, so all input is treated as untrusted and Auth's own text is never
  * shown (the repository translates it).

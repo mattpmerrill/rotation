@@ -1,4 +1,4 @@
-// Guard: source files and folders are kebab-case (engineering-standards.md, code conventions).
+// Guard: source files and folders are kebab-case (the engineering standards, code conventions).
 //
 // A ratchet, like the query-location guard in the standards: files that already break the rule
 // are listed in filenames.exempt.json. The list may only shrink. This guard fails when

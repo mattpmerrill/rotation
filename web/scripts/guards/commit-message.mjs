@@ -1,4 +1,4 @@
-// Guard: commit messages follow version-control.md.
+// Guard: commit messages follow the version-control standard.
 //   - the subject is `<area>: <what changed>`
 //   - no em-dash or en-dash anywhere in the message
 //   - an `Exception:` trailer reads `Exception: <rule> - <why> - expires YYYY-MM-DD`
@@ -35,7 +35,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   }
   const found = problems(readFileSync(file, "utf8"));
   if (found.length) {
-    console.error(`commit message rejected (version-control.md):\n  - ${found.join("\n  - ")}`);
+    console.error(`commit message rejected (the version-control standard):\n  - ${found.join("\n  - ")}`);
     process.exit(1);
   }
 }

@@ -13,7 +13,7 @@ import { fail, ok, type ApplicationResult } from "@/lib/result";
 import type { FillInput, TradeInput } from "./schema";
 
 /**
- * The trade use cases (architecture.md: the service is the use case). Each one takes input that
+ * The trade use cases (the service is the use case). Each one takes input that
  * the Server Action has already authenticated and validated, applies the challenge rules, and asks
  * the repository to write. It knows nothing about forms, HTTP or cache revalidation, and returns
  * an ApplicationResult with a stable error code. The database enforces the same rules again.

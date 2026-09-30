@@ -7,7 +7,7 @@ import { fillInput, tradeIdInput, tradeInput } from "./schema";
 import { fillSlotWithCoin, recordTrade, retractTrade } from "./service";
 
 /**
- * Transport for the trade use cases (architecture.md): authenticate, validate the input, call one
+ * Transport for the trade use cases: authenticate, validate the input, call one
  * service, and turn its result into what the form shows. No rules live here. The proxy is not the
  * authorization boundary, and Server Actions can be posted to directly, so each one starts with
  * requireMember() and treats its arguments as untrusted.

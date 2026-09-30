@@ -8,7 +8,7 @@ import { supabaseServer, type Db } from "./supabase/server";
 
 /**
  * The repository for `entry_trades`: the only place a query against that table (or the
- * `fill_slot` function) is built (architecture.md). Reads throw on failure, which is unexpected
+ * `fill_slot` function) is built. Reads throw on failure, which is unexpected
  * for a read; writes return an ApplicationResult, with database failures translated by
  * dbFailure so no database text reaches a user.
  */

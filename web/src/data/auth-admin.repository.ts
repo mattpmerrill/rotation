@@ -5,7 +5,7 @@ import { supabaseAdmin } from "./supabase/admin";
 
 /**
  * Auth operations that need the secret key. The caller must already have checked that the person
- * asking is an admin and recorded the action (architecture.md: a user-initiated operation with the
+ * asking is an admin and recorded the action (a user-initiated operation with the
  * elevated key has explicit application authorization and is audit-logged).
  */
 

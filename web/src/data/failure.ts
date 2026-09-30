@@ -10,7 +10,7 @@ export interface DbError {
 
 /**
  * Translate a database failure into the app's own result, so no raw database text reaches a user
- * (contracts-and-errors.md). The database functions raise these SQLSTATEs on purpose (see
+ * (the contracts-and-errors standard). The database functions raise these SQLSTATEs on purpose (see
  * supabase/migrations): 42501 not allowed, 23514 a challenge rule, 23505 already exists, P0002 not
  * found. Everything else is unexpected: the user gets a generic message and the details go to the log.
  *

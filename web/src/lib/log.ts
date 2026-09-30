@@ -1,6 +1,6 @@
 /**
  * Structured logging: one JSON object per line on stdout or stderr, which Vercel captures and makes
- * searchable (observability.md). Callers pass the facts about the event, never secrets, tokens,
+ * searchable (the observability standard). Callers pass the facts about the event, never secrets, tokens,
  * payment details, or personal data beyond what an investigation needs.
  *
  * Not built yet: a correlation ID carried from the request into every line (exception 3 in

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-// The hardening headers (security.md). They run against a production build, or against production
+// The hardening headers (the security standard). They run against a production build, or against production
 // itself after a deploy, so nothing here names a specific Supabase project.
 
 const nonceOf = (policy: string | undefined) => /'nonce-([^']+)'/.exec(policy ?? "")?.[1];

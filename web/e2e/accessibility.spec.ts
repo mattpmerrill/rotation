@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-// WCAG 2.2 AA (frontend.md), gated at serious and critical. Signed-out pages only: the signed-in
+// WCAG 2.2 AA (the frontend standard), gated at serious and critical. Signed-out pages only: the signed-in
 // pages need a signed-in journey, which is a recorded exception in docs/exceptions.md.
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 

@@ -1,5 +1,5 @@
 /**
- * The one shape every use case returns (contracts-and-errors.md). Expected failures are data, not
+ * The one shape every use case returns (the contracts-and-errors standard). Expected failures are data, not
  * exceptions: the caller branches on a stable `code`, and shows `message`, which is written for a
  * person and may change. Unexpected failures are thrown (or logged and reported as "unexpected").
  */

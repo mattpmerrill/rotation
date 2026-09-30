@@ -12,7 +12,7 @@ import { editableCoins } from "./editable-coins";
 import type { BuyInInput } from "./schema";
 
 /**
- * The buy-in use cases (architecture.md: the service is the use case): start an entry, redo its
+ * The buy-in use cases (the service is the use case): start an entry, redo its
  * buy-in, delete it. Each takes input the Server Action has already authenticated and validated,
  * applies the challenge rules, and asks the repository to write. The database enforces the same
  * rules again, so where it refuses anyway (a race, a direct call) the repository's typed failure is

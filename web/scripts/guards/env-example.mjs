@@ -1,4 +1,4 @@
-// Guard: .env.example lists exactly the variables src/data/env.ts reads (configuration.md:
+// Guard: .env.example lists exactly the variables src/data/env.ts reads (the configuration standard:
 // "`.env.example` lists every variable the app reads ... updated in the same commit").
 // Run: node scripts/guards/env-example.mjs   (part of `npm run check`)
 import { readFileSync } from "node:fs";

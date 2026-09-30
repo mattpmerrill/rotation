@@ -1,5 +1,5 @@
 /**
- * Import-graph rules (architecture.md, "Enforcing the direction"). ESLint's no-restricted-imports
+ * Import-graph rules (docs/architecture.md). ESLint's no-restricted-imports
  * already enforces the layer order; this covers what a per-file import rule cannot see: cycles,
  * modules nothing imports, and presentation code reaching past its layer.
  * Run: npm run deps   (part of `npm run check`)
@@ -65,7 +65,8 @@ module.exports = {
     },
     {
       name: "no-orphans",
-      comment: "A module nothing imports is dead code (deprecation.md): delete it with the change that orphaned it.",
+      comment:
+        "A module nothing imports is dead code (the deprecation standard): delete it with the change that orphaned it.",
       severity: "error",
       from: {
         orphan: true,

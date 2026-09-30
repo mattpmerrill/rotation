@@ -9,7 +9,7 @@ import { buyInInput, entryIdArgument, entryIdField } from "./schema";
 import { deleteBasket, enterChallenge, redoBuyIn } from "./service";
 
 /**
- * Transport for the buy-in use cases (architecture.md): authenticate, validate, call one service,
+ * Transport for the buy-in use cases: authenticate, validate, call one service,
  * turn its result into what the form shows, and redirect on success. No rules live here. Each
  * action starts with requireMember() because Server Actions can be posted to directly.
  */

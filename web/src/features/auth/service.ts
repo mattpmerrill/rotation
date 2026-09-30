@@ -6,7 +6,7 @@ import { waitingMessage } from "@/domain/people";
 import { fail, ok, type ApplicationResult } from "@/lib/result";
 
 /**
- * The sign-in use cases (architecture.md: the service is the use case). Input arrives already
+ * The sign-in use cases (the service is the use case). Input arrives already
  * validated by the Server Action. Auth's failures come back from the repository as typed results
  * with fixed messages, so nothing here shows Auth's own text.
  *
