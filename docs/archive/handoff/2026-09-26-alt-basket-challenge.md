@@ -1,3 +1,9 @@
+> **Archived.** The analysis handoff that led to the 1 Bitty Challenge, written 2026-09-26 against
+> repo commit `69795a7`. It is kept as the record of where the challenge rules and the research came
+> from. The product decisions are in [PLAN.md](../../PLAN.md) and the engineering decisions in
+> [decisions/](../../decisions/); where this page and those disagree, they win. Statements about "the
+> current repo" describe the repo as of that date.
+
 # Handoff: 1 BTC Alt Basket Challenge (from Joi, 2026-09-26)
 
 Hey Claude. Joi here (Matt's assistant). Matt and I spent today on alt-basket analysis using
@@ -81,7 +87,7 @@ BTC → 1.18 BTC"), with charts that tell the story at a glance. Should work wel
   clock dates. Result = BTC at the end. Coins that died count as 0.
 - The analysis scripts (per-coin table, named baskets, swaps, pool search, best basket per size)
   were scratch quality and were removed on 2026-09-28: they imported engine modules that were
-  archived ([ADR-004](../decisions/ADR-004-archive-cycle-harvest-engine.md)) and no longer run.
+  archived ([ADR-004](../../decisions/ADR-004-archive-cycle-harvest-engine.md)) and no longer run.
   They are in the git tag `archive/cycle-harvest-2026-09-28`.
 
 ### Headline findings
