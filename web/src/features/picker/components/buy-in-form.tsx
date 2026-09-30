@@ -2,7 +2,14 @@
 
 import { BitcoinSpinner } from "@/ui/bitcoin-spinner";
 import { useActionState, useMemo, useState } from "react";
-import { btcSoldAtBuyIn, checkBuyIn, planBuyIn, usdtAfter, type DraftTrade } from "@/domain/buy-in";
+import {
+  btcSoldAtBuyIn,
+  checkBuyIn,
+  draftBuyIn,
+  usdtAfter,
+  type BuyInOverrides,
+  type DraftTrade,
+} from "@/domain/buy-in";
 import { priceOn } from "@/domain/prices";
 import { RULES } from "@/domain/rules";
 import { BTC, type PriceBook } from "@/domain/types";
@@ -11,18 +18,7 @@ import { Button } from "@/ui/button";
 import { Field } from "@/ui/field";
 import { Notice } from "@/ui/notice";
 import { editBasket, startChallenge, type BuyInState } from "../actions";
-
-type Overrides = Record<string, { qty?: string; price?: string }>;
-
-/** A saved buy-in to edit: the form starts from what was logged. */
-export interface BuyInEdit {
-  entryId: number;
-  btcIn: number;
-  startedOn: string;
-  feeRate: number;
-  /** The logged amounts and prices, by asset. */
-  overrides: Overrides;
-}
+import type { BuyInEdit } from "../buy-in-edit";
 
 /**
  * The buy-in: how much BTC, which day, and the trades. The app plans equal dollar amounts at
@@ -48,32 +44,17 @@ export function BuyInForm({
   const [btcIn, setBtcIn] = useState(editing ? String(editing.btcIn) : "1");
   const [day, setDay] = useState(editing?.startedOn ?? window[1]);
   const [feePct, setFeePct] = useState(String(Number(((editing?.feeRate ?? RULES.defaultFeeRate) * 100).toFixed(4))));
-  const [overrides, setOverrides] = useState<Overrides>(editing?.overrides ?? {});
-  const [state, action, pending] = useActionState(editing ? editBasket : startChallenge, {} as BuyInState);
+  const [overrides, setOverrides] = useState<BuyInOverrides>(editing?.overrides ?? {});
+  const [state, action, pending] = useActionState(editing ? editBasket : startChallenge, {});
 
   const feeRate = Number(feePct) / 100;
   const btcPrice = priceOn(prices, BTC, day);
   const missing = basket.filter((id) => priceOn(prices, id, day) == null);
 
-  const trades: DraftTrade[] = useMemo(() => {
-    if (!btcPrice || missing.length || !(Number(btcIn) > 0) || !(feeRate >= 0)) return [];
-    const plan = planBuyIn({
-      btcIn: Number(btcIn),
-      btcPriceUsd: Number(overrides[BTC]?.price ?? btcPrice),
-      coinPricesUsd: Object.fromEntries(
-        basket.map((id) => [id, Number(overrides[id]?.price ?? priceOn(prices, id, day))]),
-      ),
-      basket,
-      slots,
-      feeRate,
-    });
-    // apply typed-in amounts; fees follow the edited amounts
-    return plan.map((t) => {
-      const o = overrides[t.asset];
-      const qty = t.asset === BTC ? t.qty : Number(o?.qty ?? t.qty);
-      return { ...t, qty, feeUsd: qty * t.priceUsd * feeRate };
-    });
-  }, [btcIn, btcPrice, basket, slots, day, feeRate, missing.length, overrides, prices]);
+  const trades: DraftTrade[] = useMemo(
+    () => draftBuyIn({ btcIn: Number(btcIn), basket, slots, feeRate, prices, day, overrides }),
+    [btcIn, basket, slots, day, feeRate, overrides, prices],
+  );
 
   const problems = trades.length ? checkBuyIn(Number(btcIn), basket, slots, trades) : [];
   const left = trades.length ? usdtAfter(trades) : 0;

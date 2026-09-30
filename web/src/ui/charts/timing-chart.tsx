@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { Stretch, TimingPoint } from "@/domain/timing";
+import { isGoodStretch, type Stretch, type TimingPoint } from "@/domain/timing";
 import { formatBtc, formatDay } from "@/lib/format";
 import { ChartTooltip } from "./chart-tooltip";
 import { Legend } from "./legend";
@@ -35,7 +35,7 @@ export function TimingChart({
   today: number;
 }) {
   const cycles = [...new Set(points.map((p) => p.cycle))].sort();
-  const good = stretches.filter((s) => s.stance.of >= 2 && s.stance.wins / s.stance.of > 0.5);
+  const good = stretches.filter(isGoodStretch);
   return (
     <div className="grid gap-3">
       <Legend
@@ -75,6 +75,7 @@ export function TimingChart({
             <Tooltip
               cursor={{ stroke: "var(--ink-3)" }}
               content={({ active, payload }) => {
+                // Recharts types a tooltip payload as any; it is the TimingPoint this line was given
                 const p = payload?.[0]?.payload as TimingPoint | undefined;
                 if (!active || !p) return null;
                 return (

@@ -1,5 +1,6 @@
 import type { DraftTrade } from "./buy-in";
 import { formatQty } from "@/lib/format";
+import { RULES } from "./rules";
 import { USDT, type Balances, type Trade } from "./types";
 
 /** The buy-in's own trades: the BTC sale and the basket buys at the start. */
@@ -21,4 +22,14 @@ export function checkTrade(b: Balances, t: DraftTrade, symbol: string): string |
   if (cost > b[USDT] + 0.01)
     return `That costs $${cost.toFixed(2)} with the fee; you hold $${b[USDT].toFixed(2)} in USDT.`;
   return null;
+}
+
+/** The fee a trade of `qty` at `priceUsd` starts with, before a person types their real one. */
+export function defaultTradeFee(qty: number, priceUsd: number): number {
+  return qty * priceUsd * RULES.defaultFeeRate;
+}
+
+/** The BTC that all `usdt` buys at `priceUsd`, the default fee included, so nothing is left. */
+export function rebuyAllQty(usdt: number, priceUsd: number): number {
+  return usdt / (priceUsd * (1 + RULES.defaultFeeRate));
 }

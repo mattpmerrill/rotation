@@ -26,6 +26,16 @@ export const buyInInput = z.object({
 
 export type BuyInInput = z.infer<typeof buyInInput>;
 
+/** The `?basket=` a "Try this basket" link carries: coin ids separated by commas. Anyone can edit
+ *  the URL, so anything that is not a string (a repeated parameter arrives as a list) gives an empty
+ *  basket; the picker then keeps only ids that are eligible today. */
+const basketParam = z
+  .string()
+  .transform((raw) => raw.split(",").filter(Boolean))
+  .catch([]);
+
+export const parseBasketParam = (raw: unknown): string[] => basketParam.parse(raw ?? "");
+
 /** The entry id in the edit form's hidden field: form fields arrive as strings. */
 export const entryIdField = z.coerce.number("Something went wrong. Reload and try again.").int().positive();
 

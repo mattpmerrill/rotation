@@ -1,21 +1,18 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireViewer } from "@/features/auth/viewer";
 import { CoinTable } from "@/features/entry/components/coin-table";
+import { EntryHeader } from "@/features/entry/components/entry-header";
 import { ReferenceDates } from "@/features/entry/components/reference-dates";
 import { ScoreHero } from "@/features/entry/components/score-hero";
 import { ValueChart } from "@/features/entry/components/value-chart";
 import { getEntryView } from "@/features/entry/queries";
-import { TradeForm } from "@/features/trades/components/trade-form";
-import { FillSlotForm } from "@/features/trades/components/fill-slot-form";
-import { TradeLog } from "@/features/trades/components/trade-log";
-import { BTC } from "@/domain/types";
-import { editLockedReason } from "@/domain/buy-in";
+import { requireViewer } from "@/features/auth/viewer";
 import { DeleteBasketButton } from "@/features/picker/components/delete-basket-button";
+import { TradeForm } from "@/features/trades/components/trade-form";
+import { TradeLog } from "@/features/trades/components/trade-log";
+import { WaitingSlots } from "@/features/trades/components/waiting-slots";
 import { buttonClass } from "@/ui/button";
-import Link from "next/link";
-import { formatBtc, formatDay } from "@/lib/format";
-import { LiveRefresh } from "@/ui/live-refresh";
 import { Section } from "@/ui/section";
 
 export const metadata: Metadata = { title: "Basket" };
@@ -23,44 +20,32 @@ export const metadata: Metadata = { title: "Basket" };
 export default async function EntryPage({ params }: { params: Promise<{ id: string }> }) {
   const viewer = await requireViewer();
   if (!viewer.isMember) return null;
-  const id = Number((await params).id);
-  const view = Number.isInteger(id) ? await getEntryView(id, viewer) : null;
+  const view = await getEntryView((await params).id, viewer);
   if (!view) notFound();
 
-  const { entry, standing, isOwner } = view;
-  const buyInSale = view.trades.find((t) => t.asset === BTC && t.side === "sell" && t.tradedOn === entry.startedOn);
-  const startUsd = entry.btcIn * (buyInSale?.priceUsd ?? standing.series[0]?.btcPrice ?? 0);
-  const finished = standing.phase === "back_in_btc";
-  const editable = isOwner && !editLockedReason(view.trades);
+  const { entry, standing, isOwner, finished, editable } = view;
 
   return (
     <>
       <section className="grid gap-5">
-        <div className="grid gap-1">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-ink-2 text-lg font-semibold">
-              {isOwner ? "Your basket" : `${entry.playerName}'s basket`}
-            </h1>
-            {isOwner && (
+        <EntryHeader
+          entry={entry}
+          standing={standing}
+          isOwner={isOwner}
+          finished={finished}
+          liveAt={view.liveAt}
+          actions={
+            isOwner && (
               <div className="flex flex-wrap items-center gap-2">
                 <Link href={`/entries/${entry.id}/edit`} className={buttonClass("quiet")}>
                   {editable ? "Edit basket" : "Edit or delete"}
                 </Link>
                 {editable && <DeleteBasketButton entryId={entry.id} />}
               </div>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-            <p className="text-ink-3 text-sm">
-              In since {formatDay(entry.startedOn)}.
-              {standing.best != null &&
-                standing.worst != null &&
-                ` Best ${standing.best.toFixed(2)}×, lowest ${standing.worst.toFixed(2)}×.`}
-            </p>
-            {!finished && <LiveRefresh liveAt={view.liveAt} />}
-          </div>
-        </div>
-        <ScoreHero btcIn={entry.btcIn} startUsd={startUsd} now={standing.now} phase={standing.phase} />
+            )
+          }
+        />
+        <ScoreHero btcIn={entry.btcIn} startUsd={standing.startUsd} now={standing.now} phase={standing.phase} />
       </section>
 
       <Section title="Value over time" panel>
@@ -75,25 +60,7 @@ export default async function EntryPage({ params }: { params: Promise<{ id: stri
         )}
       </Section>
 
-      {view.slots.open > 0 && (
-        <Section title={view.slots.open === 1 ? "A waiting slot" : `${view.slots.open} waiting slots`} panel>
-          {view.slots.fill ? (
-            <FillSlotForm
-              entryId={entry.id}
-              share={view.slots.share}
-              coins={view.slots.fill.coins}
-              prices={view.slots.fill.prices}
-              from={view.slots.fill.from}
-            />
-          ) : (
-            <p className="text-ink-2 text-sm">
-              {view.slots.closedReason && view.slots.waitingBtc === 0
-                ? view.slots.closedReason
-                : `${formatBtc(view.slots.waitingBtc)} is waiting as BTC, to buy a coin later.`}
-            </p>
-          )}
-        </Section>
-      )}
+      {view.slots.open > 0 && <WaitingSlots entryId={entry.id} slots={view.slots} />}
 
       {isOwner && !finished && (
         <Section title="Log a trade" panel>

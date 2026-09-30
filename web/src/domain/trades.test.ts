@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buyIn, entry, trade } from "./fixtures";
 import { balancesOn } from "./holdings";
-import { checkTrade, isBuyInTrade } from "./trades";
+import { checkTrade, defaultTradeFee, isBuyInTrade, rebuyAllQty } from "./trades";
 
 describe("trades", () => {
   it("recognizes the buy-in's trades", () => {
@@ -19,5 +19,11 @@ describe("trades", () => {
     expect(checkTrade(b, { asset: "bitcoin", side: "buy", qty: 0.1, priceUsd: 100_000, feeUsd: 0 }, "BTC")).toMatch(
       /you hold \$0.00/,
     );
+  });
+
+  it("starts a trade with the default fee, and sizes a rebuy so nothing is left", () => {
+    expect(defaultTradeFee(2, 50)).toBeCloseTo(1);
+    const qty = rebuyAllQty(1_000, 100);
+    expect(qty * 100 + defaultTradeFee(qty, 100)).toBeCloseTo(1_000);
   });
 });

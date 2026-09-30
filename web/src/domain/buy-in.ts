@@ -1,6 +1,7 @@
 import { addDays, earlierDay, laterDay } from "@/lib/days";
+import { priceOn } from "./prices";
 import { RULES } from "./rules";
-import { BTC, type Day, type Side } from "./types";
+import { BTC, type Day, type PriceBook, type Side } from "./types";
 
 /** A trade before it's saved: the buy-in's BTC sale and its alt buys. */
 export interface DraftTrade {
@@ -102,4 +103,48 @@ export function checkBuyIn(btcIn: number, basket: string[], slots: number, trade
   const left = usdtAfter(trades);
   if (left < -0.01) errors.push(`These buys spend $${(-left).toFixed(2)} more than the BTC sale raised.`);
   return errors;
+}
+
+/** The fee rate a saved buy-in was made with: the fee on its BTC sale as a share of the sale.
+ *  Undefined when it has no BTC sale, or the sale was worth nothing. */
+export function buyInFeeRate(trades: DraftTrade[]): number | undefined {
+  const sale = trades.find((t) => t.asset === BTC && t.side === "sell");
+  const gross = sale ? sale.qty * sale.priceUsd : 0;
+  return sale && gross > 0 ? sale.feeUsd / gross : undefined;
+}
+
+/** What a person typed over the planned numbers, by asset: amounts (coins only) and prices. */
+export type BuyInOverrides = Record<string, { qty?: string; price?: string }>;
+
+export interface BuyInDraftInput {
+  btcIn: number;
+  basket: string[];
+  slots: number;
+  feeRate: number;
+  prices: PriceBook;
+  day: Day;
+  overrides: BuyInOverrides;
+}
+
+/**
+ * The buy-in trades the form shows: equal dollar amounts at the day's closes, with any typed-in
+ * price or coin amount applied and each fee following its edited amount. Empty when it cannot be
+ * planned yet: a price is missing that day, or BTC in or the fee is not a usable number.
+ */
+export function draftBuyIn({ btcIn, basket, slots, feeRate, prices, day, overrides }: BuyInDraftInput): DraftTrade[] {
+  const btcPrice = priceOn(prices, BTC, day);
+  const coinPrices = basket.map((id) => priceOn(prices, id, day));
+  if (!btcPrice || coinPrices.some((p) => p == null) || !(btcIn > 0) || !(feeRate >= 0)) return [];
+  const plan = planBuyIn({
+    btcIn,
+    btcPriceUsd: Number(overrides[BTC]?.price ?? btcPrice),
+    coinPricesUsd: Object.fromEntries(basket.map((id, i) => [id, Number(overrides[id]?.price ?? coinPrices[i])])),
+    basket,
+    slots,
+    feeRate,
+  });
+  return plan.map((t) => {
+    const qty = t.asset === BTC ? t.qty : Number(overrides[t.asset]?.qty ?? t.qty);
+    return { ...t, qty, feeUsd: qty * t.priceUsd * feeRate };
+  });
 }

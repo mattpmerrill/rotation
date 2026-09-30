@@ -4,8 +4,6 @@ import { CoinChooser } from "@/features/timing/components/coin-chooser";
 import { StretchTable } from "@/features/timing/components/stretch-table";
 import { TimingVerdict } from "@/features/timing/components/timing-verdict";
 import { getTiming } from "@/features/timing/queries";
-import { nextGoodStretch } from "@/domain/timing";
-import { addDays } from "@/lib/days";
 import { formatMonth } from "@/lib/format";
 import { TimingChart } from "@/ui/charts/timing-chart";
 import { Notice } from "@/ui/notice";
@@ -17,11 +15,8 @@ export default async function TimingPage({ searchParams }: { searchParams: Promi
   const viewer = await requireViewer();
   if (!viewer.isMember) return null;
   const { coin: coinId } = await searchParams;
-  const { cycle, market, coin, coinOptions } = await getTiming(coinId ?? null);
+  const { cycle, market, nextGood, coin, coinOptions } = await getTiming(coinId ?? null);
   const today = cycle.daysSinceHalving;
-  const next = nextGoodStretch(market.stretches, today);
-  const nextStart = next && addDays(next.nextCycle ? cycle.nextHalvingEst : cycle.lastHalving, next.stretch.from);
-  const nextEnd = next && addDays(next.nextCycle ? cycle.nextHalvingEst : cycle.lastHalving, next.stretch.to);
 
   return (
     <>
@@ -35,15 +30,15 @@ export default async function TimingPage({ searchParams }: { searchParams: Promi
 
       <TimingVerdict stance={market.now} day={today} subject="the top 10 alts" />
 
-      {next && nextStart && nextEnd && (
+      {nextGood && (
         <div className="panel border-gain/40 grid gap-1 p-5 sm:p-6">
           <span className="text-ink-3 text-sm">The next stretch that beat BTC in most past cycles</span>
           <span className="font-display text-gain text-xl font-semibold sm:text-2xl">
-            {formatMonth(nextStart)} to {formatMonth(nextEnd)}
+            {formatMonth(nextGood.start)} to {formatMonth(nextGood.end)}
           </span>
           <span className="text-ink-2 text-sm">
-            Buying in this stretch beat holding BTC in at least {next.stretch.stance.wins} of {next.stretch.stance.of}{" "}
-            past cycles. Dates after the next halving are estimates.
+            Buying in this stretch beat holding BTC in at least {nextGood.wins} of {nextGood.of} past cycles. Dates
+            after the next halving are estimates.
           </span>
         </div>
       )}

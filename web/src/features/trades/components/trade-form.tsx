@@ -4,6 +4,7 @@ import { BitcoinSpinner } from "@/ui/bitcoin-spinner";
 import { useActionState, useState } from "react";
 import { priceOn } from "@/domain/prices";
 import { RULES } from "@/domain/rules";
+import { defaultTradeFee, rebuyAllQty } from "@/domain/trades";
 import { BTC, type Coin, type PriceBook } from "@/domain/types";
 import { todayUtc } from "@/lib/days";
 import { formatQty, formatUsd } from "@/lib/format";
@@ -28,7 +29,7 @@ interface Props {
  * actually got), and the fee defaults to 1% of the trade. After a save the fields reset.
  */
 export function TradeForm(props: Props) {
-  const [state, action, pending] = useActionState(logTrade, {} as TradeFormState);
+  const [state, action, pending] = useActionState(logTrade, {});
   // A new key after each save remounts the fields, which clears them.
   return <TradeFields key={state.saved ?? 0} {...props} state={state} action={action} pending={pending} />;
 }
@@ -57,11 +58,11 @@ function TradeFields({
   const closeThatDay = priceOn(prices, traded, day);
   const price = typedPrice ?? (closeThatDay ? String(closeThatDay) : "");
   const notional = Number(qty) * Number(price);
-  const fee = typedFee ?? (notional > 0 ? (notional * RULES.defaultFeeRate).toFixed(2) : "");
+  const fee = typedFee ?? (notional > 0 ? defaultTradeFee(Number(qty), Number(price)).toFixed(2) : "");
 
   const fillAll = () => {
     if (kind === "sell_alt") setQty(String(alts[asset] ?? ""));
-    else if (Number(price) > 0) setQty(String(usdt / (Number(price) * (1 + RULES.defaultFeeRate))));
+    else if (Number(price) > 0) setQty(String(rebuyAllQty(usdt, Number(price))));
   };
 
   const canSell = held.length > 0;

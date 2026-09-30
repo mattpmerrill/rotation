@@ -4,13 +4,15 @@ import { findEntryFor, getEntry } from "@/data/entries.repository";
 import { listTrades } from "@/data/trades.repository";
 import { buyInWindow, editLockedReason, editWindow } from "@/domain/buy-in";
 import { getCoins, getEligibleCoins, getPriceBook } from "@/data/prices.repository";
-import { marketReference } from "@/data/reference.repository";
+import { cycleOn, marketReference } from "@/data/reference.repository";
 import type { Viewer } from "@/domain/viewer";
 import type { EligibleCoin } from "@/domain/basket";
-import { cycleReference } from "@/domain/cycle";
-import { BTC, type Challenge, type Entry, type PriceBook, type Trade } from "@/domain/types";
+import { BTC, type Challenge, type Entry, type PriceBook } from "@/domain/types";
 import { addDays, todayUtc } from "@/lib/days";
+import { integerParam } from "@/lib/integer-param";
+import { toBuyInEdit, type BuyInEdit } from "./buy-in-edit";
 import { editableCoins } from "./editable-coins";
+import { parseBasketParam } from "./schema";
 
 export type PickerData =
   | { status: "no_challenge" }
@@ -28,12 +30,15 @@ export type PickerData =
       prices: PriceBook;
       /** BTC's icon, for waiting slots. */
       btcIcon: string | null;
+      /** Coins to start the basket with, from a "Try this basket" link; ids not eligible are dropped by the form. */
+      initialBasket: string[];
     };
 
 export type EditData =
-  | { status: "locked"; reason: string }
+  | { status: "locked"; entryId: number; reason: string }
   | {
       status: "ready";
+      entryId: number;
       entry: Entry;
       coins: EligibleCoin[];
       daysSinceHalving: number;
@@ -42,19 +47,21 @@ export type EditData =
       prices: PriceBook;
       btcIcon: string | null;
       /** The saved buy-in, to start the form from. */
-      buyIn: { trades: Trade[] };
+      edit: BuyInEdit;
     };
 
-/** Everything the edit page needs, or null if the entry isn't the viewer's. */
-export async function getEditData(entryId: number, viewer: Viewer): Promise<EditData | null> {
+/** Everything the edit page needs, or null if `idParam` (the URL segment) isn't the viewer's entry. */
+export async function getEditData(idParam: string, viewer: Viewer): Promise<EditData | null> {
+  const entryId = integerParam(idParam);
+  if (entryId === null) return null;
   const entry = await getEntry(entryId);
   if (!entry || entry.userId !== viewer.id) return null;
   const challenge = await getCurrentChallenge();
   if (!challenge || challenge.id !== entry.challengeId || challenge.closedOn)
-    return { status: "locked", reason: "This challenge has closed." };
+    return { status: "locked", entryId: entry.id, reason: "This challenge has closed." };
   const trades = await listTrades([entry.id]);
   const locked = editLockedReason(trades);
-  if (locked) return { status: "locked", reason: locked };
+  if (locked) return { status: "locked", entryId: entry.id, reason: locked };
 
   const today = todayUtc();
   const window = editWindow(challenge.openedOn, entry.startedOn, today);
@@ -65,23 +72,20 @@ export async function getEditData(entryId: number, viewer: Viewer): Promise<Edit
   ]);
   return {
     status: "ready",
+    entryId: entry.id,
     entry,
     coins,
-    daysSinceHalving: cycleReference(
-      marketReference.halvings,
-      marketReference.halvingIntervalDays,
-      marketReference.sellWindowDays,
-      today,
-    ).daysSinceHalving,
+    daysSinceHalving: cycleOn(today).daysSinceHalving,
     sellWindowDays: marketReference.sellWindowDays,
     window,
     prices,
     btcIcon: btc[BTC]?.image ?? null,
-    buyIn: { trades },
+    edit: toBuyInEdit(entry, trades),
   };
 }
 
-export async function getPickerData(viewer: Viewer): Promise<PickerData> {
+/** Everything the picker needs. `basketParam` is the raw `?basket=` from the URL. */
+export async function getPickerData(viewer: Viewer, basketParam: unknown): Promise<PickerData> {
   const challenge = await getCurrentChallenge();
   if (!challenge || challenge.closedOn) return { status: "no_challenge" };
   const existing = await findEntryFor(viewer.id, challenge.id);
@@ -99,15 +103,11 @@ export async function getPickerData(viewer: Viewer): Promise<PickerData> {
     challenge,
     coins,
     ranksAsOf: asOf,
-    daysSinceHalving: cycleReference(
-      marketReference.halvings,
-      marketReference.halvingIntervalDays,
-      marketReference.sellWindowDays,
-      today,
-    ).daysSinceHalving,
+    daysSinceHalving: cycleOn(today).daysSinceHalving,
     sellWindowDays: marketReference.sellWindowDays,
     window: [from, today],
     prices,
     btcIcon: btc[BTC]?.image ?? null,
+    initialBasket: parseBasketParam(basketParam),
   };
 }

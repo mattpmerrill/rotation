@@ -1,8 +1,7 @@
 import "server-only";
 import { basketHistory } from "@/data/history.repository";
 import { getCoins } from "@/data/prices.repository";
-import { marketReference } from "@/data/reference.repository";
-import { cycleReference } from "@/domain/cycle";
+import { cycleOn, marketReference } from "@/data/reference.repository";
 import { previewBasket, type CyclePreview } from "@/domain/preview";
 import { RULES } from "@/domain/rules";
 import type { Coin } from "@/domain/types";
@@ -19,8 +18,8 @@ export async function getPicks(): Promise<{
   coins: Record<string, Coin>;
   daysSinceHalving: number;
 }> {
-  const { halvings, halvingIntervalDays, sellWindowDays } = marketReference;
-  const { daysSinceHalving } = cycleReference(halvings, halvingIntervalDays, sellWindowDays, todayUtc());
+  const { sellWindowDays } = marketReference;
+  const { daysSinceHalving } = cycleOn(todayUtc());
   const coins = await getCoins(PICKS.flatMap((p) => p.basket));
   return {
     daysSinceHalving,

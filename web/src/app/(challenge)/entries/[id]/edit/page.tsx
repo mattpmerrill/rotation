@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireViewer } from "@/features/auth/viewer";
-import { BTC } from "@/domain/types";
 import { DeleteBasketButton } from "@/features/picker/components/delete-basket-button";
 import { PickerFlow } from "@/features/picker/components/picker-flow";
 import { getEditData } from "@/features/picker/queries";
@@ -13,12 +12,14 @@ export const metadata: Metadata = { title: "Edit basket" };
 export default async function EditBasketPage({ params }: { params: Promise<{ id: string }> }) {
   const viewer = await requireViewer();
   if (!viewer.isMember) return null;
-  const id = Number((await params).id);
-  const data = Number.isInteger(id) ? await getEditData(id, viewer) : null;
+  const data = await getEditData((await params).id, viewer);
   if (!data) notFound();
 
   const back = (
-    <Link href={`/entries/${id}`} className="text-gold text-sm font-semibold underline-offset-4 hover:underline">
+    <Link
+      href={`/entries/${data.entryId}`}
+      className="text-gold text-sm font-semibold underline-offset-4 hover:underline"
+    >
       ← Back to your basket
     </Link>
   );
@@ -30,17 +31,12 @@ export default async function EditBasketPage({ params }: { params: Promise<{ id:
         <h1 className="text-3xl font-semibold sm:text-4xl">Edit basket</h1>
         <Notice>{data.reason}</Notice>
         <div>
-          <DeleteBasketButton entryId={id} />
+          <DeleteBasketButton entryId={data.entryId} />
         </div>
       </>
     );
 
-  const { entry, buyIn } = data;
-  const sale = buyIn.trades.find((t) => t.asset === BTC && t.side === "sell");
-  const feeRate = sale && sale.qty * sale.priceUsd > 0 ? sale.feeUsd / (sale.qty * sale.priceUsd) : undefined;
-  const overrides = Object.fromEntries(
-    buyIn.trades.map((t) => [t.asset, { qty: String(t.qty), price: String(t.priceUsd) }]),
-  );
+  const { entry } = data;
 
   return (
     <>
@@ -61,13 +57,7 @@ export default async function EditBasketPage({ params }: { params: Promise<{ id:
         initialBasket={entry.basket}
         initialSlots={entry.openSlots}
         btcIcon={data.btcIcon}
-        edit={{
-          entryId: entry.id,
-          btcIn: entry.btcIn,
-          startedOn: entry.startedOn,
-          feeRate: feeRate ?? 0.01,
-          overrides,
-        }}
+        edit={data.edit}
       />
       <section className="border-loss/30 grid gap-3 rounded-2xl border p-4 sm:p-5">
         <h2 className="text-lg font-semibold">Delete this basket</h2>

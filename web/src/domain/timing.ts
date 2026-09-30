@@ -1,3 +1,7 @@
+import { addDays } from "@/lib/days";
+import type { CycleReference } from "./cycle";
+import type { Day } from "./types";
+
 /**
  * When buying alts has paid off (engine: `rotation buy-timing`, web/public/data/buy-timing.json).
  * Each point is a buy day: how many days after that cycle's halving it was, and the BTC per BTC
@@ -49,7 +53,7 @@ export interface Stance {
 
 /**
  * How buying around `day` (± `spread` days) went in each past cycle. Good: beat holding BTC in
- * every cycle with data (at least two). Poor: lost in every one. Mixed: some of each.
+ * most cycles with data (at least two cycles). Poor: lost in every one. Mixed: some of each.
  */
 export function stanceAt(points: TimingPoint[], day: number, spread = 45): Stance {
   const near = points.filter((p) => Math.abs(p.day - day) <= spread);
@@ -60,7 +64,7 @@ export function stanceAt(points: TimingPoint[], day: number, spread = 45): Stanc
   }));
   const wins = byCycle.filter((c) => c.btc > 1).length;
   const verdict: Verdict =
-    byCycle.length < 2 ? "unknown" : wins === byCycle.length ? "good" : wins === 0 ? "poor" : "mixed";
+    byCycle.length < 2 ? "unknown" : wins === 0 ? "poor" : wins / byCycle.length > 0.5 ? "good" : "mixed";
   return {
     verdict,
     byCycle,
@@ -96,7 +100,7 @@ function median(xs: number[]): number {
 
 /** A stretch where buying beat holding BTC in most past cycles. */
 export function isGoodStretch(s: Stretch): boolean {
-  return s.stance.of >= 2 && s.stance.wins / s.stance.of > 0.5;
+  return s.stance.verdict === "good";
 }
 
 /**
@@ -117,4 +121,21 @@ export function nextGoodStretch(all: Stretch[], today: number): { stretch: Stret
   if (current) return { stretch: current, nextCycle: false };
   const first = runs[0];
   return first ? { stretch: first, nextCycle: true } : null;
+}
+
+/** The calendar dates of the next good run of stretches, for the page to show. Days in the next
+ *  cycle are counted from the estimated next halving. */
+export function nextGoodWindow(
+  all: Stretch[],
+  cycle: Pick<CycleReference, "daysSinceHalving" | "lastHalving" | "nextHalvingEst">,
+): { start: Day; end: Day; wins: number; of: number } | null {
+  const next = nextGoodStretch(all, cycle.daysSinceHalving);
+  if (!next) return null;
+  const from = next.nextCycle ? cycle.nextHalvingEst : cycle.lastHalving;
+  return {
+    start: addDays(from, next.stretch.from),
+    end: addDays(from, next.stretch.to),
+    wins: next.stretch.stance.wins,
+    of: next.stretch.stance.of,
+  };
 }

@@ -10,9 +10,7 @@ const TONE = {
 
 /** The indicator: how buying at this point in the cycle went before, in one line and a number per cycle. */
 export function TimingVerdict({ stance, day, subject }: { stance: Stance; day: number; subject: string }) {
-  const kind =
-    stance.of < 2 ? "unknown" : stance.wins === 0 ? "poor" : stance.wins / stance.of > 0.5 ? "good" : "mixed";
-  const t = TONE[kind];
+  const t = TONE[stance.verdict];
   return (
     <div
       className={`panel grid gap-4 p-5 sm:p-6 ${t.ring}`}

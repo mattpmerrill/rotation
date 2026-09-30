@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { defined } from "@/lib/defined";
-import { nextGoodStretch, stanceAt, stretches, timingPoints, type BuyTimingData } from "./timing";
+import { nextGoodStretch, nextGoodWindow, stanceAt, stretches, timingPoints, type BuyTimingData } from "./timing";
 
 const data: BuyTimingData = {
   generated: "2026-09-26",
@@ -29,6 +29,13 @@ describe("buy timing", () => {
     expect(stanceAt(timingPoints(data, "solana"), 890).verdict).toBe("unknown"); // one cycle only
   });
 
+  it("calls a stretch good when most cycles with data beat BTC, not only when all did", () => {
+    const three = (btc: number[]) => btc.map((b, i) => ({ entry: String(i), cycle: 2016 + i * 4, day: 10, btc: b }));
+    expect(stanceAt(three([2, 1.5, 0.8]), 10)).toMatchObject({ verdict: "good", wins: 2, of: 3 });
+    expect(stanceAt(three([2, 0.8, 0.7]), 10)).toMatchObject({ verdict: "mixed", wins: 1, of: 3 });
+    expect(stanceAt(three([0.9, 0.8, 0.7]), 10).verdict).toBe("poor");
+  });
+
   it("splits the cycle into stretches", () => {
     const s = stretches(points, 90);
     expect(s[0]).toMatchObject({ from: 0, to: 89 });
@@ -45,5 +52,27 @@ describe("next good stretch", () => {
     // two good stretches back to back merge into one run
     const run = nextGoodStretch([...s.slice(0, 1), { ...defined(s[0]), from: 90, to: 179 }, ...s.slice(2)], 890);
     expect(run?.stretch).toMatchObject({ from: 0, to: 179 });
+  });
+});
+
+describe("next good window", () => {
+  const s = stretches(timingPoints(data, "top10"), 90);
+  const cycle = { lastHalving: "2024-04-20", nextHalvingEst: "2028-04-17" };
+
+  it("dates a stretch in the current cycle from the last halving", () => {
+    expect(nextGoodWindow(s, { ...cycle, daysSinceHalving: 10 })).toEqual({
+      start: "2024-04-20",
+      end: "2024-07-18",
+      wins: 2,
+      of: 2,
+    });
+  });
+
+  it("dates a stretch in the next cycle from the estimated next halving", () => {
+    expect(nextGoodWindow(s, { ...cycle, daysSinceHalving: 890 })).toMatchObject({ start: "2028-04-17" });
+  });
+
+  it("is null when no stretch beat BTC", () => {
+    expect(nextGoodWindow([], { ...cycle, daysSinceHalving: 10 })).toBeNull();
   });
 });

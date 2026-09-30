@@ -8,7 +8,8 @@ import { buttonClass } from "@/ui/button";
 import { CoinTag } from "@/ui/coin-tag";
 import { Notice } from "@/ui/notice";
 import { Section } from "@/ui/section";
-import { BuyInForm, type BuyInEdit } from "./buy-in-form";
+import type { BuyInEdit } from "../buy-in-edit";
+import { BuyInForm } from "./buy-in-form";
 import { CoinPicker } from "./coin-picker";
 import { PreviewPanel } from "./preview-panel";
 

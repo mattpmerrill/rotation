@@ -3,19 +3,21 @@ import { getCurrentChallenge } from "@/data/challenges.repository";
 import { findEntryFor } from "@/data/entries.repository";
 import { getEligibleCoins, getPriceBook } from "@/data/prices.repository";
 import { getMarketState } from "@/data/market.repository";
-import { marketReference } from "@/data/reference.repository";
+import { cycleOn, marketReference } from "@/data/reference.repository";
 import { env } from "@/data/env";
 import { loadCurrentChallenge } from "@/data/snapshot.repository";
 import type { Viewer } from "@/domain/viewer";
 import { coinChanges, type CoinChange } from "@/domain/coins";
-import { cycleReference, type CycleReference } from "@/domain/cycle";
+import type { CycleReference } from "@/domain/cycle";
 import { altHoldings, balancesOn } from "@/domain/holdings";
+import { editLockedReason } from "@/domain/buy-in";
 import { slotShare, slotsClosedReason, waitingBtc } from "@/domain/slots";
-import { standingOf, type Standing } from "@/domain/standings";
+import { isFinished, standingOf, type Standing } from "@/domain/standings";
 import { BTC, USDT, type Coin, type Entry, type MarketState, type PriceBook, type Trade } from "@/domain/types";
 import type { EligibleCoin } from "@/domain/basket";
 import { getLivePrices } from "@/integrations/coingecko";
 import { addDays, laterDay, todayUtc } from "@/lib/days";
+import { integerParam } from "@/lib/integer-param";
 
 /** Today's prices from CoinGecko, cached a minute; null (daily closes only) if it is down. */
 const liveQuotes = (ids: string[]) => getLivePrices(ids, { apiKey: env().COINGECKO_API_KEY });
@@ -23,6 +25,10 @@ const liveQuotes = (ids: string[]) => getLivePrices(ids, { apiKey: env().COINGEC
 export interface EntryView {
   entry: Entry;
   isOwner: boolean;
+  /** The entry is back in BTC: its score is final. */
+  finished: boolean;
+  /** The owner can still redo the buy-in (nothing has been logged since). */
+  editable: boolean;
   standing: Standing;
   coins: Record<string, Coin>;
   changes: CoinChange[];
@@ -48,8 +54,11 @@ export interface EntryView {
   liveAt: number | null;
 }
 
-/** One entry in the current challenge, valued as of today. Null if it isn't in it. */
-export async function getEntryView(entryId: number, viewer: Viewer): Promise<EntryView | null> {
+/** One entry in the current challenge, valued as of today. Null if `idParam` (the URL segment)
+ *  isn't an entry in it. */
+export async function getEntryView(idParam: string, viewer: Viewer): Promise<EntryView | null> {
+  const entryId = integerParam(idParam);
+  if (entryId === null) return null;
   const [snap, market] = await Promise.all([loadCurrentChallenge(undefined, { liveQuotes }), getMarketState()]);
   const entry = snap?.entries.find((e) => e.id === entryId);
   if (!snap || !entry) return null;
@@ -59,10 +68,13 @@ export async function getEntryView(entryId: number, viewer: Viewer): Promise<Ent
   const assets = [BTC, ...entry.basket];
   const closedReason = slotsClosedReason(entry, trades);
   const isOwner = entry.userId === viewer.id;
+  const standing = standingOf(entry, trades, snap.prices, today);
   return {
     entry,
     isOwner,
-    standing: standingOf(entry, trades, snap.prices, today),
+    finished: isFinished(standing),
+    editable: isOwner && !editLockedReason(trades),
+    standing,
     coins: snap.coins,
     changes: coinChanges(entry, trades, snap.prices, today),
     trades,
@@ -73,12 +85,7 @@ export async function getEntryView(entryId: number, viewer: Viewer): Promise<Ent
         return series ? [[a, series]] : [];
       }),
     ),
-    cycle: cycleReference(
-      marketReference.halvings,
-      marketReference.halvingIntervalDays,
-      marketReference.sellWindowDays,
-      today,
-    ),
+    cycle: cycleOn(today),
     market,
     rebuyRule: marketReference.rebuy,
     liveAt: snap.liveAt,
@@ -92,8 +99,9 @@ export async function getEntryView(entryId: number, viewer: Viewer): Promise<Ent
   };
 }
 
-/** The viewer's entry in the current challenge, if they've started one. */
+/** The viewer's entry in the current challenge, if they're a member and have started one. */
 export async function getMyEntryId(viewer: Viewer): Promise<number | null> {
+  if (!viewer.isMember) return null;
   const challenge = await getCurrentChallenge();
   if (!challenge) return null;
   return (await findEntryFor(viewer.id, challenge.id))?.id ?? null;

@@ -11,8 +11,7 @@ import { Wordmark } from "@/ui/wordmark";
 /** The signed-in app: header, then the page. Non-members see how to get in instead. */
 export default async function ChallengeLayout({ children }: { children: React.ReactNode }) {
   const viewer = await requireViewer();
-  const myEntryId = viewer.isMember ? await getMyEntryId(viewer) : null;
-  const waiting = viewer.isAdmin ? await countWaiting() : 0;
+  const [myEntryId, waiting] = await Promise.all([getMyEntryId(viewer), countWaiting(viewer)]);
 
   return (
     <>
