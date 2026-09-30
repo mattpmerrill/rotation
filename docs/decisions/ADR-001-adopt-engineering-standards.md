@@ -9,8 +9,11 @@
 Rotation (the 1 Bitty Challenge) started as a research project and became a small live web app
 in five days: Next.js 16 and Supabase for the app, a Python engine for market data and research.
 It already had a real structure (`app -> features -> data -> domain -> lib`, enforced by ESLint),
-pgTAP tests and CI. It was written before the [GetLatest engineering standards](https://github.com/get-latest/company/tree/main/engineering)
-were applied to it.
+pgTAP tests and CI. It was written before the GetLatest engineering standards were applied to it.
+Those standards come from GetLatest AI's internal engineering handbook, which is not public. This
+repo carries the parts it follows, in `AGENTS.md`, the ADRs, [exceptions.md](../exceptions.md) and
+[enforcement-matrix.md](../enforcement-matrix.md), and cites a rule by name (for example "the
+observability standard") where it applies.
 
 The project doubles as a showcase: modern frameworks, a clean architecture, and visible
 engineering discipline. An audit against the standards on 2026-09-28 measured the distance:
@@ -37,7 +40,7 @@ yet, that is recorded rather than hidden:
 - **Guards over intentions.** Rules that a tool can check are checked by `npm run check` (web)
   and the pre-push hook. Rules a tool cannot check stay in review, and the matrix says so.
 - **Trunk is production.** `main` is the only long-lived branch, and a push to `main` deploys to
-  production through Vercel's Git integration ([version-control.md](https://github.com/get-latest/company/blob/main/engineering/standards/version-control.md)).
+  production through Vercel's Git integration (the version-control standard).
   The gate is the local check and the pre-push hook; CI on push is the detector. This is
   acceptable because the team is one person, an agent and four friends, and the cost of a bad
   deploy is a fun project being down for a few minutes.

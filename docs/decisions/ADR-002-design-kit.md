@@ -13,7 +13,7 @@ whether a rewrite is worth doing while the project is small.
 Current base (versions as of 2026-09-28): Next.js 16.3 (App Router), React 19.2, Tailwind 4,
 Supabase Auth and Postgres, Zod 4, Recharts, Vitest 5. All are current. The interface is built by
 hand from Tailwind tokens: fonts (Instrument Sans, Unbounded), a dark palette, a glow background.
-It has no headless primitive library, which [frontend.md](https://github.com/get-latest/company/blob/main/engineering/standards/frontend.md)
+It has no headless primitive library, which the frontend standard
 requires for select, dialog, tabs, tooltip, menu and similar behaviour.
 
 ## Decision

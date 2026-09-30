@@ -1,7 +1,6 @@
 # Enforcement matrix
 
-The audit of the [engineering standards](https://github.com/get-latest/company/blob/main/engineering/standards/enforcement-matrix.md)
-against this repo: for each rule area, what checks it, where that check runs, and whether it is running
+The audit of this repo against the engineering standards it follows ([ADR-001](decisions/ADR-001-adopt-engineering-standards.md)): for each rule area, what checks it, where that check runs, and whether it is running
 today. A MUST with nothing behind it is an intention, and it is listed as one.
 
 Status is **re-derived from the repo, not edited from memory** (the standards require it). Derived on
@@ -74,7 +73,7 @@ and re-derive the whole table when you touch this file.
 
 ## What this says
 
-Ten of the eleven [CI quality gates](https://github.com/get-latest/company/blob/main/engineering/standards/engineering-standards.md#ci-quality-gates)
+Ten of the eleven CI quality gates in the engineering standards
 run today: formatting, linting, type checking, unit tests (there are no component tests), a clean
 database reset, the pgTAP tests, the production build, the browser tests, accessibility checks, and
 secret and dependency scanning. The eleventh, the preview smoke test, is a recorded substitution by the
