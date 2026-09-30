@@ -138,11 +138,15 @@ async function main() {
 
   if (!skipBuild) execFileSync("npm", ["run", "build"], { cwd: webDir, env, stdio: "inherit" });
 
-  // The app falls back to daily closes when CoinGecko cannot be reached. Cutting it off keeps the
-  // shots the same on every run and independent of the network and of the day's prices.
+  // The app server answers its own CoinGecko price calls from the seed's last closes (see
+  // screenshots-offline.mjs), so the shots are the same on every run, with no network.
   const server = spawn(path.join(webDir, "node_modules", ".bin", "next"), ["start", "--port", String(port)], {
     cwd: webDir,
-    env: { ...env, NODE_OPTIONS: `--import ${path.join(webDir, "scripts", "screenshots-offline.mjs")}` },
+    env: {
+      ...env,
+      SCREENSHOT_SEED_SQL: path.join(repoDir, "supabase", "seed.sql"),
+      NODE_OPTIONS: `--import ${path.join(webDir, "scripts", "screenshots-offline.mjs")}`,
+    },
     stdio: ["ignore", "inherit", "inherit"],
   });
   let browser;
