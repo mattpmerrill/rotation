@@ -4,7 +4,7 @@ The audit of this repo against the engineering standards it follows ([ADR-001](d
 today. A MUST with nothing behind it is an intention, and it is listed as one.
 
 Status is **re-derived from the repo, not edited from memory** (the standards require it). Re-derived on
-2026-09-30, after the layer, security-header and seed work on the `cleanup/showcase` branch (rows whose
+2026-09-30, after the layer, security-header and seed work that shipped in `e1b694c` (rows whose
 evidence carries an earlier date were not re-run; the date says when they were). Update a row when the check behind it changes,
 and re-derive the whole table when you touch this file.
 

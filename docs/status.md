@@ -7,9 +7,10 @@ it, what to do next and why, and how to get set up. It is a snapshot: the source
 [enforcement-matrix.md](enforcement-matrix.md) (what a tool checks). If this file and one of those
 disagree, they win; fix this file.
 
-**Snapshot: 2026-09-30.** Production serves whatever `/api/health` reports. `main` was at `6ca8c20` when the
-cleanup branch was cut from it. The work described under "What is on the branch" has **not been pushed**:
-it lives on the local branch `cleanup/showcase`, and a push to `main` deploys to production.
+**Snapshot: 2026-09-30.** Production serves whatever `/api/health` reports. The showcase cleanup below was pushed to `main` on
+2026-09-30 as `e1b694c`; CI, the security scan and the post-deploy check were green, and the live site served
+the new security headers with no browser errors on the signed-out pages. Signed-in pages were not checked on
+production because the database is paused (next section).
 
 ## Production database is paused (2026-09-30)
 
@@ -45,10 +46,9 @@ of the work is guards, tests and docs.
 - The daily job (GitHub Actions, 13:15 UTC) refreshes market data; the app's notification job posts to
   Discord **only once `DISCORD_WEBHOOK_URL` is set in Vercel (it is not, yet)**.
 
-## What is on the branch, not in production
+## The showcase cleanup (in production since 2026-09-30)
 
-`cleanup/showcase` is `main` plus the showcase cleanup (no migration and no database type changed, so there is
-nothing to apply to production first):
+No migration and no database type changed, so there was nothing to apply to production first:
 
 - **Layers.** A new `web/src/integrations/` layer with one adapter per vendor (`coingecko`, `discord`); only
   features import it. Files in `data/` that build queries are `<thing>.repository.ts`, the access guards are
