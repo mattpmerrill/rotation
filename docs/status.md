@@ -103,10 +103,8 @@ node scripts/check.mjs                    # the one command that runs every chec
   against a local Supabase and needs Docker and `supabase start`.
 - The pre-push hook runs the same check. A push to `main` deploys to production (Vercel's Git integration).
   After a push, watch CI and the post-deploy check, then confirm `/api/health` reports the pushed commit.
-- **Docker.** Docker Desktop was started by a session on 2026-09-28. `supabase start` and `supabase stop`
-  control the local stack (project id `rotation`); `supabase db reset` rebuilds it from the migrations. Docker
-  also auto-starts another project's containers (`snappy-teams-safe-isolated`): leave them alone. The rotation
-  stack was stopped at the end of the session.
+- **Docker.** `supabase start` and `supabase stop` control the local stack (project id `rotation`);
+  `supabase db reset` rebuilds it from the migrations.
 - **Applying a migration to production:** write the migration and its pgTAP test, prove them first inside one
   transaction that is rolled back (a script using `psycopg` with `SUPABASE_DB_URL` from `.env`, running the
   migration and the test file, then rolling back; it was not kept in the repo), then `supabase db push`
