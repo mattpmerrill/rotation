@@ -12,7 +12,9 @@ export const LOGIN_ERRORS = {
 
 export type LoginErrorCode = keyof typeof LOGIN_ERRORS;
 
+const isLoginErrorCode = (code: string): code is LoginErrorCode => Object.hasOwn(LOGIN_ERRORS, code);
+
 /** The fixed message for a code from the URL, or undefined for anything that isn't one of ours. */
 export function loginErrorMessage(code: string | undefined): string | undefined {
-  return code !== undefined && Object.hasOwn(LOGIN_ERRORS, code) ? LOGIN_ERRORS[code as LoginErrorCode] : undefined;
+  return code !== undefined && isLoginErrorCode(code) ? LOGIN_ERRORS[code] : undefined;
 }

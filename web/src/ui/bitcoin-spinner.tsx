@@ -23,6 +23,7 @@ export function BitcoinSpinner({
       role="status"
       aria-label={label}
       className={`btc-spinner btc-spinner-${size}`}
+      // React's style type has no slot for CSS custom properties, so the cast is the documented way to pass them
       style={{ "--coin": `${px}px`, "--depth": `${depth}px` } as React.CSSProperties}
     >
       {size !== "sm" && <span aria-hidden className="btc-spinner-glow" />}
@@ -31,6 +32,7 @@ export function BitcoinSpinner({
           <span
             key={i}
             className="btc-spinner-edge"
+            // custom property, as above
             style={{ "--z": `${(i / (EDGE_LAYERS - 1) - 0.5) * depth}px` } as React.CSSProperties}
           />
         ))}

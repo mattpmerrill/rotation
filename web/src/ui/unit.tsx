@@ -28,7 +28,7 @@ function subscribe(fn: () => void) {
 const UnitContext = createContext<{ unit: Unit; setUnit: (u: Unit) => void }>({ unit: "btc", setUnit: () => {} });
 
 export function UnitProvider({ children }: { children: ReactNode }) {
-  const unit = useSyncExternalStore(subscribe, read, () => "btc" as Unit);
+  const unit = useSyncExternalStore(subscribe, read, (): Unit => "btc");
   const setUnit = useCallback((u: Unit) => {
     try {
       localStorage.setItem(KEY, u);

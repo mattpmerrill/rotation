@@ -51,6 +51,7 @@ export function BasketHistoryChart({
           <Tooltip
             cursor={{ stroke: "var(--ink-3)" }}
             content={({ active, payload }) => {
+              // Recharts types a tooltip payload as any; it is the row this chart was given
               const point = payload?.[0]?.payload as { week: string; btc: number } | undefined;
               if (!active || !point) return null;
               return (

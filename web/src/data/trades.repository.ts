@@ -14,16 +14,28 @@ import { supabaseServer, type Db } from "./supabase/server";
  */
 type TradeRow = Database["public"]["Tables"]["entry_trades"]["Row"];
 
+/** The table's check constraints allow only these values; a different one means the schema and the
+ *  app have drifted apart, which is worth failing loudly for. */
+function sideOf(value: string): Side {
+  if (value === "buy" || value === "sell") return value;
+  throw new Error(`Unknown trade side from the database: ${value}`);
+}
+
+function kindOf(value: string): TradeKind {
+  if (value === "buy_in" || value === "fill" || value === "sell" || value === "rebuy") return value;
+  throw new Error(`Unknown trade kind from the database: ${value}`);
+}
+
 const toTrade = (r: TradeRow): Trade => ({
   id: r.id,
   entryId: r.entry_id,
   tradedOn: r.traded_on,
   asset: r.asset,
-  side: r.side as Side,
+  side: sideOf(r.side),
   qty: Number(r.qty),
   priceUsd: Number(r.price_usd),
   feeUsd: Number(r.fee_usd),
-  kind: r.kind as TradeKind,
+  kind: kindOf(r.kind),
   note: r.note,
 });
 

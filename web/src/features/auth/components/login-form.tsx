@@ -10,8 +10,8 @@ import { signIn, signInWithGoogle, signUp, type AuthFormState } from "../actions
 
 export function LoginForm({ linkError }: { linkError?: string | undefined }) {
   const [creating, setCreating] = useState(false);
-  const [signInState, signInAction, signingIn] = useActionState(signIn, {} as AuthFormState);
-  const [signUpState, signUpAction, signingUp] = useActionState(signUp, {} as AuthFormState);
+  const [signInState, signInAction, signingIn] = useActionState(signIn, {});
+  const [signUpState, signUpAction, signingUp] = useActionState(signUp, {});
   const error = (creating ? signUpState.error : signInState.error) ?? linkError;
   const busy = signingIn || signingUp;
 

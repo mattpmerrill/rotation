@@ -32,7 +32,7 @@ export function FillSlotForm({
   prices: PriceBook;
   from: string;
 }) {
-  const [state, action, pending] = useActionState(fillWaitingSlot, {} as TradeFormState);
+  const [state, action, pending] = useActionState(fillWaitingSlot, {});
   const [coin, setCoin] = useState(coins[0]?.id ?? "");
   const [day, setDay] = useState(todayUtc());
   const [typed, setTyped] = useState<{ btc?: string | undefined; coin?: string | undefined; qty?: string | undefined }>(

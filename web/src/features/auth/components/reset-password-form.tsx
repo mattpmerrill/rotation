@@ -9,7 +9,7 @@ import { setNewPassword, type AuthFormState } from "../actions";
 
 /** Choose a new password after following a sign-in help link. */
 export function ResetPasswordForm() {
-  const [state, action, pending] = useActionState(setNewPassword, {} as AuthFormState);
+  const [state, action, pending] = useActionState(setNewPassword, {});
   return (
     <form action={action} className="grid gap-4">
       {state.error && <Notice tone="error">{state.error}</Notice>}
