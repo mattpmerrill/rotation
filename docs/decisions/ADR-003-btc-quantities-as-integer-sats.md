@@ -6,7 +6,7 @@
 
 ## Context
 
-[data.md](https://github.com/get-latest/company/blob/main/engineering/standards/data.md) says money is
+The data standard says money is
 "integer minor units or Postgres `numeric`. Never floating point." The database follows that
 (`numeric` columns). The web app does not: `data/challenge.ts` reads `Number(row.btc_in)`, and the
 domain layer (`web/src/domain`) computes valuations, fills and standings in JavaScript floats.

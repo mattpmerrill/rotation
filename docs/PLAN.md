@@ -9,7 +9,7 @@ Players: Matt and three friends. The app tells no one when to trade: it shows
 where everyone stands, the history, and reference dates. People place their own trades on their
 own exchange and log them.
 
-Owner: Matt. Architect: Beck. Last updated 2026-09-26.
+Owner: Matt.
 
 - Where we left off: [status.md](status.md). How it's built: [architecture.md](architecture.md). How to change it: [../CONTRIBUTING.md](../CONTRIBUTING.md).
 - App: https://rotation-web-seven.vercel.app (Vercel project `rotation-web`, root `web/`).
@@ -17,7 +17,7 @@ Owner: Matt. Architect: Beck. Last updated 2026-09-26.
 ## What the research says (read before picking)
 
 From 1 BTC, 1% fee per trade, using the two cycles the alt data covers
-(`docs/backtests/challenge-exits.md`, Joi's analysis in `docs/handoff/`):
+(`docs/backtests/challenge-exits.md`, the analysis handoff in `docs/archive/handoff/`):
 
 - **Buying alts at this point in the cycle lost BTC in the last cycle, whatever the basket.**
   In 2022-25 every basket tested ended at about 0.5-0.8 BTC at the old sell window. In
@@ -37,11 +37,11 @@ From 1 BTC, 1% fee per trade, using the two cycles the alt data covers
 | 1 | Profit ladder triggers in USD. *(Superseded by 11.)* | 2026-09-23 |
 | 2 | Regime order Euphoria > Defend > Expand > Accumulate. *(Research engine only.)* | 2026-09-23 |
 | 3 | Leverage off. | 2026-09-23 |
-| 4 | Repo `~/Work/rotation`, private on `mattpmerrill` GitHub. | 2026-09-23 |
+| 4 | Repo `mattpmerrill/rotation` on GitHub. It started private; it is public now and stays public as it is (decided 2026-09-30). | 2026-09-23 |
 | 5 | Custom daily-step simulator, so backtests and live rules share functions. | 2026-09-23 |
 | 6 | pandas only; backtests read Parquet, Postgres holds what the app reads. | 2026-09-23 |
 | 7 | BTC core + alt sleeve instead of USD-weighted buckets. *(Superseded by 13.)* | 2026-09-24 |
-| 8 | BTC cycle harvest as the primary strategy; Supabase project `rotation` (ref `xtccrljmxtjmxbosczrd`, free 21 Stacks org). *(Strategy superseded by 13; the project stays.)* | 2026-09-24 |
+| 8 | BTC cycle harvest as the primary strategy; Supabase project `rotation` (ref `xtccrljmxtjmxbosczrd`, free plan). *(Strategy superseded by 13; the project stays.)* | 2026-09-24 |
 | 9 | Research assumes 0% tax and a 1% fee per trade (`config/rules.yaml` `cycle.account`). | 2026-09-24 |
 | 10 | Discord never shows holdings or amounts. | 2026-09-24 |
 | 11 | 10 BTC core + 1 BTC alt basket on the halving clock. *(Superseded by 13.)* | 2026-09-25 |
@@ -75,8 +75,8 @@ From 1 BTC, 1% fee per trade, using the two cycles the alt data covers
 
 - Invite the three friends: send them the link, then approve them on the People page.
 - Set `DISCORD_WEBHOOK_URL` in Vercel so new sign-ups and trades are announced.
-- Later, if wanted: an admin page for members and challenges (today it's SQL), and an
-  "available on my exchange" filter in the picker.
+- Later, if wanted: an admin page for challenges (members are managed on the People page; opening and
+  closing a challenge is SQL today), and an "available on my exchange" filter in the picker.
 
 ## Data
 
@@ -95,6 +95,6 @@ Phase 0 (2026-09-23 to 09-25) built the data, a rule engine for the original pro
 studies: the original alt-trading rules lost BTC, and a BTC cycle harvest beat holding. That engine
 and its studies were archived on 2026-09-28
 ([ADR-004](decisions/ADR-004-archive-cycle-harvest-engine.md)): the code and the written studies live
-in the git tag `archive/cycle-harvest-2026-09-28`, and `docs/RULES.md` describes the rules. Only the
+in the git tag `archive/cycle-harvest-2026-09-28`, and `docs/archive/RULES.md` describes the rules. Only the
 halving clock and BTC cycle features remain in the engine, and `docs/backtests/` holds the research
 behind the challenge.

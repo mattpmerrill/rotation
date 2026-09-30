@@ -1,8 +1,8 @@
 # Runbooks
 
 Procedures you do not want to be inventing at the time. Each is a numbered list of commands and
-checks, written to be read by someone in a hurry. The rules are in the
-[incident standard](https://github.com/get-latest/company/blob/main/engineering/standards/incident.md).
+checks, written to be read by someone in a hurry. They follow the incident standard
+(see [ADR-001](../decisions/ADR-001-adopt-engineering-standards.md)).
 
 **Every runbook here is UNTESTED until it says otherwise.** The standards ask for the rollback and
 the restore to be exercised once while nothing is wrong. That has not happened yet, and it is

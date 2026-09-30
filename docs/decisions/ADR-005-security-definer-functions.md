@@ -8,7 +8,7 @@
 
 The challenge's fairness rules (at most 1 BTC in, 2 to 8 coins, exact slot shares, no
 overselling, edits only before the first sell) must hold no matter which client writes. They live
-in the database ([ADR-002 in the standards](https://github.com/get-latest/company/blob/main/engineering/decisions/ADR-002-supabase-rls-everywhere.md):
+in the database (the "RLS everywhere" rule in the engineering standards:
 RLS and the database are authoritative). Several operations write more than one row at once and
 must be atomic: starting an entry with its buy-in trades, editing one, filling a waiting slot,
 deleting one.

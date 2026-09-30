@@ -1,8 +1,7 @@
 # System context
 
-The assumptions the architecture depends on, as the
-[engineering standards](https://github.com/get-latest/company/blob/main/engineering/standards/engineering-standards.md#system-context-and-constraints)
-require. If one of these changes, the architecture may need to.
+The assumptions the architecture depends on, as the engineering standards
+(see [ADR-001](decisions/ADR-001-adopt-engineering-standards.md)) require. If one of these changes, the architecture may need to.
 
 ## Users and critical workflows
 

@@ -1,13 +1,13 @@
 # Rules in plain English (research engine)
 
 > **Archived.** The original Phase 0 rule engine. Its code was removed from `main` on 2026-09-28
-> ([ADR-004](decisions/ADR-004-archive-cycle-harvest-engine.md)) and lives on in the git tag
+> ([ADR-004](../decisions/ADR-004-archive-cycle-harvest-engine.md)) and lives on in the git tag
 > `archive/cycle-harvest-2026-09-28`. Only the halving clock and BTC cycle features survive, in
 > `engine/src/rotation/rules/cycle.py`. This page is the record of the rules; the studies it produced
-> are in the tag. The live app is the 1 Bitty Challenge: see [PLAN.md](PLAN.md).
+> are in the tag. The live app is the 1 Bitty Challenge: see [PLAN.md](../PLAN.md).
 
 The source of truth is `config/rules.yaml`; this page explains it. Items tagged
-**[default]** are definitions the program doc left open. Beck proposed them; Matt
+**[default]** are definitions the program doc left open. They were proposed during the build; Matt
 reviews them. Change the number in the config, not the code.
 
 All gains are measured in USD from the average entry price. All performance is

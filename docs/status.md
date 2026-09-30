@@ -17,10 +17,10 @@ commit when this was written. Run `git log --oneline -8` to see anything newer.
 The **1 Bitty Challenge**: Matt and three friends each put up to 1 BTC into a basket of 2 to 8 alts, sell
 near the top, rebuy BTC in the bear, and are scored in BTC. A Next.js 16 app on Vercel and Supabase, plus a
 Python engine that refreshes market data daily. Live at https://rotation-web-seven.vercel.app. Repo:
-`mattpmerrill/rotation` (private).
+`mattpmerrill/rotation` (public; Matt decided on 2026-09-30 to leave it public as it is and not rewrite history).
 
-It is also a showcase of the [GetLatest engineering standards](https://github.com/get-latest/company/tree/main/engineering)
-applied to a small real app, done in phases. That is why so much of the work is guards, tests and docs.
+It is also a showcase of the GetLatest engineering standards (see
+[ADR-001](decisions/ADR-001-adopt-engineering-standards.md)) applied to a small real app, done in phases. That is why so much of the work is guards, tests and docs.
 
 ## What is live
 
@@ -48,12 +48,9 @@ applied to a small real app, done in phases. That is why so much of the work is 
 2. **Try the Approve and Reject buttons with the first real friend.** They are covered by the signed-in
    browser journey (local Supabase, in CI) but nobody has used them on production; the production check
    approved a throwaway account with SQL because the button needs an admin session.
-3. **Decide about going public.** The working tree is scrubbed of account details, holdings, brokerage and
-   friends' names. **Git history still contains them.** If the repo is ever made public, make a fresh repo
-   from the current files (or rewrite history first); do not just flip visibility.
-4. **Optional, when wanted: an email service** (a custom SMTP provider; the steps are in the runbook). It
+3. **Optional, when wanted: an email service** (a custom SMTP provider; the steps are in the runbook). It
    would allow email confirmation and reset emails and retire [exception 17](exceptions.md).
-5. **Unverified:** `ANTHROPIC_API_KEY` and `DISCORD_BOT_TOKEN` sit in the local `.env` and nothing in the
+4. **Unverified:** `ANTHROPIC_API_KEY` and `DISCORD_BOT_TOKEN` sit in the local `.env` and nothing in the
    repo appears to use them. Not touched; check before deleting.
 
 ## What to do next, in the order I would do it
@@ -106,10 +103,8 @@ node scripts/check.mjs                    # the one command that runs every chec
   against a local Supabase and needs Docker and `supabase start`.
 - The pre-push hook runs the same check. A push to `main` deploys to production (Vercel's Git integration).
   After a push, watch CI and the post-deploy check, then confirm `/api/health` reports the pushed commit.
-- **Docker.** Docker Desktop was started by a session on 2026-09-28. `supabase start` and `supabase stop`
-  control the local stack (project id `rotation`); `supabase db reset` rebuilds it from the migrations. Docker
-  also auto-starts another project's containers (`snappy-teams-safe-isolated`): leave them alone. The rotation
-  stack was stopped at the end of the session.
+- **Docker.** `supabase start` and `supabase stop` control the local stack (project id `rotation`);
+  `supabase db reset` rebuilds it from the migrations.
 - **Applying a migration to production:** write the migration and its pgTAP test, prove them first inside one
   transaction that is rolled back (a script using `psycopg` with `SUPABASE_DB_URL` from `.env`, running the
   migration and the test file, then rolling back; it was not kept in the repo), then `supabase db push`
@@ -156,7 +151,7 @@ node scripts/check.mjs                    # the one command that runs every chec
   enforces it). Say what was and was not verified, and report failures as failures.
 - Never put amounts or holdings in Discord messages, and never commit holdings, account type, secrets or
   friends' names. Names in fixtures are generic.
-- Credentials live in the credential store and the runtime only ([configuration.md](https://github.com/get-latest/company/blob/main/engineering/standards/configuration.md)),
+- Credentials live in the credential store and the runtime only (the configuration standard),
   never in chat, commits or logs.
 
 ## Where things are

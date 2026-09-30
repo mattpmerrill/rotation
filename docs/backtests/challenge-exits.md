@@ -26,7 +26,7 @@ Benchmark, no alts (sell 1 BTC on the clock, rebuy in the bear):
 - 2016 cycle: 0.97 → 2.46 BTC
 - 2020 cycle: 1.00 → rebuy pending BTC
 
-## What it says (Beck, 2026-09-26)
+## What it says (2026-09-26)
 
 1. **No trend alert beat the clock.** In the 2018 cycle every alert that fired sold earlier
    than the clock and ended with less BTC after the rebuy (e.g. top 10: clock 3.83, usd20

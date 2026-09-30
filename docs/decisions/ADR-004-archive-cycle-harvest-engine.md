@@ -12,8 +12,7 @@ rebuilt on 2026-09-26 as the 1 Bitty Challenge only (`docs/PLAN.md`, decision 13
 tables that supported the old plan were dropped. The engine's research modules, their tests and
 a tracked scratch script stayed in `engine/`, "tested and switched off".
 
-[deprecation.md](https://github.com/get-latest/company/blob/main/engineering/standards/deprecation.md)
-is clear: dead code is deleted, not kept behind a flag. Git keeps the history.
+The deprecation standard is clear: dead code is deleted, not kept behind a flag. Git keeps the history.
 
 The first draft of this ADR said the simulator, rules and signal would all go. Computing the real
 import graph showed that is not possible without breaking live code: the daily job and the
@@ -57,7 +56,7 @@ stub error codes in `pyproject.toml` with the reason written beside it.
 standard's `domain/application/infrastructure/workers/api` tree. The engine is a research and
 market-data package with one scheduled entry point, not an application backend, and a rename would
 add risk to code whose output feeds the live app for no behavioural gain. This is the recorded
-deviation from [python.md](https://github.com/get-latest/company/blob/main/engineering/stack/python.md).
+deviation from the Python standard.
 
 ## Follow-ups this leaves (each is its own change)
 
