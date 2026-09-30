@@ -9,5 +9,5 @@ npm run check        # lint (with layer rules), prettier, types, unit tests
 npm run db:types     # regenerate src/data/database.types.ts from the local database
 ```
 
-Structure and rules: [../docs/architecture.md](../docs/architecture.md). Files in
+Structure: [../docs/architecture.md](../docs/architecture.md). Rules: [../AGENTS.md](../AGENTS.md). Files in
 `src/generated/` and `public/data/` come from the engine (`cd ../engine && uv run rotation web-data`).
