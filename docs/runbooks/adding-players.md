@@ -69,8 +69,9 @@ already have accounts.
 
 1. Supabase dashboard, project `rotation`, Authentication, Sign In / Providers: turn off **Allow new
    users to sign up**.
-2. Or by the Management API, with your access token in `SUPABASE_ACCESS_TOKEN`:
-   `curl -X PATCH -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" -d '{"disable_signup":true}' https://api.supabase.com/v1/projects/xtccrljmxtjmxbosczrd/config/auth`
+2. Or by the Management API, with an access token from the owner of the project's org in
+   `ROTATION_SUPABASE_ACCESS_TOKEN` (root `.env`; a token from a Developer member is refused):
+   `curl -X PATCH -H "Authorization: Bearer $ROTATION_SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" -d '{"disable_signup":true}' https://api.supabase.com/v1/projects/xtccrljmxtjmxbosczrd/config/auth`
    (set it back to `false` to reopen).
 
 ## Turning email confirmation back on

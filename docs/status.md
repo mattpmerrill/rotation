@@ -7,20 +7,23 @@ it, what to do next and why, and how to get set up. It is a snapshot: the source
 [enforcement-matrix.md](enforcement-matrix.md) (what a tool checks). If this file and one of those
 disagree, they win; fix this file.
 
-**Snapshot: 2026-09-30.** Production serves whatever `/api/health` reports. The showcase cleanup below was pushed to `main` on
+**Snapshot: 2026-10-01.** Production serves whatever `/api/health` reports. The showcase cleanup below was pushed to `main` on
 2026-09-30 as `e1b694c`; CI, the security scan and the post-deploy check were green, and the live site served
 the new security headers with no browser errors on the signed-out pages. Signed-in pages were not checked on
-production because the database is paused (next section).
+production because the database was paused at the time (next section).
 
-## Production database is paused (2026-09-30)
+## Production database moved to its own org (2026-10-01)
 
-The Supabase project `rotation` was paused on 2026-09-30 (status INACTIVE) to free the free-plan project slot.
-While it is paused sign-in on the live site does not work, and the daily job would fail at its "Market data"
-step, so its workflow is disabled in GitHub (2026-09-30; the file is unchanged). Matt chose to leave it paused
-for now. To bring it back: restore the project in the Supabase dashboard (or with the Supabase CLI or MCP
-`restore_project`), run `gh workflow enable daily.yml` and `gh workflow run daily.yml`, then check that run and
-`/api/health`. Anything
-that needs the production database waits for that, including dropping the two unused tables (exception 16).
+The Supabase project `rotation` was paused on 2026-09-30 to free a free-plan project slot. On 2026-10-01 it
+was restored and moved, with Supabase's "Transfer project", into a separate free organization owned by the
+owner's second Supabase account, so it has its own free-plan slots. The transfer keeps the project ref
+(`xtccrljmxtjmxbosczrd`), URL, keys and data, so `.env`, Vercel and the GitHub secrets did not change. The
+daily workflow was re-enabled the same day; a manual run passed and `/api/health` was ok.
+
+Access: the account that owned the old org is a Developer in the new one (data and SQL, not project
+settings; Owner or Admin would pool its free-project slots with the old org). Project settings (auth config,
+pause and restore, keys) need an access token from the new org's owner, kept in the root `.env` as
+`ROTATION_SUPABASE_ACCESS_TOKEN`. Dropping the two unused tables (exception 16) is no longer blocked.
 
 ## What this project is
 
@@ -123,8 +126,8 @@ the recommended order and why.
 5. **The rest of the signed-in journey** ([exception 9](exceptions.md)): logging a trade, editing a basket,
    filling a slot, and axe on signed-in pages. The sign-up journey in `web/e2e/signed-in/` is the pattern, and
    the demo seed gives it real baskets to work with.
-6. **Clean-ups:** the two unused tables (`exchange_symbols`, `derivatives_daily`; drop them once the database is
-   restored) ([exception 16](exceptions.md), [ADR-004](decisions/ADR-004-archive-cycle-harvest-engine.md)); Vercel's
+6. **Clean-ups:** the two unused tables (`exchange_symbols`, `derivatives_daily`; the database is
+   restored, so they can be dropped) ([exception 16](exceptions.md), [ADR-004](decisions/ADR-004-archive-cycle-harvest-engine.md)); Vercel's
    Preview scope pointing at the production database ([exception 15](exceptions.md)); schemas named
    `*.schema.ts` (ours are plain `schema.ts` in `features/picker` and `features/trades`).
 
